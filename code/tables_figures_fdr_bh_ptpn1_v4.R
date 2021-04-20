@@ -1,28 +1,56 @@
-#HERE I CHANGE THE CODE FOR TABLE 2 in LPL code TO INCLUDE SOME SUGGESTIONS FOR REVIEWERS OF CNTF
+#!/usr/bin/env Rscript
 
-#The version 2 is run in the David Enard laptop. I changed the titles of the supplementary figures and calculate the correlation between leptin and adiposity.
+#This is done to have the possibility to run this script as an executable: 'chmod +x myscript.R' and then ' ./myscript.R'. If you run the script as 'R CMD BATCH myscript.R', i THINK this is not used, because it is annotated. 
+    #https://www.jonzelner.net/statistics/make/docker/reproducibility/2016/05/31/script-is-a-program/
 
-#also remove the binding of supplementary pdfs, now this is not needed.
-
-#In the version 3 I have changed the name of the supplementary figures 2,3,4. Now it is called figure SX...
-
-#In the version 4, I have included the reviewer suggestions of ped obesity. 
+#In case you run this script as an executable, you can save the output without warnings "./myscript.R > myscript.Rout" or with errors "./myscript.R &> myscript.Rout"
+    #https://askubuntu.com/questions/420981/how-do-i-save-terminal-output-to-a-file
 
 
 
-#################################
-##### LOAD ENVIRONMENT ##########
-#################################
+##################################################################################
+####################### SCRIPT FOR PREPARING TABLES AND FIGURES ##################
+##################################################################################
+
+#Script where we create all the figures and tables of the manuscript
+
+
+
+####################################################
+##### CHANGES RESPECT TO PREVIOS VERSIONS ##########
+####################################################
+
+#Respect previous papers
+    #Here, I changed the code for table 2 in lpl code to include some suggestions for reviewers of cntf
+
+#Version 2
+    #The version 2 is run in the David Enard laptop. I changed the titles of the supplementary figures and calculate the correlation between leptin and adiposity.
+    #also remove the binding of supplementary pdfs, now this is not needed.
+
+#Version 3
+    #In the version 3 I have changed the name of the supplementary figures 2,3,4. Now it is called figure SX...
+
+#Version 4
+    #In the version 4, I have included the reviewer suggestions of ped obesity. 
+
+
+
+########################################
+############ DATA PREPARATION ##########
+########################################
+
+### load the environment with the analyses run
 load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis.RData")
 require(SNPassoc)
 require(genetics)
 
-###set wd
+
+### set wd
 setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7")
+    #For this paper we will only use adiposity markers as CVD risk factors only show significant associations with FDR<0.1 for leptin and SBP and three snps (FDR>0.07 in all cases). No haplotype association nor interaction with physical activity.
 
-#For this paper we will only use adiposity markers as CVD risk factors only show significant associations with FDR<0.1 for leptin and SBP and three snps (FDR>0.07 in all cases). No haplotype association nor interaction with physical activity.
 
-##### create a data.frame withe the names of phenotypes in dataset and the real name por the figure
+### create a data.frame withe the names of phenotypes in dataset and the real name por the figure
 pheno_names = cbind.data.frame(
     c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP"),
     c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% individuals", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
