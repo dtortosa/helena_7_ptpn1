@@ -203,10 +203,9 @@ for(i in 1:length(ptpn1s)){
 
 
 
-### check minor/major alleles in HELENA respect to 1000 Genomes Project
-maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
-row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
-colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
+### check minor alleles in HELENA respect to 1000 Genomes Project
+
+## Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
     #rs6067472: T=0.3648
         #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
     #rs10485614: C=0.0755
@@ -219,21 +218,44 @@ colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
         #https://www.ncbi.nlm.nih.gov/snp/rs968701#frequency_tab
 
 
+## create a table with these minor allele frequencies
+maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
+row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
+colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
 
+
+## merge with table 1 
 table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
 
+
+## change the allele that it is different (rs6067472 - T should be the minor, not the major)
 table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Major allele")] <- "A"
 table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Minor allele")] <- "T"
 
 
+## reorder the table again following the order in the chromosome 
+table_1_1KGP = table_1_1KGP[match(c("PTPN1", as.character(ptpn1_snps$snp)), table_1_1KGP$Row.names),]
+table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_snps$snp))
+
+
+## remove the column name for row names
 colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 
-REVISA EL ORDEN!!
 
-
-#convert to a latex table
+## convert to a latex table
 require(xtable)
 print.xtable(xtable(table_1_1KGP, align="lcccccc"), include.rownames=FALSE, NA.string="", floating = FALSE)
+
+
+
+
+cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$CRF_height, alternative="two.sided", method="pearson")
+cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$CRF_height, alternative="two.sided", method="pearson")
+
+cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$CRF_weight, alternative="two.sided", method="pearson")
+cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$CRF_weight, alternative="two.sided", method="pearson")
+
+
 
 
 ####################
@@ -522,14 +544,14 @@ only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1)
 length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be zero
     
 
-####################
-###### FIGURES #####
-####################
+
 
 ##################
 #### Figure 1 ####
 ##################
 #HAPLOVIEW. IN PTPN1 this figure was included in the supplementary as first figure.
+
+
 
 
 ######################################
