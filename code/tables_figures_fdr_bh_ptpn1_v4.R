@@ -8,11 +8,13 @@
 
 
 
+
 ##################################################################################
 ####################### SCRIPT FOR PREPARING TABLES AND FIGURES ##################
 ##################################################################################
 
 #Script where we create all the figures and tables of the manuscript
+
 
 
 
@@ -35,6 +37,7 @@
 
 
 
+
 ########################################
 ############ DATA PREPARATION ##########
 ########################################
@@ -45,46 +48,59 @@ require(SNPassoc)
 require(genetics)
 
 
-### set wd
+
+### set the working directory
 setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7")
-    #For this paper we will only use adiposity markers as CVD risk factors only show significant associations with FDR<0.1 for leptin and SBP and three snps (FDR>0.07 in all cases). No haplotype association nor interaction with physical activity.
 
 
-### create a data.frame withe the names of phenotypes in dataset and the real name por the figure
+
+### create a data.frame withe the names of phenotypes in dataset and the real name per the figure
 pheno_names = cbind.data.frame(
     c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP"),
     c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% individuals", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
 colnames(pheno_names) <- c("var_name", "final_name")
 
-#binomial phenotypes included in this set of results
+#### binomial phenotypes included in this set of results
 binomial_pheno = c("obesity", "CVi_BP")
 
-##### the same for SSB variable
+
+
+#### the same for SSB variable
 ssb_names = cbind.data.frame(
     c("mean_Alspac_v42","CVi_softdrink_cont_2000"),
     c("mean_Alspac_v42","CVi_softdrink_cont_2000"))
 colnames(ssb_names) <- c("var_name", "final_name")
 
+
+
 ##### level names of factor variables
-factor_variables_levels = list(c("Non-overweight", "Overweight"),
-    c("Low physic. act. (<60 min/day)", "High physic. act. (≥60 min/day)"))
+factor_variables_levels = list(c("Non-overweight", "Overweight"), c("Low physic. act. (<60 min/day)", "High physic. act. (≥60 min/day)"))
 names(factor_variables_levels) <- c("obesity", "PA_factor")
 
-##### load allele and genesnames of SNPs according to helena and ncbi
+
+
+##### load allele and genes names of SNPs according to HELENA and ncbi
+## gene names
 gene_names = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
 #select snps from the studied gene
 gene_names = gene_names[which(gene_names$selected_snp %in% labels(myData_ptpn1)),]
 
-#load allele names
+
+## load allele names
 alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1.csv", sep=",", header=T)
 nrow(gene_names) == length(labels(myData_ptpn1))
 nrow(alleles) == length(labels(myData_ptpn1))
     #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
+    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans. 
+
+
+
 
 ####################
 ##### TABLE 1 ######
 ####################
 
+### start the table
 #extract summary of snps
 summary_snps = summary(myData_ptpn1)
 
@@ -103,7 +119,9 @@ table_1
 table_1$MAF == 1-(summary_snps$major.allele.freq/100)
 table_1$HWE == summary_snps$HWE
 
-## add alleles to table 1 
+
+
+### add alleles to table 1 
 #add two columns for Major and minor alleles
 table_1 = cbind.data.frame(NA, NA, table_1)
 #add the corresponding names (first major, second minor)
@@ -129,7 +147,7 @@ for(i in 1:nrow(table_1)){#for each row of table 1
     table_1[i,which(colnames(table_1) == "Minor allele")] <- ncbi_minor
 }
 
-#extract the allele names frmo the table1 (combined major and minor) along with snp names
+#extract the allele names from the table 1 (combined major and minor) along with snp names
 alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
 colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
 
@@ -143,7 +161,10 @@ identical(df_check_alleles$alleles_from_ncbi, df_check_alleles$ncbi)
 table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
 row.names(table_1) == ptpn1_snps$snp
 
-#loop for add the gene name to the table
+
+
+### add the gene name to the table. More sense when SNPs of multiple genes are included. 
+#loop for each gene
 ptpn1s = unique(ptpn1_snps$gen)
 #for each gene name
 for(i in 1:length(ptpn1s)){
@@ -181,6 +202,8 @@ for(i in 1:length(ptpn1s)){
 }
 
 
+
+### check minor/major alleles in HELENA respect to 1000 Genomes Project
 maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
 row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
 colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
@@ -205,6 +228,7 @@ table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_
 
 colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 
+REVISA EL ORDEN!!
 
 
 #convert to a latex table
