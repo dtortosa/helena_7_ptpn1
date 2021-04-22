@@ -3,7 +3,7 @@
 rm(list = ls()[-which(ls()=="wideScreen")])
 
 ########### Data for analysing ucp genotype data from helena
-setwd("/Users/diegosalazar/My Drive/science/open_projects/helena_7")
+setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7")
 
 #### import data from SPSS database
 require(foreign)
@@ -21,8 +21,8 @@ if(FALSE){
 ### faster way to extract the data
 if(FALSE){
     n<-3551 #number of rows without the header (e.g. number of individuals) 
-    dat<-scan("/Users/diegosalazar/My Drive/science/open_projects/helena_7/data/snps/helena_db.txt", list("character"),skip=1) 
-    variables<-scan("/Users/diegosalazar/My Drive/science/open_projects/helena_7/data/snps/helena_db.txt", list("character"), n=1) 
+    dat<-scan("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/helena_db.txt", list("character"),skip=1) 
+    variables<-scan("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/helena_db.txt", list("character"), n=1) 
     ncols<-length(dat[[1]])/n
     temp<-matrix(dat[[1]],nrow=n,ncol=ncols,byrow=TRUE) 
     HapMap<-data.frame(temp, stringsAsFactors = FALSE) 
@@ -234,7 +234,7 @@ helena$risk_score <- risk_score
 helena$risk_score_for_log <- risk_score_for_log
 
 #see correlation of risk score with score variables
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/risk_score/risk_score_cors.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/risk_score/risk_score_cors.pdf")
 par(mfrow=c(2,2))
 plot(risk_score~TC_HDL, helena)
 plot(risk_score~TG, helena)
@@ -298,7 +298,7 @@ colnames(ptpn1_snps) <- c("gen", "snp")
 nrow(ptpn1_snps)
 
 #check that are all correct with snp-gene data from the whoel panel (extracted from ncbi in "/Users/diegosalazar/My Drive/science/open_projects/helena_sweet/code/analyses_fdr_bh.R")
-chromosome_snps_helena = read.table("/Users/diegosalazar/My Drive/science/open_projects/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
+chromosome_snps_helena = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
 
 #snps not included in chromosome_snps_helena or in ptpn1_snps (we have to check both possibilities)
 different_snps = c(
@@ -337,7 +337,7 @@ ptpn1_position = ptpn1_position[order(ptpn1_position$pos),] #order snps by posit
 ptpn1_position$pos == ptpn1_position[order(ptpn1_position$pos),]$pos
 
 #save it
-write.table(ptpn1_position, "/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/tables/ptpn1_snps_ordered.csv", sep=",", col.names = TRUE, row.names = FALSE)
+write.table(ptpn1_position, "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/ptpn1_snps_ordered.csv", sep=",", col.names = TRUE, row.names = FALSE)
 
 ## select phenotypes of interest
 pheno_selected = c(
@@ -588,7 +588,7 @@ LDplot(linkage_target_snps, which="D'")
 dev.off()
 
 #plot LD
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/linkage_dis/plot_LD.pdf", width=20, height=20)
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/linkage_dis/plot_LD.pdf", width=20, height=20)
 LDtable(linkage_target_snps, digits=2, colorize="D'", colorcut=seq(0,1, 0.1), colors=colorRampPalette(c("yellow", "red"))(length(seq(0,1, 0.1))), cex=0.8)
 dev.off()
 
@@ -747,7 +747,7 @@ phenotypes_normality = c(
     "risk_score_for_log")
 
 #### plot the distribution and qqplot of response variables
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/normality_phenotypes/normality_plots_log.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/normality_plots_log.pdf")
 for (i in 1:length(phenotypes_normality)){
     pheno = phenotypes_normality[i]
     normality_test_log(pheno, data=myData_ptpn1)
@@ -775,7 +775,7 @@ type_heritage = c("recessive", "dominant", "overdominant", "additive", "codomina
 require(car)
 
 #without transformation
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/normality_phenotypes/residual_models_without_trans_plots.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/residual_models_without_trans_plots.pdf")
 #for each phenotype
 for (i in 1:length(phenotypes_normality)){
     
@@ -824,7 +824,7 @@ for (i in 1:length(phenotypes_normality)){
 dev.off()
 
 #with log transformation
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/normality_phenotypes/residual_models_log_plots.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/residual_models_log_plots.pdf")
 #for each phenotype
 for (i in 1:length(phenotypes_normality)){
       
@@ -873,7 +873,7 @@ for (i in 1:length(phenotypes_normality)){
 dev.off()
 
 #with sqrt transformation
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/normality_phenotypes/residual_models_sqrt_plots.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/residual_models_sqrt_plots.pdf")
 #for each phenotype
 for (i in 1:length(phenotypes_normality)){
       
@@ -922,7 +922,7 @@ for (i in 1:length(phenotypes_normality)){
 dev.off()
 
 #with squares transformation
-pdf("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/normality_phenotypes/residual_models_squared_plots.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/residual_models_squared_plots.pdf")
 #for each phenotype
 for (i in 1:length(phenotypes_normality)){
       
@@ -1236,7 +1236,7 @@ for(i in 1:length(significant_chr)){
     }
 
     #create haploviewdata
-    makeHaploviewInputFile(famid = rep(NA, nrow(myData_ptpn1)), patid = row.names(myData_ptpn1), aff = rep(0, nrow(myData_ptpn1)), fid = rep(NA, nrow(myData_ptpn1)), mid = rep(NA, nrow(myData_ptpn1)), sex = sex, geno = final_geno_data_markers, marker.name=selected_markers, marker.position=markers_pos, haploview.pedfile = paste("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/haplotype/haplo_", selected_chr, ".pedfile", sep=""), haploview.infofile = paste("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/haplotype/haplo_", selected_chr, ".infofile", sep=""))
+    makeHaploviewInputFile(famid = rep(NA, nrow(myData_ptpn1)), patid = row.names(myData_ptpn1), aff = rep(0, nrow(myData_ptpn1)), fid = rep(NA, nrow(myData_ptpn1)), mid = rep(NA, nrow(myData_ptpn1)), sex = sex, geno = final_geno_data_markers, marker.name=selected_markers, marker.position=markers_pos, haploview.pedfile = paste("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/haplotype/haplo_", selected_chr, ".pedfile", sep=""), haploview.infofile = paste("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/haplotype/haplo_", selected_chr, ".infofile", sep=""))
 }
 
 ##open haploview
@@ -1529,7 +1529,7 @@ names(haplo_list_per_block) <- vector_haplotype_blocks
 ###save significant results
 
 #load allele names to interpretation
-allele_names = read.csv("/Users/diegosalazar/My Drive/science/open_projects/helena_7/data/snps/alleles_ptpn1.csv", header=TRUE)
+allele_names = read.csv("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1.csv", header=TRUE)
     #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
 
 #check that there is a correspondence between ncbi and helena alleles (first major, second minor)
@@ -2317,6 +2317,6 @@ if("risk_score_for_log" %in% final_interactions$pheno_selected){
 #################################
 ##### LOAD ENVIRONMENT ##########
 #################################
-save.image("/Users/diegosalazar/My Drive/science/open_projects/helena_7/results/rdata/analysis.RData")
+save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis.RData")
 require(SNPassoc)
 require(genetics)
