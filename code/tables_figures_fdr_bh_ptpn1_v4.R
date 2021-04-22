@@ -249,14 +249,6 @@ print.xtable(xtable(table_1_1KGP, align="lcccccc"), include.rownames=FALSE, NA.s
 
 
 
-cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$CRF_height, alternative="two.sided", method="pearson")
-cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$CRF_height, alternative="two.sided", method="pearson")
-
-cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "male"),]$CRF_weight, alternative="two.sided", method="pearson")
-cor.test(myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$FMI, myData_ptpn1[which(myData_ptpn1$CRF_sex == "female"),]$CRF_weight, alternative="two.sided", method="pearson")
-
-
-
 
 ####################
 ##### TABLE 2 ######
