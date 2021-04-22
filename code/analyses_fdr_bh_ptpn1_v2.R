@@ -7,13 +7,13 @@ setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_p
 
 #### import data from SPSS database
 require(foreign)
-helena <- read.spss("/Users/diegosalazar/My Drive/science/open_projects/helena_sweet/data/snps/Helena_CSS_no_UK_Modena_13_12_20-2.sav", to.data.frame=TRUE)
+helena <- read.spss("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_sweet/data/snps/Helena_CSS_no_UK_Modena_13_12_20-2.sav", to.data.frame=TRUE)
 str(helena)
 summary(helena)
 
 #database used in the first two helenas
 if(FALSE){
-    helena = read.table("/Users/diegosalazar/My Drive/science/open_projects/helena_ucp_obesity/data/snps/helena_db.txt", sep="\t", header=T)
+    helena = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_ucp_obesity/data/snps/helena_db.txt", sep="\t", header=T)
     str(helena)
     summary(helena)
 }
@@ -123,7 +123,7 @@ helena$waist_hip = helena$CRF_waist/helena$CRF_hip
 #check reversing the formula
 summary(round((helena$waist_hip*helena$CRF_hip) - helena$CRF_waist, 2) == 0)
 
-####info about calculation of QUICKI here: "/Users/diegosalazar/My Drive/science/open_projects/helena_6/code/check_quicki"
+####info about calculation of QUICKI here: "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_6/code/check_quicki"
 
 #### create BP variables (mean of the two values of each variable)
 #We two measurements of each blood pressure variable. in both cases, first and second measurements of blood pressures are similar
@@ -297,7 +297,7 @@ ptpn1_snps = data.frame(cbind(c(rep("ptpn1", 7)), c(c("rs6067472", "rs10485614",
 colnames(ptpn1_snps) <- c("gen", "snp")
 nrow(ptpn1_snps)
 
-#check that are all correct with snp-gene data from the whoel panel (extracted from ncbi in "/Users/diegosalazar/My Drive/science/open_projects/helena_sweet/code/analyses_fdr_bh.R")
+#check that are all correct with snp-gene data from the whoel panel (extracted from ncbi in "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_sweet/code/analyses_fdr_bh.R")
 chromosome_snps_helena = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
 
 #snps not included in chromosome_snps_helena or in ptpn1_snps (we have to check both possibilities)
@@ -755,7 +755,7 @@ for (i in 1:length(phenotypes_normality)){
 dev.off()
 
 #### plot the distribution and qqplot of response variables
-pdf("/Users/diegosalazar/My Drive/science/open_projects/fibro_fatiga_new/results/normality_phenotypes/normality_plots_sqrt.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/normality_plots_sqrt.pdf")
 for (i in 1:length(phenotypes_normality)){
     pheno = phenotypes_normality[i]
     normality_test_sqrt(pheno, data=myData_ptpn1)
@@ -763,7 +763,7 @@ for (i in 1:length(phenotypes_normality)){
 dev.off()
 
 #### plot the distribution and qqplot of response variables
-pdf("/Users/diegosalazar/My Drive/science/open_projects/fibro_fatiga_new/results/normality_phenotypes/normality_plots_squared.pdf")
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/normality_phenotypes/normality_plots_squared.pdf")
 for (i in 1:length(phenotypes_normality)){
     pheno = phenotypes_normality[i]
     normality_test_squared(pheno, data=myData_ptpn1)
@@ -1087,7 +1087,7 @@ for(p in 1:length(pheno_to_model)){
         }
         
         #calculate FDR
-        fdr = p.adjust(pvals, method="BH")#correction for BH, it is valid use this correction when markerse are correlated directly, if two markers are correlated, a higher significance in one, will entail higher significance in the other. In the case the correlation was negative, we should used other correction, I think remember that Benjamini & Yekutieli (2001), but check. For further details see: "/Users/diegosalazar/My Drive/science/open_projects/helena_ucp_cv/p_value_correction/pvalue_correction.pdf"
+        fdr = p.adjust(pvals, method="BH")#correction for BH, it is valid use this correction when markerse are correlated directly, if two markers are correlated, a higher significance in one, will entail higher significance in the other. In the case the correlation was negative, we should used other correction, I think remember that Benjamini & Yekutieli (2001), but check. For further details see: "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_ucp_cv/p_value_correction/pvalue_correction.pdf"
 
         #calculate BF
         bf_correction = 0.05/length(na.omit(pvals))
