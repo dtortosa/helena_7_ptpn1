@@ -1082,6 +1082,9 @@ for(p in 1:length(pheno_to_model)){
 
                 #extract and save the pvals                
                 results = anova(model1, model2, test="Chi")$"Pr(>Chi)"[2]
+
+                #calculate the R2 LO HICISTE PARA FIBRO!
+
                 pvals = append(pvals, results)
             }    
         }
