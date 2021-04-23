@@ -1197,14 +1197,26 @@ nrow(geno_pheno_results) == length(pheno_to_model) * length(snp_to_test) * lengt
 #R2 mine and with mumin: They are very similar.
 summary(round(geno_pheno_results$d2_mine,11) == round(geno_pheno_results$d2_mumin,11))
 summary(geno_pheno_results$d2_mine - geno_pheno_results$d2_mumin) 
+plot(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin)
+cor.test(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin, method="spearman") #rho=0.999
+
 
 #R2 adjusted is not equal with both methods.
 summary(round(geno_pheno_results$adjust_d2_mine,11) == round(geno_pheno_results$adjust_d2_mumin,11))
 summary(geno_pheno_results$adjust_d2_mine - geno_pheno_results$adjust_d2_mumin) 
     #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
 
-#In any case, I am not 100% sure if this a correct way to adjust, so I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and adjusted d2 are not very different.
+#In any case, I am not 100% sure if this a correct way to adjust, so I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2.
 summary(geno_pheno_results$d2_mine-geno_pheno_results$adjust_d2_mine)
+plot(geno_pheno_results$d2_mine, geno_pheno_results$adjust_d2_mine)
+summary(geno_pheno_results$d2_mumin-geno_pheno_results$adjust_d2_mine)
+plot(geno_pheno_results$d2_mumin, geno_pheno_results$adjust_d2_mine)
+    #There are differences, for each R2 value not adjusted, there is a very similar R2 adjusted value but also another value that differ in 0.001. My guess is that can be caused because recessive, dominant and overdominant models only have 2 levels, so 2-1 gives 1 paramater, thus the adjusted R2 is bigger and similar to non-adjusted R2 (1 - ((n - 1) / (n - p)) * (1 - d2)). You can check it by calculating R2 adjusted and un-adjusted with Dsquared_mod, but setting the number of level to 2. The result is the same. 
+plot(geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="red")
+points(geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="blue")
+    #the red dots are from models with two levels and have the similar R2 adn adjusted R2. However, blue dots comes form additive and codominant model, being the adjusted R2 smaller, because now you have more parameters (3 genotypes - 1 = 2 levels).
+
+#Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is a published packages, we will use the R2 of Mumin. 
 
 
 ## use these results to create the first supplementary data
@@ -1214,7 +1226,7 @@ system(paste("mkdir -p ", folder_to_save_supple_data, sep=""))
     #p: no error if existing, make parent directories as needed
 
 #select the columns we are interested
-suppl_data_1 = geno_pheno_results[,which(colnames(geno_pheno_results) %in% c("selected_pheno", "selected_model", "snp_to_test", "min_n", "pvals", "fdr", "d2_mine"))]
+suppl_data_1 = geno_pheno_results[,which(colnames(geno_pheno_results) %in% c("selected_pheno", "selected_model", "snp_to_test", "min_n", "pvals", "fdr", "d2_mumin"))]
 
 #change columns names
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_pheno")] <- "phenotype"
@@ -1223,7 +1235,7 @@ colnames(suppl_data_1)[which(colnames(suppl_data_1) == "snp_to_test")] <- "snp"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "min_n")] <- "min_sample_size"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "pvals")] <- "p_value"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "fdr")] <- "fdr"
-colnames(suppl_data_1)[which(colnames(suppl_data_1) == "d2_mine")] <- "r2"
+colnames(suppl_data_1)[which(colnames(suppl_data_1) == "d2_mumin")] <- "r2"
 
 #save the table
 write.table(suppl_data_1, gzfile(paste(folder_to_save_supple_data, "/suplementary_data_1.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
