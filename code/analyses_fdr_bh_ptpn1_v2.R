@@ -1,3 +1,46 @@
+#!/usr/bin/env Rscript
+
+#This is done to have the possibility to run this script as an executable: 'chmod +x myscript.R' and then ' ./myscript.R'. If you run the script as 'R CMD BATCH myscript.R', i THINK this is not used, because it is annotated. 
+    #https://www.jonzelner.net/statistics/make/docker/reproducibility/2016/05/31/script-is-a-program/
+
+#In case you run this script as an executable, you can save the output without warnings "./myscript.R > myscript.Rout" or with errors "./myscript.R &> myscript.Rout"
+    #https://askubuntu.com/questions/420981/how-do-i-save-terminal-output-to-a-file
+
+
+
+#######################################################################################################################
+######### SCRIPT FOR MODELING GENE-PHENOTYPE AND GENE*ENV INTERACTIONS FOR PTPN1 AND OBESITY-RELATED TRAITS ###########
+#######################################################################################################################
+
+#In this script, we model the association between PTPN1 polymorphisms and obesity related traits in the HELENA cohort. We also consider the association between haplotypes of these SNPs and traits, and the interaction between these SNPs and physical activity. 
+
+
+
+
+##############################################################
+######### DIFFERENCES RESPECT TO PREVIOUS VERSIONS ###########
+##############################################################
+
+#Version 1
+    #We add here the calculation of R2 for each gene-phenotype association and each gene*physical activity interactions to create supplementary data 1 and 2, respectively. 
+
+
+
+
+#######################################
+######### REQUIRED PACKAGES ###########
+#######################################
+
+require(foreign) #for importing the HELENA database from SPSS format
+require(SNPassoc) #for using the heritage model functions and create setupSNP objects
+
+
+
+
+#######################################
+######### DATA PREPARATION ############
+#######################################
+
 ######clean the working space#########
 #We remove all the elements except wideScreen, which is a command to expand the space of the terminal in R
 rm(list = ls()[-which(ls()=="wideScreen")])
@@ -496,10 +539,9 @@ if(!length(snps_geno_rate_low) == 0){
 #check that these snps were removed
 length(which(labels(myData_ptpn1) %in% snps_geno_rate_low)) == 0
 
-#########################################################
-############ Hardy-Weinberg equilibrium (HWE) ###########
-#########################################################
 
+
+### Hardy-Weinberg equilibrium (HWE) 
 ## across groups
 res <- tableHWE(myData_ptpn1)
 res #The column indicated by flag shows those SNPs that are statistically significant at level 0.05. This significance level may be changed using the argument sig in the print function (e.g. print(myData_ptpn1, sig=0.0001)). The number of decimals may also be changed using the digits parameter.
@@ -535,9 +577,9 @@ tableHWE(myData_ptpn1,strata=myData_ptpn1$obesity)
 tableHWE(myData_ptpn1,strata=myData_ptpn1$CVi_BP)
 
 
-########################################
-############ Final SNPs ################
-########################################
+
+
+### Final SNPs
 final_snps = snps_labels[which(snps_labels$new_labels %in% colnames(myData_ptpn1)),]$new_labels
 length(final_snps)
 
@@ -555,9 +597,9 @@ summary(!summary(myData_ptpn1)$HWE < 0.01)#ALL TRUE
 plotMissing(myData_ptpn1) 
 dev.off()
 
-###############################################
-############ Linkage Disequilibrium ###########
-###############################################
+
+
+### Linkage Disequilibrium
 #D prima cercano a 1 es LD, si ademas el pvalue es significativo entonces LD es signifciatvo: lo observado es diferente de lo esperado si hubiera random associations between alleles. See for more information: 
     #"http://pbgworks.org/sites/pbgworks.org/files/measuresoflinkagedisequilibrium-111119214123-phpapp01_0.pdf"
     #https://www.researchgate.net/post/I_have_Linkage_Disequilibrium_LD_data_for_two_SNPs-r2_is_about_014_D_is_around_08_Could_these_SNPs_be_said_to_be_in_strong_LD
@@ -591,6 +633,8 @@ dev.off()
 pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/linkage_dis/plot_LD.pdf", width=20, height=20)
 LDtable(linkage_target_snps, digits=2, colorize="D'", colorcut=seq(0,1, 0.1), colors=colorRampPalette(c("yellow", "red"))(length(seq(0,1, 0.1))), cex=0.8)
 dev.off()
+
+
 
 
 #########################################################################
@@ -715,6 +759,9 @@ normality_test_squared = function(phenotype, data){
     print("###############################################")
     print(significations)
 }
+
+
+
 
 #########################################################################
 ######################### Normality #####################################
