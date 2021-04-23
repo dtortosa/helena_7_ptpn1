@@ -33,7 +33,7 @@
 
 require(foreign) #for importing the HELENA database from SPSS format
 require(SNPassoc) #for using the heritage model functions and create setupSNP objects
-
+    #Not all the packages are listed!
 
 
 
@@ -1024,31 +1024,31 @@ dev.off()
 ##### Gene - phenotype association with biochemical variables  #####
 ####################################################################
 
-#NOTE: All SNs are used with dominant model (including those with MAF < 0.1). The rest of models are unisg in SNPs qith MAD > 0.1.
+#NOTE: All SNPs are used with dominant model (including those with MAF < 0.1). The rest of models are using in SNPs with MAF > 0.1.
 
-#Note: We run aditive model, which is a type of codominant model in which the heterocigous have an interemediate value of the phenotype between the other two genotypes. A codominant model assumes a differente phenotype for heterocigous, but it has not to be exctly intermediate. See "http://www.bio.net/mm/gen-link/1998-January/001415.html" for further information. 
+#Note: We run additive model, which is a type of codominant model in which the heterozygous have an intermediate value of the phenotype between the other two genotypes. A codominant model assumes a different phenotype for heterozygous, but it has not to be exactly intermediate. See "http://www.bio.net/mm/gen-link/1998-January/001415.html" for further information. 
 
-#We are also use this information to obtain a supplementary dataset with as many rows as model*SNP combinations, showing for each one the phenotype, polymorphism, heritage model, R2, p-value, false discovery rate and RD for the gene-phenotype association.
+#We will also use this information to obtain a supplementary dataset with as many rows as phenotype*model*SNP combinations, showing for each one the phenotype, polymorphism, heritage model, minimum sample size, p-value, false discovery rate and R2 for the gene-phenotype association.
 
-#We will apply a loop to run the models of each association. From that model, we will obtain: phenotype, polymorphism, heritage model, R2, p-value and false discovery rate and R2. Respect to R2: We can calculate the R2 (adjusted? Zimmerman and Guisan function?) of the model including the SNP. Maybe, we can calculate R2 from the likelihood ratio test, which would give us the exact R2 of the SNP after accounting for the rest of confounding factors. We could also save the minimum sample size, that is, the group with less individuals. 
+#We will apply a loop to run the models of each association. From that model, we will obtain: phenotype, polymorphism, heritage model, minimum sample size (the group with less individuals), p-value, false discovery rate and R2. Respect to R2: We can calculate the R2 (adjusted? Zimmerman and Guisan function?) of the model including the SNP. Maybe, we can calculate R2 from the likelihood ratio test, which would give us the exact R2 of the SNP after accounting for the rest of confounding factors.
 
 #required packages for this
 Dsquared_mod = function(model, null_model, adjust = TRUE, n_levels_predictor_test=NULL, predictor_is_factor=NULL) {
-  # version 1.1 (13 Aug 2013)
-  # calculates the explained deviance of a likelihood ratio test between a complex model and a nested one without one predictor. I MADE THIS MODIFICATION. 
-  # model: a model object of class "glm"
-  # the null model which is equal than model but without 1 predictor. The predictor removed will be the predictor under study  
-  # adjust: logical, whether or not to use the adjusted deviance taking into account the number of observations and parameters (Weisberg 1980; Guisan & Zimmermann 2000). More data used for fitting enhance d2, whilst more parameters lower it.
-  # n_levels_predictor_test: set the number of the levels of the predictor that is removed in the null model to calculate the adjusted R2.
-  d2 <- (null_model$deviance - model$deviance) / null_model$deviance
-  if (adjust) { #adjust by the sample size and the number of parameters tested. PROBLEM HERE: We are setting here as the number of parameters, the total number of predictors in the complex model, when the null model share all of them except 1. Indeed the change in deviance is for the change of only 1 predictor, so putting as number of coefficients ALL could be too stringent. You are taking the change of deviance calculated in a likelihood ratio test between two models. The difference en degrees of freedom between models is the number of levels of the factor removed (SNP in this case) less 1. So that would be to set p as the number of levels of the SNP less 1, as you have one coefficient for each level respect to the reference level. If the predictor changed between models is continuous, the number of levels is 1.
-    n <- length(model$fitted.values)
-    #p <- length(model$coefficients)
-    p <- ifelse(predictor_is_factor, n_levels_predictor_test - 1, n_levels_predictor_test) #if the predictor is a factor we set the number of coefficients as the number of levels less 1. If the predictor is not a factor, then we set as just the number of levels that for a continuous variable should be 1.
-    #IMPORTANT: An alternative for obtaining "p" would be to extract the "df" of the likelihood ratio tests between the models: anova(model, null_model, test="Chi")$Df[2]. Note that the change in df between models is 1 for each continuous predictor, for factors is n_levels minus 1. This is similar to the number of coefficients. If you have a three-level factor you have 2 coefficients respect to the reference level (3-1=2). 
-    d2 <- 1 - ((n - 1) / (n - p)) * (1 - d2)
-  }
-  return(d2)
+    # version 1.1 (13 Aug 2013)
+    # calculates the explained deviance of a likelihood ratio test between a complex model and a nested one without one predictor. I MADE THIS MODIFICATION. 
+    # model: a model object of class "glm"
+    # the null model which is equal than model but without 1 predictor. The predictor removed will be the predictor under study  
+    # adjust: logical, whether or not to use the adjusted deviance taking into account the number of observations and parameters (Weisberg 1980; Guisan & Zimmermann 2000). More data used for fitting enhance d2, whilst more parameters lower it.
+    # n_levels_predictor_test: set the number of the levels of the predictor that is removed in the null model to calculate the adjusted R2.
+    d2 <- (null_model$deviance - model$deviance) / null_model$deviance #If the model with the predictor of interest (SNP) has the same deviance (desviacion) than the null model (exactly equal to the model but without the SNP), then model (and hence the predictor) does not reduce the deviance and consequently R2 = 0 as null_model$deviance - model$deviance = 0. As the deviance in the model decreases respect to the null model, the denominator is higher and hence R2 is higher. 
+    if (adjust) { #adjust by the sample size and the number of parameters tested. PROBLEM HERE: We are setting here as the number of parameters, the total number of predictors in the complex model, when the null model share all of them except 1. Indeed the change in deviance is for the change of only 1 predictor, so putting as number of coefficients ALL could be too stringent. You are taking the change of deviance calculated in a likelihood ratio test between two models. The difference in degrees of freedom between models is the number of levels of the factor removed (SNP in this case) less 1. So that would be to set p as the number of levels of the SNP less 1, as you have one coefficient for each level respect to the reference level. If the predictor changed between models is continuous, the number of levels is 1.
+        n <- length(model$fitted.values)
+        #p <- length(model$coefficients)
+        p <- ifelse(predictor_is_factor, n_levels_predictor_test - 1, n_levels_predictor_test) #if the predictor is a factor we set the number of coefficients as the number of levels less 1. If the predictor is not a factor, then we set as just the number of levels that for a continuous variable should be 1.
+        #IMPORTANT: An alternative for obtaining "p" would be to extract the "df" of the likelihood ratio tests between the models: anova(model, null_model, test="Chi")$Df[2]. Note that the change in df between models is 1 for each continuous predictor, for factors is n_levels minus 1. This is similar to the number of coefficients. If you have a three-level factor you have 2 coefficients respect to the reference level (3-1=2). 
+        d2 <- 1 - ((n - 1) / (n - p)) * (1 - d2) #higher R2 gives smaller (1-d2) and hence less is subtracted from 1, leading to higher R2. Lower n (lower sample size) and higher p (more parameters) leads to smaller numerator and smaller denominator being the result higher and then the result of multiplying by (1-d2) would be bigger, subtracting more from 1 and giving less R2. 
+    }
+    return(d2)
 } #D2 function of Nick. If you have problem with this you can use modEvA ("http://modeva.r-forge.r-project.org/") or MuMIn ("https://cran.r-project.org/web/packages/MuMIn/index.html"). 
 require(MuMIn) #for calculating the R2 from a likelihood ratio test. This will be compared with Dsquared_mod
 
@@ -1082,7 +1082,6 @@ for(p in 1:length(pheno_to_model)){
     if(!selected_pheno %in% c("CVi_BP", "SBP", "DBP", "TG", "TC", "LDL", "HDL", "LDL_HDL", "Apo_A1", "Apo_B", "ApoB_ApoA1", "apoB_LDL", "TG_HDL", "Insulin", "Leptin_ng_ml", "HOMA", "QUICKI",  "TC_HDL",  "risk_score_for_log")){
         control_variables = "CRF_sex+CRF_age+center"
     } else{
-
         control_variables = "CRF_BMI+CRF_sex+CRF_age+center"         
     }
 
@@ -1092,13 +1091,15 @@ for(p in 1:length(pheno_to_model)){
         #select the [m] model
         selected_model = models[m]
         
-        #for each model
+        #open empty vectors to save the results of all SNPs in the [m] heritage model
         d2_mine=NULL
         adjust_d2_mine=NULL
         d2_mumin=NULL
         adjust_d2_mumin=NULL
         min_n=NULL
-        pvals = NULL        
+        pvals = NULL
+        
+        #for each model               
         for(k in 1:length(snp_to_test)){
     
             #select the [k] snp
@@ -1157,7 +1158,6 @@ for(p in 1:length(pheno_to_model)){
                 adjust_d2_mumin=append(adjust_d2_mumin, NA)
                 min_n=append(min_n, NA)                
                 pvals = append(pvals, NA)
-
             } else{
     
                 #run models with and without the snp
@@ -1171,7 +1171,7 @@ for(p in 1:length(pheno_to_model)){
                 ##calculate the R2. WE WANT the R2 of the SNP after adjusting by the controlling variables.
                 #first using the modified function of Nick Zimmermann
                 d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=FALSE)
-                adjust_d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=TRUE, n_levels_predictor_test=n_levels_snp, predictor_is_factor=TRUE) #we calculate the adjusted R2 and for that we need to set TRUE for adjust and consider the number of genotypes because that number will be the number of coefficients (one estimate for each level) that differ between the null and the complex model. We indicate that the predictores tested is a factor (the SNP) to calculate the the difference in coefficient between the null and the complex model (each level has an estimate respect to the reference level).
+                adjust_d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=TRUE, n_levels_predictor_test=n_levels_snp, predictor_is_factor=TRUE) #we calculate the adjusted R2 and for that we need to set TRUE for adjust and consider the number of genotypes because that number will be the number of coefficients (one estimate for each level) that differ between the null and the complex model. We indicate that the predictors tested is a factor (the SNP) to calculate the the difference in coefficient between the null and the complex model (each level has an estimate respect to the reference level).
 
                 #second with the MuMIn package. This statistic is is one of the several proposed pseudo-R^2's for nonlinear regression models. It is based on an improvement from _null_ (intercept only) model to the fitted model, and calculated as R^2 = 1 - exp(-2/n * logL(x) - logL(0)) where logL(x) and logL(0) are the log-likelihoods of the fitted and the _null_ model respectively. ML estimates are used if models have been fitted by REstricted ML (by calling ‘logLik’ with argument ‘REML = FALSE’). Note that the _null_ model can include the random factors of the original model, in which case the statistic represents the ‘variance explained’ by fixed effects. For OLS models the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2) where max(R^2) = 1 - exp(2 / n * logL(0)) . ‘null.fit’ tries to guess the _null_ model call, given the provided fitted model object. This would be usually a ‘glm’. The function will give an error for an unrecognised class.
                 d2_mumin_raw = r.squaredLR(object=model1, null=model2, null.RE=FALSE)
@@ -1272,8 +1272,10 @@ folder_to_save_supple_data = "/media/dftortosa/Windows/Users/dftor/Documents/die
 system(paste("mkdir -p ", folder_to_save_supple_data, sep=""))
     #p: no error if existing, make parent directories as needed
 
-#select the columns we are interested
-suppl_data_1 = geno_pheno_results[,which(colnames(geno_pheno_results) %in% c("selected_pheno", "selected_model", "snp_to_test", "min_n", "pvals", "fdr", "d2_mumin"))]
+#select the rows and columns we are interested
+suppl_data_1 = geno_pheno_results[which(geno_pheno_results$selected_pheno != "risk_score_for_log"), which(colnames(geno_pheno_results) %in% c("selected_pheno", "selected_model", "snp_to_test", "min_n", "pvals", "fdr", "d2_mumin"))]
+    #We remove all rows belonging to the CVD risk score because this variable was finally not used in the manuscript. 
+    #We select the columns that includes the variables selected for the supplementary dataset 1
 
 #change columns names
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_pheno")] <- "phenotype"
