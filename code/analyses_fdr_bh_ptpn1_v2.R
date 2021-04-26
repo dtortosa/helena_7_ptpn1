@@ -1242,26 +1242,37 @@ nrow(geno_pheno_results) == length(pheno_to_model) * length(snp_to_test) * lengt
 
 ##Comparisons R2
 #R2 mine and with mumin: They are very similar.
-summary(round(geno_pheno_results$d2_mine,11) == round(geno_pheno_results$d2_mumin,11))
 summary(geno_pheno_results$d2_mine - geno_pheno_results$d2_mumin) 
 plot(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin)
 cor.test(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin, method="spearman") #rho=0.999
 
 
 #R2 adjusted is not equal with both methods.
-summary(round(geno_pheno_results$adjust_d2_mine,11) == round(geno_pheno_results$adjust_d2_mumin,11))
 summary(geno_pheno_results$adjust_d2_mine - geno_pheno_results$adjust_d2_mumin) 
+plot(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin)
+cor.test(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin, method="spearman") #rho=0.999
     #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
+
+
+#For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2)
+    #where max(R^2) = 1 - exp(2 / n * logL(0)) .
+plot(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity" & geno_pheno_results$selected_model %in% c("recessive", "dominant", "overdomintant")),]$d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity" & geno_pheno_results$selected_model %in% c("recessive", "dominant", "overdomintant")),]$adjust_d2_mine, col="red")
+
+    #it seems we are ok even with binomial,
+
 
 #In any case, I am not 100% sure if this a correct way to adjust, so I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2.
 summary(geno_pheno_results$d2_mine-geno_pheno_results$adjust_d2_mine)
 plot(geno_pheno_results$d2_mine, geno_pheno_results$adjust_d2_mine)
 summary(geno_pheno_results$d2_mumin-geno_pheno_results$adjust_d2_mine)
 plot(geno_pheno_results$d2_mumin, geno_pheno_results$adjust_d2_mine)
-    #There are differences, for each R2 value not adjusted, there is a very similar R2 adjusted value but also another value that differ in 0.001. My guess is that can be caused because recessive, dominant and overdominant models only have 2 levels, so 2-1 gives 1 paramater, thus the adjusted R2 is bigger and similar to non-adjusted R2 (1 - ((n - 1) / (n - p)) * (1 - d2)). You can check it by calculating R2 adjusted and un-adjusted with Dsquared_mod, but setting the number of level to 2. The result is the same. 
+    #There are differences, for each R2 value not adjusted, there is a very similar R2 adjusted value but also another value that differ in 0.001. My guess is that can be caused because recessive, dominant and overdominant models only have 2 levels, so 2-1 gives 1 parameter, thus the adjusted R2 is bigger and exactly similar to non-adjusted R2 (1 - ((n - 1) / (n - p)) * (1 - d2)). You can check it by calculating R2 adjusted and un-adjusted with Dsquared_mod, but setting the number of level to 2. The result is the same. 
 plot(geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="red")
 points(geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="blue")
     #the red dots are from models with two levels and have the similar R2 adn adjusted R2. However, blue dots comes form additive and codominant model, being the adjusted R2 smaller, because now you have more parameters (3 genotypes - 1 = 2 levels).
+
+
+
 
 #Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is a published packages, we will use the R2 of Mumin. 
 
