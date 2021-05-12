@@ -1316,8 +1316,9 @@ geno_pheno_results_fdr_0.1
 summary(geno_pheno_results_fdr_0.1$fdr<0.1)
 summary(geno_pheno_results[-which(geno_pheno_results$fdr<0.1),]$fdr>0.1)
 
-#Combinations of phenotypes*snps that are significant for crude associaitons
-significan_snp_pheno_crude = interaction(geno_pheno_results_fdr_0.1$selected_pheno, geno_pheno_results_fdr_0.1$snp_to_test)#this will be used for select haplotype and analyses
+#Combinations of phenotypes*snps that are significant for crude associations
+significan_snp_pheno_crude = interaction(geno_pheno_results_fdr_0.1$selected_pheno, geno_pheno_results_fdr_0.1$snp_to_test)
+    #this will be used for select haplotype and analyses
 #check
 summary(significan_snp_pheno_crude == paste(geno_pheno_results_fdr_0.1$selected_pheno, ".", geno_pheno_results_fdr_0.1$snp_to_test, sep=""))
 
@@ -2046,11 +2047,13 @@ singificant_results_per_blocks
 
 
 
+
 ##################################################
 ##### Gene - gene interaction across SNPs ########
 ##################################################
 
-#Muchos desbalances entre grupos, tal vez se podría hacer controlando bien el número mínimo de individuos por grupo, como ya está hecho para geno-pheno y physical activity.
+#In general, we have too much imbalance between groups, because we have too many groups for our sample size. Maybe we could control from the minimum sample size just like we did for crude associations and physical activity, but not sure how many association would have enough sample size. 
+
 
 
 
@@ -2065,7 +2068,9 @@ pheno_to_model_interact = unique(geno_pheno_results_fdr_0.1$selected_pheno)
 heritage_models = c("dominant", "recessive", "overdominant", "codominant", "additive")
 
 #function to model
-siginficant_interactions_env = function(pheno_selected, family, transformation, env_variable, env_var_factor, correction_variables, significance_level){
+#NOT REVISED FOR CONTINUOUS ENVIRONMENTAL VARIABLES
+#to debug: pheno_selected=selected_pheno; family=family; transformation=transformation; env_variable="PA_factor"; env_var_factor=TRUE; correction_variables = paste("+", control_variables, sep=""); significance_level="fdr_0.05"
+siginficant_interactions_env = function(pheno_selected, family, transformation, env_variable, env_var_factor, correction_variables){
 
     #SE function to plot erro bars in bar plots
     se <- function(x) sd(x)/sqrt(length(x)) 
@@ -2092,8 +2097,8 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
     }
 
     #data frame for saving results
-    final_output_results = data.frame(pheno_selected=NA, snps=NA, selected_model=NA, p.val=NA, BF=NA, FDR=NA)
-
+    final_output_results = data.frame(pheno_selected=NA, selected_model=NA, snps=NA, min_n=NA, p.val=NA, BF=NA, FDR=NA, d2_mine=NA, adjust_d2_mine=NA, d2_mumin=NA, adjust_d2_mumin=NA)
+    
     #for each heritage model 
     heritage_models = c("dominant", "recessive", "overdominant", "codominant", "additive")
     for(j in 1:length(heritage_models)){
@@ -2102,6 +2107,11 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
         selected_model = heritage_models[j]
 
         #calculate p.vale of interaction between the environmental variable and each snp
+        d2_mine=NULL
+        adjust_d2_mine=NULL
+        d2_mumin=NULL
+        adjust_d2_mumin=NULL
+        min_n=NULL        
         p.val = NULL
         snps = NULL        
         for (i in 1:length(labels(myData_ptpn1))){ 
@@ -2248,15 +2258,43 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
             if(selected_model %in% c("recessive", "overdominant", "codominant", "additive") & !snp %in% snps_maf_low_0.9 | TRUE %in% (sample_size_per_geno < 10)  | n_levels_snp==1 | n_levels_env == 1 |n_levels_discre_pheno == 1){
 
                 #save the p.val and the snp name
+                d2_mine=append(d2_mine, NA)
+                adjust_d2_mine=append(adjust_d2_mine, NA)
+                d2_mumin=append(d2_mumin, NA)
+                adjust_d2_mumin=append(adjust_d2_mumin, NA)
+                min_n=append(min_n, NA)
                 p.val = append(p.val, NA)
                 snps = append(snps, snp) 
             } else {
                 #test significant reductions of deviance with and without interaction
                 model1 = glm(formula(paste(response, "~", selected_model, "(", snp, ")*", env_variable, correction_variables, sep="")), data=myData_ptpn1, family=family_error)
                 model2 = glm(formula(paste(response, "~", selected_model, "(", snp, ")+", env_variable, correction_variables, sep="")), data=myData_ptpn1, family=family_error)
-                results = anova(model1, model2, test="Chi")
                 
+                #extract the pvals
+                results = anova(model1, model2, test="Chi")
+
+                ##calculate the R2. WE WANT the R2 of the SNP after adjusting by the controlling variables.
+                #first using the modified function of Nick Zimmermann
+                d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=FALSE)
+                adjust_d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=TRUE, n_levels_predictor_test=1, predictor_is_factor=FALSE) #we calculate the adjusted R2 and for that we need to set TRUE for adjust. We set the number of levels of the predictor as 1, because the difference between models is only the interaction, but both the environmental variable and the SNP are maintained in the nested model. Indeed, if you check the difference in degrees of freedom between models, in this case is 1. We indicate that the predictor is not a factor. This is TRUE for genotypes, when we remove a SNP from the model, so if you have 3 levels, the decrease in df is 3-1=2 (number of genotypes respect to the reference genotype). In this case, we are not removing a factor, df is 1. 
+
+                #second with the MuMIn package. This statistic is is one of the several proposed pseudo-R^2's for nonlinear regression models. It is based on an improvement from _null_ (intercept only) model to the fitted model, and calculated as R^2 = 1 - exp(-2/n * logL(x) - logL(0)) where logL(x) and logL(0) are the log-likelihoods of the fitted and the _null_ model respectively. ML estimates are used if models have been fitted by REstricted ML (by calling ‘logLik’ with argument ‘REML = FALSE’). Note that the _null_ model can include the random factors of the original model, in which case the statistic represents the ‘variance explained’ by fixed effects. For OLS models the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2) where max(R^2) = 1 - exp(2 / n * logL(0)) . ‘null.fit’ tries to guess the _null_ model call, given the provided fitted model object. This would be usually a ‘glm’. The function will give an error for an unrecognised class.
+                d2_mumin_raw = r.squaredLR(object=model1, null=model2, null.RE=FALSE)
+                    #object: a fitted model object (a.k.a. the full model)
+                    #null: a fitted null model. This is the model to compare with. In my case, the simpler and nested model without the SNP under study.
+                    #null.RE: logical, should the null model contain random factors?  Only used if no _null_ model is given, otherwise omitted, with a warning.
+                    #the rest of arguments are for fitting the null model, but we have already fit it. 
+                    #the result is: ‘r.squaredLR’ returns a value of R_LR^2, and the attribute ‘"adj.r.squared"’ gives the Nagelkerke's modified statistic. Note that this is not the same as nor equivalent to the classical ‘adjusted R squared’. IT IS NOT THE SAME ADJUST THAN THE ZIMMERMAN ADJUSTMENT
+                #extract d2 and adjust d2 from the mumin results
+                d2_mumin_pkg = d2_mumin_raw[1]
+                adjust_d2_mumin_pkg = attributes(d2_mumin_raw)$adj.r.squared
+
                 #save the p.val and the snp name
+                d2_mine=append(d2_mine, d2_nick)
+                adjust_d2_mine=append(adjust_d2_mine, adjust_d2_nick)
+                d2_mumin=append(d2_mumin, d2_mumin_pkg)
+                adjust_d2_mumin=append(adjust_d2_mumin, adjust_d2_mumin_pkg)
+                min_n=append(min_n, min(sample_size_per_geno))                
                 p.val = append(p.val, results[,which(names(results)=="Pr(>Chi)")][2])
                 snps = append(snps, snp)
             }
@@ -2283,65 +2321,32 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
         }  
 
         #bind all results
-        final_results = cbind.data.frame(rep(pheno_selected, length(snps)), snps, rep(selected_model, length(snps)), p.val, BF, FDR) 
-
-        #change colnames
-        colnames(final_results)[which(colnames(final_results) == "rep(pheno_selected, length(snps))")] <- "pheno_selected"
-        colnames(final_results)[which(colnames(final_results) == "rep(selected_model, length(snps))")] <- "selected_model"
-
-        #save rows with NA for pval
-        print(nrow(final_results[which(is.na(final_results$p.val)),]))
-
-        #omit NAs
-        final_results = na.omit(final_results)
+        final_results = cbind.data.frame(rep(pheno_selected, length(snps)), rep(selected_model, length(snps)), snps, min_n, p.val, BF, FDR, d2_mine, adjust_d2_mine, d2_mumin, adjust_d2_mumin) 
+        colnames(final_results)[1] <- "pheno_selected"
+        colnames(final_results)[2] <- "selected_model"
+        colnames(final_results)[3] <- "snps"
+        colnames(final_results)[4] <- "min_n"
+        colnames(final_results)[5] <- "p.val"
+        colnames(final_results)[6] <- "BF"                
+        colnames(final_results)[7] <- "FDR"
+        colnames(final_results)[8] <- "d2_mine"
+        colnames(final_results)[9] <- "adjust_d2_mine"
+        colnames(final_results)[10] <- "d2_mumin"
+        colnames(final_results)[11] <- "adjust_d2_mumin"
 
         #save it
-        final_output_results = rbind.data.frame(final_output_results, final_results)
-
-        #present significant results (according to FDR o bonferroni)
-        if(nrow(final_results) > 0){#if we have at least one row with pval
-            #print each significant result
-            for(m in 1:nrow(final_results)){
-
-                #for each snps*PA interaction
-                selectec_row = final_results[m,]
-
-                #if the p.value is lower than 0.05
-                if(selectec_row$p.val < 0.05){
-
-                    #set the conditions to select snps for plotting
-                    if(significance_level == "p_0.05"){
-                        #is TRUE for sure because of the latter conditional
-                        condition = TRUE
-                    }    
-                    if(significance_level == "fdr_0.05"){
-                        #Both conditions are redundant, if BF=YES, FDR will be lower than 0.05 for sure (because of its definition; sensu Benjamini...)
-                        condition = selectec_row$BF == "YES" | selectec_row$FDR < 0.05
-                    }
-                    if(significance_level == "fdr_0.1"){
-                        condition = selectec_row$BF == "YES" | selectec_row$FDR < 0.1
-                    }
-
-                    #if the selected condition is TRUE show results in terminal
-                    if(condition){
-
-                        #print its results into terminal
-                        print(paste(pheno_selected, ";", env_variable, "; ", selectec_row$snps, ";", selected_model, ";", "pval=", selectec_row$p.val, ";", "BF=", selectec_row$BF,";", "FDR=", selectec_row$FDR))
-                    } 
-                }           
-            }
-        }                   
+        final_output_results = rbind.data.frame(final_output_results, final_results)                 
     }
 
     #remove first row with NA
-    final_output_results = final_output_results[-1,]
+    final_output_results = final_output_results[-which(rowSums(is.na(final_output_results)) == ncol(final_output_results)),]
 
     #save it
     return(final_output_results)
-}#NOT REVISED FOR CONTINUOUS ENVIRONMENTAL VARIABLES
+} #NOT REVISED FOR CONTINUOUS ENVIRONMENTAL VARIABLES
  
 #with FDR<0.05
-interact_PA_results = data.frame(pheno_selected=NA, snps=NA, selected_model=NA, p.val=NA, BF=NA, FDR=NA)
+interact_PA_results = data.frame(pheno_selected=NA, selected_model=NA, snps=NA, min_n=NA, p.val=NA, BF=NA, FDR=NA, d2_mine=NA, adjust_d2_mine=NA, d2_mumin=NA, adjust_d2_mumin=NA)
 #for each phenotype from significant phenotypes (pheno_to_model_interact)
 for(p in 1:length(pheno_to_model_interact)){
 
@@ -2373,48 +2378,114 @@ for(p in 1:length(pheno_to_model_interact)){
         control_variables = "CRF_BMI+CRF_sex+CRF_age+center"         
     }
 
-    interact_PA_results = rbind.data.frame(interact_PA_results, siginficant_interactions_env(pheno_selected=selected_pheno, family=family, transformation=transformation, env_variable="PA_factor", env_var_factor=TRUE, correction_variables = paste("+", control_variables, sep=""), significance_level="fdr_0.05"))
+    interact_PA_results = rbind.data.frame(interact_PA_results, siginficant_interactions_env(pheno_selected=selected_pheno, family=family, transformation=transformation, env_variable="PA_factor", env_var_factor=TRUE, correction_variables = paste("+", control_variables, sep="")))
 }
 
 #remove the first row with NA
-interact_PA_results = interact_PA_results[-1,]
+interact_PA_results = interact_PA_results[-which(rowSums(is.na(interact_PA_results)) == ncol(interact_PA_results)),]
 
-#the rows included in interact_PA_results more the cases with NA for the pval (excluded analyses; calculated by hand form zeros and one to the result from siginficant_interactions_env)
-rows_with_na = 38
-nrow(interact_PA_results) + rows_with_na == length(pheno_to_model_interact) * length(heritage_models) * length(labels(myData_ptpn1))
+#check we have all the interaction we should have
+nrow(interact_PA_results) == length(pheno_to_model_interact) * length(heritage_models) * length(labels(myData_ptpn1))
 
 #see the results
-interact_results_fdr_0.05=interact_PA_results[which(interact_PA_results$BF=="YES" | interact_PA_results$FDR<0.05),]
+interact_PA_results
 
-#IMPORTANT: CHECK N OF CATEGORIES IN THE FIGURES OBTAINED WITH THE SCRIPT FOR FIGURES ("tables_figures_fdr_bh_ptpn1.R")
 
 ####### select those interactions for wich genotypes and phenotypes are previously associated according to FDR<0.1 ########
 #Combinations of phenotypes*snps that interact with AF
-significan_snp_pheno_interact = interaction(interact_results_fdr_0.05$pheno_selected, interact_results_fdr_0.05$snps)
+significan_snp_pheno_interact = interaction(interact_PA_results$pheno_selected, interact_PA_results$snps)
 #check
-summary(significan_snp_pheno_interact == paste(interact_results_fdr_0.05$pheno_selected, ".", interact_results_fdr_0.05$snps, sep=""))
+summary(significan_snp_pheno_interact == paste(interact_PA_results$pheno_selected, ".", interact_PA_results$snps, sep=""))
 
 #Combinations of phenotypes*snps that are significant for crude associaitons
 significan_snp_pheno_crude#created at the end of geno-pheno asocciation crudes (no haplotype)
 
 #select those interactions
-final_interactions = interact_results_fdr_0.05[which(significan_snp_pheno_interact %in% significan_snp_pheno_crude),]
-final_interactions
+interact_PA_results_clean = interact_PA_results[which(significan_snp_pheno_interact %in% significan_snp_pheno_crude),]
+interact_PA_results_clean
+
 
 #check that these interactions implie snps and phenotypes previously associated
-summary(interaction(final_interactions$pheno_selected, final_interactions$snps) %in% significan_snp_pheno_crude)
+summary(interaction(interact_PA_results_clean$pheno_selected, interact_PA_results_clean$snps) %in% significan_snp_pheno_crude)
 
 #check that the interactions not included are not inside the significan_snp_pheno_crude
 #extract not included interactios
-discarded_interactions = interact_results_fdr_0.05[which(!significan_snp_pheno_interact %in% significan_snp_pheno_crude),]
+discarded_interactions = interact_PA_results[which(!significan_snp_pheno_interact %in% significan_snp_pheno_crude),]
 #extract their pheno*snp combinations and see if they are inside significan_snp_pheno_crude
 summary(!paste(discarded_interactions$pheno_selected, ".", discarded_interactions$snps, sep="") %in% significan_snp_pheno_crude)
 
 
-###### Correlaton genotypes - AF
-#we don't include in the paper the correlation between AF and genotypes because we have filtered by disbalances between levels. If a genotype (e.g. G/G) has more individuals with high MVPA, we would have more G/G individuals in the level of high PA than in the low level. Therefore, we would have a disbalance of levels. When genotypes and AF are correlated, we don't have a similar distirbution sample size of genotypes between the two levels of physical activity. We have filtered for that, eliminating cases with levels with low number of individuals. In these cases with disbalance it is difficult to test an interaction because you don't have enough individuals with the same genotype under the two levels of physical activity.
+##Comparisons R2
+#R2 mine and with mumin: They are very similar.
+summary(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) 
+plot(interact_PA_results_clean$d2_mine, interact_PA_results_clean$d2_mumin)
+cor.test(interact_PA_results_clean$d2_mine, interact_PA_results_clean$d2_mumin, method="spearman") #rho=0.999
+#there is a case that it is a little bit different:
+interact_PA_results_clean[which((interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(abs(na.omit(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin)))),]
+    #It is with obesity, but there is other association with obesity that have more similar R2 with both methods, so I do not think this is a question about logistic. In addition, the correction for non-linear GLMs is done in adjusted mumin. 
+        #which((interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(abs(na.omit(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin))))
 
-#we calculate this, but only for us
+#R2 adjusted is not equal with both methods.
+summary(interact_PA_results_clean$adjust_d2_mine - interact_PA_results_clean$adjust_d2_mumin) 
+plot(interact_PA_results_clean$adjust_d2_mine, interact_PA_results_clean$adjust_d2_mumin)
+cor.test(interact_PA_results_clean$adjust_d2_mine, interact_PA_results_clean$adjust_d2_mumin, method="spearman") #rho=0.999
+    #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
+
+#For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2). So you are basically adjusting the R2 by the maximum R2 present in your data. I see the point because the R2 max is not 1 in logistic. I see the point, you could underestimate the R2 for logistic models, but I do not fully understand how the maximum R2 can be established for a given model comparison.
+
+#there are differences between adjusted and non-adjusted in mumin, but this is not caused by the logistic
+plot(interact_PA_results_clean$adjust_d2_mumin, interact_PA_results_clean$d2_mumin, col="red")
+cor.test(interact_PA_results_clean$adjust_d2_mumin, interact_PA_results_clean$d2_mumin)
+
+#you can see here how when considering only obesity (factor with 2 levels, that is, logistic), there is a perfect correlation between adjusted and un-adjusted in mumin. 
+plot(interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$adjust_d2_mumin, interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$d2_mumin, col="red")
+#cor.test(interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$adjust_d2_mumin, interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$d2_mumin, col="red")
+
+#Given that I am not 100% sure if this a correct way to adjust and R2 does NOT seem underestimated for obesity (logistic), I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2 using the traditional approach
+summary(interact_PA_results_clean$d2_mine-interact_PA_results_clean$adjust_d2_mine)
+plot(interact_PA_results_clean$d2_mine, interact_PA_results_clean$adjust_d2_mine)
+summary(interact_PA_results_clean$d2_mumin-interact_PA_results_clean$adjust_d2_mine)
+plot(interact_PA_results_clean$d2_mumin, interact_PA_results_clean$adjust_d2_mine)
+    #There are almost no differences. Only one case (row 3) with a little bit of difference, which is the same showing some differences between mummin and my R2 without adjusting.
+
+#Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is in a published package, we will use the R2 of Mumin. 
+
+#Summary: We will use the classical R^2 calculated with the mumin package.
+
+
+## use these results to create the first supplementary data
+#set the folder to save
+folder_to_save_supple_data = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
+system(paste("mkdir -p ", folder_to_save_supple_data, sep=""))
+    #p: no error if existing, make parent directories as needed
+
+#select the rows and columns we are interested
+suppl_data_2 = interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected != "risk_score_for_log"), which(colnames(interact_PA_results_clean) %in% c("pheno_selected", "selected_model", "snps", "min_n", "p.val", "FDR", "d2_mumin"))]
+    #We remove all rows belonging to the CVD risk score because this variable was finally not used in the manuscript. 
+    #We select the columns that includes the variables selected for the supplementary dataset 1
+
+#convert R2 from 0-1 to percentage
+suppl_data_2$d2_mumin = (suppl_data_2$d2_mumin*100)/1
+    #For example: If over 1, we have 0.5, over 100 we would have X. X being (100*0.5)/1=50 -> 50% 
+
+#change columns names
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "pheno_selected")] <- "phenotype"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "selected_model")] <- "heritage_model"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "snps")] <- "snp"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "min_n")] <- "min_sample_size"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "pvals")] <- "p_value"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "fdr")] <- "fdr"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "d2_mumin")] <- "r2_percentage"
+
+#save the table
+write.table(suppl_data_2, gzfile(paste(folder_to_save_supple_data, "/suplementary_data_2.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
+    #you can save directly as a compressed file using "gzfile"
+
+
+
+###### Correlaton genotypes - AF 
+#we don't include in the paper the correlation between AF and genotypes because we have filtered by imbalances between levels. If a genotype (e.g. G/G) has more individuals with high MVPA, we would have more G/G individuals in the level of high PA than in the low level. If most GG individuals have high MVPA, the level of low PA would have very few GG. Therefore, we would have a imbalance of levels. When genotypes and AF are correlated, we don't have a similar distribution sample size of genotypes between the two levels of physical activity. We have applied filters for that, eliminating cases with levels with low number of individuals. In these cases with imbalance it is difficult to test an interaction because you don't have enough individuals with the same genotype under the two levels of physical activity. In other words, if you have a great correlation between genotypes and AF, you should have great differences of sample size between genotypes across physical activity levels.
+
 #heritage models
 heritage_models = c("dominant", "recessive", "overdominant", "codominant", "additive")
 
@@ -2464,9 +2535,9 @@ significant_cor_geno_af = results_cor_af_geno[which(results_cor_af_geno$pval < 0
 
 #check that the significant interactions are not included in the cases of correlation between genotype and AF
 #combination of snp*model with sigifnicant interaticons
-snp_model_significant_interac = interaction(final_interactions$snps, final_interactions$selected_model)
+snp_model_significant_interac = interaction(interact_PA_results_clean$snps, interact_PA_results_clean$selected_model)
 #check
-snp_model_significant_interac == paste(final_interactions$snps, final_interactions$selected_model, sep=".")
+snp_model_significant_interac == paste(interact_PA_results_clean$snps, interact_PA_results_clean$selected_model, sep=".")
 
 #combination of snp*model associated with AF
 snp_model_significant_assoc_af = interaction(significant_cor_geno_af$selected_snp, significant_cor_geno_af$selected_model)
@@ -2479,19 +2550,24 @@ snp_model_significant_assoc_af == paste(significant_cor_geno_af$selected_snp, si
 #see problematic cases 
 unique(snp_model_significant_interac[which(snp_model_significant_interac %in% snp_model_significant_assoc_af)])
     
-#CONCLUSIONS: there are 5 p.values lower than 0.05, but all of them are higher than 0.01. These are relatively high Pvalues, and inly affects two snps: rs2143511 and rs6020608. rs2143511 does not show great disbalances, in the case of rs6020608 there is more disbalance (a group with 30), but this is not very bad.
+#CONCLUSIONS: there are 5 p.values lower than 0.05, but all of them are higher than 0.01. These are relatively high Pvalues, and only affects two snps: rs2143511 and rs6020608. rs2143511 does not show great disbalances, in the case of rs6020608 there is more imbalance (a group with 30), but this is not very bad. In addition, there are very significant and explicative associations beside these SNPs (R2 higher 1.5% in two cases), suggesting that our signals is not caused by a correlation between AF and genotypes. 
+
 
 
 ##############################################################################
 ############# Change risk_score names in results to plot #####################
 ##############################################################################
 
-#change the name of the risk_score_for_log to risk_score, to match the name of the variable that will be used for plotting. We change for all set the results at the end because all the analyses have to be done. If for example, we change the name is geno-pheno, the haplotype code will try to model with log(risk_score), which has negative values. 
+#change the name of the risk_score_for_log to risk_score, to match the name of the variable that will be used for plotting. We change for all the results at the end because all the analyses have to be done. If for example, we change the name is geno-pheno, the haplotype code will try to model with log(risk_score), which has negative values. 
+
+#In the scripts for figures, then the p-values of risk_score_for_log will be extracted by calling risk_score. The values (with positive and negative) for plotting will be obtained from the original variable. 
+
 
 ##change in geno-pheno
 geno_pheno_results[which(geno_pheno_results$selected_pheno == "risk_score_for_log"),]$selected_pheno <- "risk_score"
 #check
 !"risk_score_for_log" %in% geno_pheno_results$selected_pheno
+
 
 ##change in interaction (we remove non-significant interactions so it's possible that risk_score is not included)
 if("risk_score_for_log" %in% final_interactions$pheno_selected){
@@ -2499,6 +2575,9 @@ if("risk_score_for_log" %in% final_interactions$pheno_selected){
 }
 #check
 !"risk_score_for_log" %in% final_interactions$pheno_selected
+
+
+
 
 #################################
 ##### LOAD ENVIRONMENT ##########
