@@ -1254,14 +1254,17 @@ cor.test(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin, 
     #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
 
 
-#For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2)
-    #where max(R^2) = 1 - exp(2 / n * logL(0)) .
-plot(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity" & geno_pheno_results$selected_model %in% c("recessive", "dominant", "overdomintant")),]$d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity" & geno_pheno_results$selected_model %in% c("recessive", "dominant", "overdomintant")),]$adjust_d2_mine, col="red")
+#For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2). So you are basically adjusting the R2 by the maximum R2 present in your data. I see the point because the R2 max is not 1 in logistic. I see the point, you could underestimate the R2 for logistic models, but I do not fully understand how the maximum R2 can be established for a given model comparison.
 
-    #it seems we are ok even with binomial,
+#there are differences between adjusted and non-adjusted in mumin, but this is not caused by the logistic
+plot(geno_pheno_results$adjust_d2_mumin, geno_pheno_results$d2_mumin, col="red")
+cor.test(geno_pheno_results$adjust_d2_mumin, geno_pheno_results$d2_mumin)
 
-
-#In any case, I am not 100% sure if this a correct way to adjust, so I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2.
+#you can see here how when considering only obesity (factor with 2 levels, that is, logistic), there is a perfect correlation between adjusted and un-adjusted in mumin. 
+plot(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$adjust_d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$d2_mumin, col="red")
+cor.test(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$adjust_d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$d2_mumin, col="red")
+ 
+#Given that I am not 100% sure if this a correct way to adjust and R2 does NOT seem underestimated for obesity (logistic), I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2 using the traditional approach
 summary(geno_pheno_results$d2_mine-geno_pheno_results$adjust_d2_mine)
 plot(geno_pheno_results$d2_mine, geno_pheno_results$adjust_d2_mine)
 summary(geno_pheno_results$d2_mumin-geno_pheno_results$adjust_d2_mine)
@@ -1269,12 +1272,11 @@ plot(geno_pheno_results$d2_mumin, geno_pheno_results$adjust_d2_mine)
     #There are differences, for each R2 value not adjusted, there is a very similar R2 adjusted value but also another value that differ in 0.001. My guess is that can be caused because recessive, dominant and overdominant models only have 2 levels, so 2-1 gives 1 parameter, thus the adjusted R2 is bigger and exactly similar to non-adjusted R2 (1 - ((n - 1) / (n - p)) * (1 - d2)). You can check it by calculating R2 adjusted and un-adjusted with Dsquared_mod, but setting the number of level to 2. The result is the same. 
 plot(geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="red")
 points(geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="blue")
-    #the red dots are from models with two levels and have the similar R2 adn adjusted R2. However, blue dots comes form additive and codominant model, being the adjusted R2 smaller, because now you have more parameters (3 genotypes - 1 = 2 levels).
+    #the red dots are from models with two levels and have the similar R2 and adjusted R2. However, blue dots comes from additive and codominant model, being the adjusted R2 smaller, because now you have more parameters (3 genotypes - 1 = 2 levels).
 
+#Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is in a published package, we will use the R2 of Mumin. 
 
-
-
-#Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is a published packages, we will use the R2 of Mumin. 
+#Summary: We will use the classical R^2 calculated with the mumin package.
 
 
 ## use these results to create the first supplementary data
@@ -1288,6 +1290,10 @@ suppl_data_1 = geno_pheno_results[which(geno_pheno_results$selected_pheno != "ri
     #We remove all rows belonging to the CVD risk score because this variable was finally not used in the manuscript. 
     #We select the columns that includes the variables selected for the supplementary dataset 1
 
+#convert R2 from 0-1 to percentage
+suppl_data_1$d2_mumin = (suppl_data_1$d2_mumin*100)/1
+    #For example: If over 1, we have 0.5, over 100 we would have X. X being (100*0.5)/1=50 -> 50% 
+
 #change columns names
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_pheno")] <- "phenotype"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_model")] <- "heritage_model"
@@ -1295,7 +1301,7 @@ colnames(suppl_data_1)[which(colnames(suppl_data_1) == "snp_to_test")] <- "snp"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "min_n")] <- "min_sample_size"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "pvals")] <- "p_value"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "fdr")] <- "fdr"
-colnames(suppl_data_1)[which(colnames(suppl_data_1) == "d2_mumin")] <- "r2"
+colnames(suppl_data_1)[which(colnames(suppl_data_1) == "d2_mumin")] <- "r2_percentage"
 
 #save the table
 write.table(suppl_data_1, gzfile(paste(folder_to_save_supple_data, "/suplementary_data_1.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
