@@ -2069,7 +2069,7 @@ heritage_models = c("dominant", "recessive", "overdominant", "codominant", "addi
 
 #function to model
 #NOT REVISED FOR CONTINUOUS ENVIRONMENTAL VARIABLES
-#to debug: pheno_selected=selected_pheno; family=family; transformation=transformation; env_variable="PA_factor"; env_var_factor=TRUE; correction_variables = paste("+", control_variables, sep=""); significance_level="fdr_0.05"
+#to debug run the next loop with some value for p and then type: pheno_selected=selected_pheno; family=family; transformation=transformation; env_variable="PA_factor"; env_var_factor=TRUE; correction_variables = paste("+", control_variables, sep="")
 siginficant_interactions_env = function(pheno_selected, family, transformation, env_variable, env_var_factor, correction_variables){
 
     #SE function to plot erro bars in bar plots
@@ -2087,11 +2087,19 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
 
     #apply transformation if apply
     if(transformation == "raw"){
+        
+        #if there is no transformation, the phenotype name is the same
         response = pheno_selected
     } else {
+
+        #if there is transformation and it is not squared
         if(!transformation == "^2"){
+
+            #add the transformation before the phenotype name
             response = paste(transformation, "(", pheno_selected, ")", sep="")
         } else {
+
+            #add the transformation after the phenotype name
             response = paste("(", pheno_selected, ")", transformation, sep="")
         }           
     }
@@ -2099,21 +2107,25 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
     #data frame for saving results
     final_output_results = data.frame(pheno_selected=NA, selected_model=NA, snps=NA, min_n=NA, p.val=NA, BF=NA, FDR=NA, d2_mine=NA, adjust_d2_mine=NA, d2_mumin=NA, adjust_d2_mumin=NA)
     
-    #for each heritage model 
+    #create a vector with the heritage models considered    
     heritage_models = c("dominant", "recessive", "overdominant", "codominant", "additive")
+
+    #for each heritage model 
     for(j in 1:length(heritage_models)){
 
         #select the heritage model
         selected_model = heritage_models[j]
 
-        #calculate p.vale of interaction between the environmental variable and each snp
+        #open empty vectors to save results
         d2_mine=NULL
         adjust_d2_mine=NULL
         d2_mumin=NULL
         adjust_d2_mumin=NULL
+        snps = NULL
         min_n=NULL        
         p.val = NULL
-        snps = NULL        
+
+        #calculate p.vale of interaction between the environmental variable and each snp under the [j] heritage model      
         for (i in 1:length(labels(myData_ptpn1))){ 
             
             #select the snp
@@ -2129,7 +2141,7 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
             n_levels_snp = length(levels_genotypes)
 
             #calculate the number of individuals with each genotype and with data for the [p] phenotype
-            if(env_var_factor){ 
+            if(env_var_factor){ #if the environmental variable is a factor, we will also consider the levels of this variable. 
 
                 #levels of the environmental variable
                 env_variable_data = eval(parse(text=paste("na.omit(myData_ptpn1$", env_variable, ")", sep="")))#we consider the whole dataset because we want to extract all the levels included in this cohort for the variable. If any of this levels has low number of individuals for a given conbination with the SNP, this will detected in in the next lines (sample_size_per_geno). If there is only one level across the whoe cohort, we don't want to run the analysis.
@@ -2140,6 +2152,7 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
                 #number of levels of the environmental variable
                 n_levels_env = length(levels_env_variable)
 
+                #if the family error is NOT binomial and hence the phenotype is continuous
                 if(!family_error == "binomial"){
 
                     #levels of the discrete phenotype: It is zero because the phenotype is continuous
@@ -2148,6 +2161,7 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
                     #for each level of the environmental variable
                     sample_size_per_geno = NULL                
                     for(e in 1:length(levels_env_variable)){                       
+                        
                         #select the [e] level
                         selected_level_env = levels_env_variable[e]
 
@@ -2185,6 +2199,7 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
                             #select the [l] genotype
                             selected_level_snp = levels_genotypes[l]
 
+                            #for each level of the factor phenotype
                             for(f in 1:length(levels_factor)){
 
                                 #select the [f] level of the factor
@@ -2199,9 +2214,9 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
                         }
                     }                    
                 }             
-            } else { #for non-factor environmental variable NOT REVISED
+            } else { #NOT REVISED for non-factor environmental variable - NOT REVISED
 
-                #number of levels of the environmental variable: We have no env variable
+                #number of levels of the environmental variable: We have no env variable factor
                 n_levels_env = 0
 
                 #if the variable is continuous
@@ -2254,10 +2269,10 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
                 }                             
             }
                         
-            #If we are analysing SNPs with MAF < 0.1, we only want the dominant model, avoid the other models. Moreover, if the snp has only one genotpye in general or in a level of the environmental variable (in case is a factor), or in general all indviduals have the same genotype skip this model
-            if(selected_model %in% c("recessive", "overdominant", "codominant", "additive") & !snp %in% snps_maf_low_0.9 | TRUE %in% (sample_size_per_geno < 10)  | n_levels_snp==1 | n_levels_env == 1 |n_levels_discre_pheno == 1){
+            #If we are analyzing SNPs with MAF < 0.1, we only want the dominant model, avoid the other models. Moreover, if the snp has only one genotpye in general or in a level of the environmental variable (in case is a factor), or in general all individuals have the same genotype skip this model
+            if(selected_model %in% c("recessive", "overdominant", "codominant", "additive") & !snp %in% snps_maf_low_0.9 | TRUE %in% (sample_size_per_geno < 10)  | n_levels_snp==1 | n_levels_env == 1 | n_levels_discre_pheno == 1){
 
-                #save the p.val and the snp name
+                #save all as NA
                 d2_mine=append(d2_mine, NA)
                 adjust_d2_mine=append(adjust_d2_mine, NA)
                 d2_mumin=append(d2_mumin, NA)
@@ -2265,18 +2280,21 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
                 min_n=append(min_n, NA)
                 p.val = append(p.val, NA)
                 snps = append(snps, snp) 
-            } else {
+            } else { #if not, we can model 
+                
                 #test significant reductions of deviance with and without interaction
                 model1 = glm(formula(paste(response, "~", selected_model, "(", snp, ")*", env_variable, correction_variables, sep="")), data=myData_ptpn1, family=family_error)
                 model2 = glm(formula(paste(response, "~", selected_model, "(", snp, ")+", env_variable, correction_variables, sep="")), data=myData_ptpn1, family=family_error)
+                    #we do not need to make a subset of the data specifying that we only want rows with data for the SNP, because in this case, the second model (nested or null) also includes the SNP. The difference between the two models is the interaction.  
                 
-                #extract the pvals
+                #extract the p-value
                 results = anova(model1, model2, test="Chi")
 
-                ##calculate the R2. WE WANT the R2 of the SNP after adjusting by the controlling variables.
+
+                ##calculate the R2. WE WANT the R2 of the interaction after adjusting by the controlling variables and also the SNP and the environmental variable.
                 #first using the modified function of Nick Zimmermann
                 d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=FALSE)
-                adjust_d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=TRUE, n_levels_predictor_test=1, predictor_is_factor=FALSE) #we calculate the adjusted R2 and for that we need to set TRUE for adjust. We set the number of levels of the predictor as 1, because the difference between models is only the interaction, but both the environmental variable and the SNP are maintained in the nested model. Indeed, if you check the difference in degrees of freedom between models, in this case is 1. We indicate that the predictor is not a factor. This is TRUE for genotypes, when we remove a SNP from the model, so if you have 3 levels, the decrease in df is 3-1=2 (number of genotypes respect to the reference genotype). In this case, we are not removing a factor, df is 1. 
+                adjust_d2_nick = Dsquared_mod(model=model1, null_model = model2, adjust=TRUE, n_levels_predictor_test=1, predictor_is_factor=FALSE) #we calculate the adjusted R2 and for that we need to set TRUE for adjust. We set the number of levels of the predictor as 1, because the difference between models is only the interaction, but both the environmental variable and the SNP are maintained in the nested model. Indeed, if you check the difference in degrees of freedom between models, in this case it is 1. We indicate that the predictor is not a factor. This is TRUE for genotypes, when we remove a SNP from the model, if you have 3 levels, the decrease in df is 3-1=2 (number of genotypes respect to the reference genotype). In this case, we are not removing a factor, df is 1. 
 
                 #second with the MuMIn package. This statistic is is one of the several proposed pseudo-R^2's for nonlinear regression models. It is based on an improvement from _null_ (intercept only) model to the fitted model, and calculated as R^2 = 1 - exp(-2/n * logL(x) - logL(0)) where logL(x) and logL(0) are the log-likelihoods of the fitted and the _null_ model respectively. ML estimates are used if models have been fitted by REstricted ML (by calling ‘logLik’ with argument ‘REML = FALSE’). Note that the _null_ model can include the random factors of the original model, in which case the statistic represents the ‘variance explained’ by fixed effects. For OLS models the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2) where max(R^2) = 1 - exp(2 / n * logL(0)) . ‘null.fit’ tries to guess the _null_ model call, given the provided fitted model object. This would be usually a ‘glm’. The function will give an error for an unrecognised class.
                 d2_mumin_raw = r.squaredLR(object=model1, null=model2, null.RE=FALSE)
@@ -2305,7 +2323,7 @@ siginficant_interactions_env = function(pheno_selected, family, transformation, 
         FDR = p.adjust(pval_to_FDR, method="BH")
 
         #indicate if there is significance after bonferroni correction
-        bonferroni_significance = 0.05/length(na.omit(p.val))         
+        bonferroni_significance = 0.05/length(na.omit(p.val))
         BF = NULL
         for (i in 1:length(pval_to_FDR)){
             selected_pval = pval_to_FDR[i]
@@ -2372,12 +2390,16 @@ for(p in 1:length(pheno_to_model_interact)){
 
     #select control variables: BMI is a control variable only for CVD variables
     if(!selected_pheno %in% c("CVi_BP", "SBP", "DBP", "TG", "TC", "LDL", "HDL", "LDL_HDL", "Apo_A1", "Apo_B", "ApoB_ApoA1", "apoB_LDL", "TG_HDL", "Insulin", "Leptin_ng_ml", "HOMA", "QUICKI",  "TC_HDL",  "risk_score_for_log")){
+        
+        #not add BMI as a covariable, because the phenotype is an adiposity marker
         control_variables = "CRF_sex+CRF_age+center"
     } else{
-
+        
+        #add also BMI as a covariable
         control_variables = "CRF_BMI+CRF_sex+CRF_age+center"         
     }
 
+    #run the analyses
     interact_PA_results = rbind.data.frame(interact_PA_results, siginficant_interactions_env(pheno_selected=selected_pheno, family=family, transformation=transformation, env_variable="PA_factor", env_var_factor=TRUE, correction_variables = paste("+", control_variables, sep="")))
 }
 
@@ -2398,12 +2420,14 @@ significan_snp_pheno_interact = interaction(interact_PA_results$pheno_selected, 
 summary(significan_snp_pheno_interact == paste(interact_PA_results$pheno_selected, ".", interact_PA_results$snps, sep=""))
 
 #Combinations of phenotypes*snps that are significant for crude associaitons
-significan_snp_pheno_crude#created at the end of geno-pheno asocciation crudes (no haplotype)
+significan_snp_pheno_crude #created at the end of geno-pheno asocciation crudes (no haplotype)
 
 #select those interactions
 interact_PA_results_clean = interact_PA_results[which(significan_snp_pheno_interact %in% significan_snp_pheno_crude),]
 interact_PA_results_clean
 
+#number of interaction below an FDR of 0.05
+length(which(interact_PA_results_clean$FDR<0.05)) #this is exactly the number of interactions in the figures of the main text of the previous versions of the manuscript. 
 
 #check that these interactions implie snps and phenotypes previously associated
 summary(interaction(interact_PA_results_clean$pheno_selected, interact_PA_results_clean$snps) %in% significan_snp_pheno_crude)
