@@ -514,11 +514,16 @@ snps_maf_high_0.9
 row.names(resume_snps[which(resume_snps$major.allele.freq > 90),]) %in% snps_maf_high_0.9
 
 
+
+
 #################################
 ######## Missing data ###########
 #################################
 plotMissing(myData_ptpn1) 
 dev.off() #We may have a look at the information we have for each SNPs using plotMissing function. This function requires the data to be an object of class setupSNP. The top plot in Figure 2 shows the missing information for SNPs data set.
+
+
+
 
 ########################################
 ############ Genotyping rate ###########
@@ -578,7 +583,6 @@ tableHWE(myData_ptpn1,strata=myData_ptpn1$CVi_BP)
 
 
 
-
 ### Final SNPs
 final_snps = snps_labels[which(snps_labels$new_labels %in% colnames(myData_ptpn1)),]$new_labels
 length(final_snps)
@@ -597,6 +601,80 @@ summary(!summary(myData_ptpn1)$HWE < 0.01)#ALL TRUE
 plotMissing(myData_ptpn1) 
 dev.off()
 
+
+
+###################################################################
+######## COMPARE ALLELES HELENA VS 1000 GENOMES PROJECT ###########
+###################################################################
+
+#check minor alleles in HELENA respect to 1000 Genomes Project for the Europeans populations. We should have similar allele frequencies. 
+
+
+## Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
+    #rs6067472: T=0.3648
+        #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+    #rs10485614: C=0.0755
+        #https://www.ncbi.nlm.nih.gov/snp/rs10485614#frequency_tab
+    #rs2143511: C=0.4543
+        #https://www.ncbi.nlm.nih.gov/snp/rs2143511#frequency_tab
+    #rs6020608: T=0.2744
+        #https://www.ncbi.nlm.nih.gov/snp/rs6020608#frequency_tab
+    #rs968701: G=0.4861
+        #https://www.ncbi.nlm.nih.gov/snp/rs968701#frequency_tab
+
+
+## create a table with these minor allele frequencies
+maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
+row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
+colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
+
+
+## load allele names
+alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v1.csv", sep=",", header=T)
+nrow(alleles) == length(labels(myData_ptpn1))
+    #First allele is major, and second is minor.
+    #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
+    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans. 
+
+
+summary(myData_ptpn1)
+
+
+## merge with table 1 
+table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
+
+
+## change the allele that it is different (rs6067472 - T should be the minor, not the major)
+table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Major allele")] <- "A"
+table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Minor allele")] <- "T"
+
+#set A as the first and T as the second allele. In HELENA word the notation is the first allele major and the second minor. We have used that notation.
+#add first the new combination of alleles in the helena and ncbi columns
+alleles$helena = factor(alleles$helena, levels=c(levels(alleles$helena), "A/T"))
+alleles$ncbi = factor(alleles$ncbi, levels=c(levels(alleles$ncbi), "A/T"))
+#now change the allele order for the problematic SNP.
+alleles[which(alleles$snp == "rs6067472"),]$helena <- "A/T"
+alleles[which(alleles$snp == "rs6067472"),]$ncbi <- "A/T"
+
+
+write.table(alleles, "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", sep=",", col.names=TRUE, row.names=FALSE)
+
+
+
+#hay que recodificar el SNP tambien
+
+summary(myData_ptpn1$rs6067472) #In helena notation 1 is the A, which according the initial dataset, it is the minor. But we know now that A is the major not the minor, so A (1) should be a frequency of 1285, while T (2) should have a frequency of 829.
+
+#recode
+POR AQUI!!!
+
+myData_ptpn1$rs6067472 = factor(myData_ptpn1$rs6067472, levels=c(levels(myData_ptpn1$rs6067472), "X/X"))
+
+myData_ptpn1[which(myData_ptpn1$rs6067472 == "1/1"),]$rs6067472 <- "X/X"
+myData_ptpn1[which(myData_ptpn1$rs6067472 == "2/2"),]$rs6067472 <- "1/1"
+myData_ptpn1[which(myData_ptpn1$rs6067472 == "X/X"),]$rs6067472 <- "2/2"
+
+summary(myData_ptpn1$rs6067472)
 
 
 ### Linkage Disequilibrium
@@ -1717,7 +1795,7 @@ names(haplo_list_per_block) <- vector_haplotype_blocks
 ###save significant results
 
 #load allele names to interpretation
-allele_names = read.csv("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1.csv", header=TRUE)
+allele_names = read.csv("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", header=TRUE)
     #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
 
 #check that there is a correspondence between ncbi and helena alleles (first major, second minor)

@@ -85,14 +85,7 @@ names(factor_variables_levels) <- c("obesity", "PA_factor")
 gene_names = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
 #select snps from the studied gene
 gene_names = gene_names[which(gene_names$selected_snp %in% labels(myData_ptpn1)),]
-
-
-## load allele names
-alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1.csv", sep=",", header=T)
 nrow(gene_names) == length(labels(myData_ptpn1))
-nrow(alleles) == length(labels(myData_ptpn1))
-    #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
-    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans. 
 
 
 
@@ -224,6 +217,8 @@ maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
 row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
 colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
 
+
+ESTO YA NO HACE FALTA!!! PORQUE LO REVISAMOS EN EL OTRO SCRIPT
 
 ## merge with table 1 
 table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
@@ -537,6 +532,17 @@ only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1)
 length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be zero
     
 
+
+
+#hay que cambiar el nombre del major/minor del SNP chungo en la tabla de snp helena names
+
+
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2903808/
+#table 2
+#11 12  22
+# genotyping success rate; Major allele: 1; Minor allele: 2; HW: P-value for Hardy-Weinberg equilibrium. Data are n (frequency).
+
+#fenotipo, snp, media and sd de cada genotipo, FDR the moedl add y co, R2 de ambos modelos. 
 
 
 #################################################
