@@ -1251,7 +1251,7 @@ cor.test(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin, method="spearm
 summary(geno_pheno_results$adjust_d2_mine - geno_pheno_results$adjust_d2_mumin) 
 plot(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin)
 cor.test(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin, method="spearman") #rho=0.999
-    #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
+    #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. Mumin uses the Nagelkerke adjustment (see below). I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
 
 
 #For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2). So you are basically adjusting the R2 by the maximum R2 present in your data. I see the point because the R2 max is not 1 in logistic. I see the point, you could underestimate the R2 for logistic models, but I do not fully understand how the maximum R2 can be established for a given model comparison.
@@ -1279,15 +1279,16 @@ points(geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codomi
 #Summary: We will use the classical R^2 calculated with the mumin package.
 
 
-## use these results to create the first supplementary data
+## use these results to create the supplementary data 1
 #set the folder to save
-folder_to_save_supple_data = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
-system(paste("mkdir -p ", folder_to_save_supple_data, sep=""))
+folder_to_save_supple_data_1 = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
+system(paste("mkdir -p ", folder_to_save_supple_data_1, sep=""))
     #p: no error if existing, make parent directories as needed
 
 #select the rows and columns we are interested
 suppl_data_1 = geno_pheno_results[which(geno_pheno_results$selected_pheno != "risk_score_for_log"), which(colnames(geno_pheno_results) %in% c("selected_pheno", "selected_model", "snp_to_test", "min_n", "pvals", "fdr", "d2_mumin"))]
     #We remove all rows belonging to the CVD risk score because this variable was finally not used in the manuscript. 
+        #IMPORTANT: If we include risk_score_for_log, then we should change to risk_score in the supple data. 
     #We select the columns that includes the variables selected for the supplementary dataset 1
 
 #convert R2 from 0-1 to percentage
@@ -1304,7 +1305,7 @@ colnames(suppl_data_1)[which(colnames(suppl_data_1) == "fdr")] <- "fdr"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "d2_mumin")] <- "r2_percentage"
 
 #save the table
-write.table(suppl_data_1, gzfile(paste(folder_to_save_supple_data, "/suplementary_data_1.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
+write.table(suppl_data_1, gzfile(paste(folder_to_save_supple_data_1, "/suplementary_data_1.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
     #you can save directly as a compressed file using "gzfile"
 
 
@@ -2445,15 +2446,15 @@ summary(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin)
 plot(interact_PA_results_clean$d2_mine, interact_PA_results_clean$d2_mumin)
 cor.test(interact_PA_results_clean$d2_mine, interact_PA_results_clean$d2_mumin, method="spearman") #rho=0.999
 #there is a case that it is a little bit different:
-interact_PA_results_clean[which((interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(abs(na.omit(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin)))),]
-    #It is with obesity, but there is other association with obesity that have more similar R2 with both methods, so I do not think this is a question about logistic. In addition, the correction for non-linear GLMs is done in adjusted mumin. 
+interact_PA_results_clean[which(abs(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(na.omit(abs(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin)))),]
+    #It is with obesity, but there is other association with obesity that have more similar R2 with both methods, so I do not think this is a question about logistic. In addition, the correction for non-linear GLMs is done in adjusted mumin. The difference is very small, from 0.009939082745 to 0.009320662592. 0.009939082745-0.009320662592 = 0.000618420153. (0.000618420153/0.009939082745)*100=6.22% of difference. It is only one case and very small difference. The difference in the supple data will be 0.93% instead of 0.99.
         #which((interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(abs(na.omit(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin))))
 
 #R2 adjusted is not equal with both methods.
 summary(interact_PA_results_clean$adjust_d2_mine - interact_PA_results_clean$adjust_d2_mumin) 
 plot(interact_PA_results_clean$adjust_d2_mine, interact_PA_results_clean$adjust_d2_mumin)
 cor.test(interact_PA_results_clean$adjust_d2_mine, interact_PA_results_clean$adjust_d2_mumin, method="spearman") #rho=0.999
-    #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
+    #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust based on the number of parameters and sample size. Mumin uses the Nagelkerke adjustment (see below). I have made the adjust manually modifying the function of Zimmermann.
 
 #For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2). So you are basically adjusting the R2 by the maximum R2 present in your data. I see the point because the R2 max is not 1 in logistic. I see the point, you could underestimate the R2 for logistic models, but I do not fully understand how the maximum R2 can be established for a given model comparison.
 
@@ -2477,15 +2478,16 @@ plot(interact_PA_results_clean$d2_mumin, interact_PA_results_clean$adjust_d2_min
 #Summary: We will use the classical R^2 calculated with the mumin package.
 
 
-## use these results to create the first supplementary data
+## use these results to create the supplementary data 2
 #set the folder to save
-folder_to_save_supple_data = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
-system(paste("mkdir -p ", folder_to_save_supple_data, sep=""))
+folder_to_save_supple_data_2 = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
+system(paste("mkdir -p ", folder_to_save_supple_data_2, sep=""))
     #p: no error if existing, make parent directories as needed
 
 #select the rows and columns we are interested
 suppl_data_2 = interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected != "risk_score_for_log"), which(colnames(interact_PA_results_clean) %in% c("pheno_selected", "selected_model", "snps", "min_n", "p.val", "FDR", "d2_mumin"))]
     #We remove all rows belonging to the CVD risk score because this variable was finally not used in the manuscript. 
+        #IMPORTANT: If we include risk_score_for_log, then we should change to risk_score in the supple data.     
     #We select the columns that includes the variables selected for the supplementary dataset 1
 
 #convert R2 from 0-1 to percentage
@@ -2497,12 +2499,12 @@ colnames(suppl_data_2)[which(colnames(suppl_data_2) == "pheno_selected")] <- "ph
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "selected_model")] <- "heritage_model"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "snps")] <- "snp"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "min_n")] <- "min_sample_size"
-colnames(suppl_data_2)[which(colnames(suppl_data_2) == "pvals")] <- "p_value"
-colnames(suppl_data_2)[which(colnames(suppl_data_2) == "fdr")] <- "fdr"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "p.val")] <- "p_value"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "FDR")] <- "fdr"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "d2_mumin")] <- "r2_percentage"
 
 #save the table
-write.table(suppl_data_2, gzfile(paste(folder_to_save_supple_data, "/suplementary_data_2.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
+write.table(suppl_data_2, gzfile(paste(folder_to_save_supple_data_2, "/suplementary_data_2.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
     #you can save directly as a compressed file using "gzfile"
 
 
@@ -2546,7 +2548,7 @@ for(i in 1:length(labels(myData_ptpn1))){
     }    
 }
 #remove the first row with NAs
-results_cor_af_geno = results_cor_af_geno[-1,]
+results_cor_af_geno = results_cor_af_geno[-which(rowSums(is.na(results_cor_af_geno)) == ncol(results_cor_af_geno)),]
 
 #check that all models and snps have been included
 nrow(results_cor_af_geno) == length(labels(myData_ptpn1))*length(heritage_models)
@@ -2558,7 +2560,7 @@ results_cor_af_geno
 significant_cor_geno_af = results_cor_af_geno[which(results_cor_af_geno$pval < 0.05),]
 
 #check that the significant interactions are not included in the cases of correlation between genotype and AF
-#combination of snp*model with sigifnicant interaticons
+#combination of snp*model with significant interactions
 snp_model_significant_interac = interaction(interact_PA_results_clean$snps, interact_PA_results_clean$selected_model)
 #check
 snp_model_significant_interac == paste(interact_PA_results_clean$snps, interact_PA_results_clean$selected_model, sep=".")
@@ -2571,10 +2573,12 @@ snp_model_significant_assoc_af == paste(significant_cor_geno_af$selected_snp, si
 # significant interactions are not included in the snp*models with correlation with AF?
 !unique(snp_model_significant_interac) %in% snp_model_significant_assoc_af
 
-#see problematic cases 
-unique(snp_model_significant_interac[which(snp_model_significant_interac %in% snp_model_significant_assoc_af)])
-    
-#CONCLUSIONS: there are 5 p.values lower than 0.05, but all of them are higher than 0.01. These are relatively high Pvalues, and only affects two snps: rs2143511 and rs6020608. rs2143511 does not show great disbalances, in the case of rs6020608 there is more imbalance (a group with 30), but this is not very bad. In addition, there are very significant and explicative associations beside these SNPs (R2 higher 1.5% in two cases), suggesting that our signals is not caused by a correlation between AF and genotypes. 
+#see problematic cases. SNP-model combinations that show significant interactions with PA
+significant_cor_geno_af[which(snp_model_significant_assoc_af %in% snp_model_significant_interac),]
+    #snp_model_significant_assoc_af comes from significant_cor_geno_af, so we can use it to select rows in significant_cor_geno_af.
+
+#CONCLUSIONS: there are 5 p.values lower than 0.05, but all of them are higher than 0.01. These are relatively high Pvalues, and only affects two snps: rs2143511 and rs6020608. rs2143511 does not show great imbalances, in the case of rs6020608 there is more imbalance (a group with 30), but this is not very bad. In addition, there are very significant and explicative associations beside these SNPs (R2 higher 1.5% in two cases), suggesting that our signals is not caused by a correlation between AF and genotypes. 
+
 
 
 
@@ -2594,11 +2598,11 @@ geno_pheno_results[which(geno_pheno_results$selected_pheno == "risk_score_for_lo
 
 
 ##change in interaction (we remove non-significant interactions so it's possible that risk_score is not included)
-if("risk_score_for_log" %in% final_interactions$pheno_selected){
-    final_interactions[which(final_interactions$pheno_selected == "risk_score_for_log"),]$pheno_selected <- "risk_score"
+if("risk_score_for_log" %in% interact_PA_results_clean$pheno_selected){
+    interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "risk_score_for_log"),]$pheno_selected <- "risk_score"
 }
 #check
-!"risk_score_for_log" %in% final_interactions$pheno_selected
+!"risk_score_for_log" %in% interact_PA_results_clean$pheno_selected
 
 
 
