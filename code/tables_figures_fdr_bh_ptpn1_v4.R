@@ -197,7 +197,7 @@ for(i in 1:length(ptpn1s)){
 
 
 
-### check minor alleles in HELENA respect to 1000 Genomes Project
+### add the minor alleles frequencies according to 1000 Genomes Project
 
 ## Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
     #rs6067472: T=0.3648
@@ -217,21 +217,12 @@ maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
 row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
 colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
 
-
-ESTO YA NO HACE FALTA!!! PORQUE LO REVISAMOS EN EL OTRO SCRIPT
-
 ## merge with table 1 
 table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
 
-
-## change the allele that it is different (rs6067472 - T should be the minor, not the major)
-table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Major allele")] <- "A"
-table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Minor allele")] <- "T"
-
-
 ## reorder the table again following the order in the chromosome 
-table_1_1KGP = table_1_1KGP[match(c("PTPN1", as.character(ptpn1_snps$snp)), table_1_1KGP$Row.names),]
-table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_snps$snp))
+table_1_1KGP = table_1_1KGP[match(c("PTPN1", as.character(ptpn1_position$snp)), table_1_1KGP$Row.names),]
+table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_position$snp))
 
 
 ## remove the column name for row names
