@@ -87,6 +87,11 @@ gene_names = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_do
 gene_names = gene_names[which(gene_names$selected_snp %in% labels(myData_ptpn1)),]
 nrow(gene_names) == length(labels(myData_ptpn1))
 
+## load allele names
+#alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", sep=",", header=T)
+    #allele names have been updated in the main script of the analyses after checking allele frequencies with the 1KGP.
+nrow(alleles) == length(labels(myData_ptpn1))
+
 
 
 
@@ -532,6 +537,10 @@ length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be
 #haz un filtro para comparar que aditivo/codominign pilla la mayoría de asociaciones significativas
 
 #hay que cambiar el nombre del major/minor del SNP chungo en la tabla de snp helena names
+
+#se coge directamente el alelo más frecuente y menos de SNP assoc y se hace subset con eso.
+
+#lo mismo puede hacer un check con el codigoq que transforma los numeros a letras en los alleles names. 
 
 
 #https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2903808/

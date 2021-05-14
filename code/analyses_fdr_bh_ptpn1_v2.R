@@ -610,6 +610,14 @@ dev.off()
 #check minor alleles in HELENA respect to 1000 Genomes Project for the Europeans populations. We should have similar allele frequencies. 
 
 
+## load the alleles names
+alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v1.csv", sep=",", header=T)
+nrow(alleles) == length(labels(myData_ptpn1))
+    #First allele is major, and second is minor.
+    #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
+    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans. 
+
+
 ## Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
     #rs6067472: T=0.3648
         #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
@@ -623,75 +631,69 @@ dev.off()
         #https://www.ncbi.nlm.nih.gov/snp/rs968701#frequency_tab
 
 
-## create a table with these minor allele frequencies
-maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
-row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
-colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
+## change allele names IF NEEDED
+#In our table, rs6067472 has T as the major and A as the minor allele. However, this is the opposite according to ncbi. T=0.3648. We have to exchange alleles A/T instead of T/A.
 
+#For rs6067472, set A as the first and T as the second allele. In the HELENA word, the notation is: first the allele major and the minor second. We have used that notation in the "alleles" files. 
 
-## load allele names
-alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v1.csv", sep=",", header=T)
-nrow(alleles) == length(labels(myData_ptpn1))
-    #First allele is major, and second is minor.
-    #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
-    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans. 
-
-
-summary(myData_ptpn1)
-
-
-## merge with table 1 
-#table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
-
-
-## change the allele that it is different (rs6067472 - T should be the minor, not the major)
-#table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Major allele")] <- "A"
-#table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Minor allele")] <- "T"
-
-#set A as the first and T as the second allele. In HELENA word the notation is the first allele major and the second minor. We have used that notation.
 #add first the new combination of alleles in the helena and ncbi columns
 alleles$helena = factor(alleles$helena, levels=c(levels(alleles$helena), "A/T"))
 alleles$ncbi = factor(alleles$ncbi, levels=c(levels(alleles$ncbi), "A/T"))
+
 #now change the allele order for the problematic SNP.
 alleles[which(alleles$snp == "rs6067472"),]$helena <- "A/T"
 alleles[which(alleles$snp == "rs6067472"),]$ncbi <- "A/T"
 
+#remove unused levels
+alleles$helena = droplevels(alleles$helena)
+alleles$ncbi = droplevels(alleles$ncbi)
 
+#save the table with alleles names
 write.table(alleles, "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", sep=",", col.names=TRUE, row.names=FALSE)
 
 
+## recode the genotype data of SNPs IF NEEDED
 
-#hay que recodificar el SNP tambien
+#we have also to recode the genotype variable of the SNPs that are wrong about allele names. If we change the genotype data here, we do not have to do anything else about this in the next steps. We have change the allele names in "alleles" and also the numbers in the genotype data.
 
-summary(myData_ptpn1$rs6067472) #In helena notation 1 is the A, which according the initial dataset, it is the minor. But we know now that A is the major not the minor, so A (1) should be a frequency of 1285, while T (2) should have a frequency of 829.
+#In helena notation 1 is the A, which according the initial dataset, it is the minor. But we know now that for rs6067472, A is the major not the minor, so A (1) should be a frequency of 1285, while T (2) should have a frequency of 829.
+summary(myData_ptpn1$rs6067472) 
 
-#recode
-POR AQUI!!!
-
+#create a new object with the genotyping data of rs6067472 but adding a new genotype level that we will use to the recode
 new_genotype = factor(myData_ptpn1$rs6067472, levels=c(levels(myData_ptpn1$rs6067472), "X/X"))
 
-new_genotype[which(new_genotype == "1/1")] <- "X/X"
-new_genotype[which(new_genotype == "2/2")] <- "1/1"
-new_genotype[which(new_genotype == "X/X")] <- "2/2"
+#recode the variable, 1/1 (A/A) has to be 2/2 (T/T) and viceversa. We have to convert 1/1 to X/X because if we change 1/1 to 2/2 directly, when we then change 2/2 to 1/1 all genotypes will be converted to 1/1!!
+new_genotype[which(new_genotype == "1/1")] <- "X/X" #change 1/1 to X/X
+new_genotype[which(new_genotype == "2/2")] <- "1/1" #then change 2/2 to 1/1
+new_genotype[which(new_genotype == "X/X")] <- "2/2" #and now you can change X/X (1/1) to 2/2
+    #The heterozygous do not have to change. 
 
+#remove unused levels (X/X)
 new_genotype = droplevels(new_genotype)
 
+#check that everything is the same but the other way around
 summary(new_genotype)
 summary(myData_ptpn1$rs6067472)
+    #Now, A/A (1/1) is the most frequent allele
 
+#save the new genotype as a column
 myData_ptpn1$rs6067472_second = new_genotype
 
+#check that individuals with 1/1 genotype in the new SNP variable are exactly the same than 2/2 in the previous variable. We have just exchange the genotypes. 
+identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/1"),], myData_ptpn1[which(myData_ptpn1$rs6067472 == "2/2"),])
 
-identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/1"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))], myData_ptpn1[which(myData_ptpn1$rs6067472 == "2/2"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))])
+#do the same but for the heterozygous, they should be the same.
+identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/2"),], myData_ptpn1[which(myData_ptpn1$rs6067472 == "1/2"),])
 
-identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/2"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))], myData_ptpn1[which(myData_ptpn1$rs6067472 == "1/2"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))])
-
+#overwrite the initial variable with the new one. We use the function snp from SNPassoc so the new column is detected as a SNP.
 myData_ptpn1$rs6067472 = snp(myData_ptpn1$rs6067472_second)
+    #CHECK THIS FUNCTION
 
+#remove the previous column with the new genotype data that is not an SNP-SNPassoc column
 myData_ptpn1 = myData_ptpn1[,-which(colnames(myData_ptpn1) == "rs6067472_second")]
 
 
-
+## check that everything is ok
 alleles
     #according to corrected alleles, rs6067472 has A as major allele and T as minor. Remember that in this HELENA dataset, the numbers follow an alphabetic order. So if you have A and T alleles in helena (helena and ncbi matches the allele names), then 1 is A and T is 2. 
 summary(myData_ptpn1$rs6067472) 
@@ -700,10 +702,8 @@ summary(myData_ptpn1$rs6067472)
         #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
     #This recoded variable will be used for the haplotype analyses and the table creation, so the alleles names should be ok. We should not see any change in the results, because the groups are exactly the same, we have just exchanged the genotype names. 
 
-
+#check that everything worked it out. 
 summary(myData_ptpn1)
-
-
 
 
 
@@ -1353,13 +1353,14 @@ nrow(geno_pheno_results) == length(pheno_to_model) * length(snp_to_test) * lengt
 summary(geno_pheno_results$d2_mine - geno_pheno_results$d2_mumin) 
 plot(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin)
 cor.test(geno_pheno_results$d2_mine, geno_pheno_results$d2_mumin, method="spearman") #rho=0.999
-
+dev.off()
 
 #R2 adjusted is not equal with both methods.
 summary(geno_pheno_results$adjust_d2_mine - geno_pheno_results$adjust_d2_mumin) 
 plot(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin)
 cor.test(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin, method="spearman") #rho=0.999
     #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust. Mumin uses the Nagelkerke adjustment (see below). I have made the adjust manually modifying the function of Zimmermann. I set as the number of coefficients the number of genotypes less 1, because we have 1 coefficient for each level of the factor respect to the reference level. This is congruent with the fact that we are comparing the decrease in deviance between a model with the SNP and a simpler model with all the confounding factors but without the SNP. So we are checking the change in deviance caused by the SNP, and thus we have to consider the changes in degree of freedom (i.e., coefficients) caused by that SNP.
+dev.off()
 
 
 #For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2). So you are basically adjusting the R2 by the maximum R2 present in your data. I see the point because the R2 max is not 1 in logistic. I see the point, you could underestimate the R2 for logistic models, but I do not fully understand how the maximum R2 can be established for a given model comparison.
@@ -1367,11 +1368,13 @@ cor.test(geno_pheno_results$adjust_d2_mine, geno_pheno_results$adjust_d2_mumin, 
 #there are differences between adjusted and non-adjusted in mumin, but this is not caused by the logistic
 plot(geno_pheno_results$adjust_d2_mumin, geno_pheno_results$d2_mumin, col="red")
 cor.test(geno_pheno_results$adjust_d2_mumin, geno_pheno_results$d2_mumin)
+dev.off()
 
 #you can see here how when considering only obesity (factor with 2 levels, that is, logistic), there is a perfect correlation between adjusted and un-adjusted in mumin. 
 plot(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$adjust_d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$d2_mumin, col="red")
 cor.test(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$adjust_d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity"),]$d2_mumin, col="red")
- 
+dev.off()
+
 #Given that I am not 100% sure if this a correct way to adjust and R2 does NOT seem underestimated for obesity (logistic), I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2 using the traditional approach
 summary(geno_pheno_results$d2_mine-geno_pheno_results$adjust_d2_mine)
 plot(geno_pheno_results$d2_mine, geno_pheno_results$adjust_d2_mine)
@@ -1381,6 +1384,7 @@ plot(geno_pheno_results$d2_mumin, geno_pheno_results$adjust_d2_mine)
 plot(geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(!geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="red")
 points(geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$d2_mumin, geno_pheno_results[which(geno_pheno_results$selected_model %in% c("codominant", "additive")),]$adjust_d2_mine, col="blue")
     #the red dots are from models with two levels and have the similar R2 and adjusted R2. However, blue dots comes from additive and codominant model, being the adjusted R2 smaller, because now you have more parameters (3 genotypes - 1 = 2 levels).
+dev.off()
 
 #Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is in a published package, we will use the R2 of Mumin. 
 
@@ -2584,22 +2588,26 @@ cor.test(interact_PA_results_clean$d2_mine, interact_PA_results_clean$d2_mumin, 
 interact_PA_results_clean[which(abs(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(na.omit(abs(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin)))),]
     #It is with obesity, but there is other association with obesity that have more similar R2 with both methods, so I do not think this is a question about logistic. In addition, the correction for non-linear GLMs is done in adjusted mumin. The difference is very small, from 0.009939082745 to 0.009320662592. 0.009939082745-0.009320662592 = 0.000618420153. (0.000618420153/0.009939082745)*100=6.22% of difference. It is only one case and very small difference. The difference in the supple data will be 0.93% instead of 0.99.
         #which((interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin) == max(abs(na.omit(interact_PA_results_clean$d2_mine - interact_PA_results_clean$d2_mumin))))
+dev.off()
 
 #R2 adjusted is not equal with both methods.
 summary(interact_PA_results_clean$adjust_d2_mine - interact_PA_results_clean$adjust_d2_mumin) 
 plot(interact_PA_results_clean$adjust_d2_mine, interact_PA_results_clean$adjust_d2_mumin)
 cor.test(interact_PA_results_clean$adjust_d2_mine, interact_PA_results_clean$adjust_d2_mumin, method="spearman") #rho=0.999
     #The non-adjusted values are similar between methods, but not when we adjust. Note that the method for adjusting used in the MuMIn function is different from the typical adjust based on the number of parameters and sample size. Mumin uses the Nagelkerke adjustment (see below). I have made the adjust manually modifying the function of Zimmermann.
+dev.off()
 
 #For OLS models (linear regression?) the value is consistent with classical R^2. In some cases (e.g. in logistic regression), the maximum R_LR^2 is less than one.  The modification proposed by Nagelkerke (1991) adjusts the R_LR^2 to achieve 1 at its maximum: Radj^2 = R^2 / max(R^2). So you are basically adjusting the R2 by the maximum R2 present in your data. I see the point because the R2 max is not 1 in logistic. I see the point, you could underestimate the R2 for logistic models, but I do not fully understand how the maximum R2 can be established for a given model comparison.
 
 #there are differences between adjusted and non-adjusted in mumin, but this is not caused by the logistic
 plot(interact_PA_results_clean$adjust_d2_mumin, interact_PA_results_clean$d2_mumin, col="red")
 cor.test(interact_PA_results_clean$adjust_d2_mumin, interact_PA_results_clean$d2_mumin)
+dev.off()
 
 #you can see here how when considering only obesity (factor with 2 levels, that is, logistic), there is a perfect correlation between adjusted and un-adjusted in mumin. 
 plot(interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$adjust_d2_mumin, interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$d2_mumin, col="red")
 #cor.test(interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$adjust_d2_mumin, interact_PA_results_clean[which(interact_PA_results_clean$pheno_selected == "obesity"),]$d2_mumin, col="red")
+dev.off()
 
 #Given that I am not 100% sure if this a correct way to adjust and R2 does NOT seem underestimated for obesity (logistic), I am going to use the traditional pseudo R2 of glms, which is similar with the formula of Zimmermamnn and the function of MuMIn. In addition, my d2 and the mumin d2 are not so different respect to adjusted d2 using the traditional approach
 summary(interact_PA_results_clean$d2_mine-interact_PA_results_clean$adjust_d2_mine)
@@ -2607,6 +2615,7 @@ plot(interact_PA_results_clean$d2_mine, interact_PA_results_clean$adjust_d2_mine
 summary(interact_PA_results_clean$d2_mumin-interact_PA_results_clean$adjust_d2_mine)
 plot(interact_PA_results_clean$d2_mumin, interact_PA_results_clean$adjust_d2_mine)
     #There are almost no differences. Only one case (row 3) with a little bit of difference, which is the same showing some differences between mummin and my R2 without adjusting.
+dev.off()
 
 #Given that both R2 (mine and mumin) are VERY similar and that mumin is more reproducible because it is in a published package, we will use the R2 of Mumin. 
 
