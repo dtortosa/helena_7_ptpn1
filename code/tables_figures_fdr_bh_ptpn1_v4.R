@@ -44,7 +44,7 @@
 ########################################
 
 ### load the environment with the analyses run
-load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis.RData")
+load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis_v2.RData")
 require(SNPassoc)
 require(genetics)
 
@@ -533,6 +533,12 @@ length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be
     
 
 
+
+####################
+##### TABLE 4 ######
+####################
+
+#haz un filtro para comparar que aditivo/codominign pilla la mayoría de asociaciones significativas
 
 #hay que cambiar el nombre del major/minor del SNP chungo en la tabla de snp helena names
 

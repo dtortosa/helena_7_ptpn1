@@ -641,12 +641,12 @@ summary(myData_ptpn1)
 
 
 ## merge with table 1 
-table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
+#table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
 
 
 ## change the allele that it is different (rs6067472 - T should be the minor, not the major)
-table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Major allele")] <- "A"
-table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Minor allele")] <- "T"
+#table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Major allele")] <- "A"
+#table_1_1KGP[which(table_1_1KGP$Row.names == "rs6067472"), which(colnames(table_1_1KGP) == "Minor allele")] <- "T"
 
 #set A as the first and T as the second allele. In HELENA word the notation is the first allele major and the second minor. We have used that notation.
 #add first the new combination of alleles in the helena and ncbi columns
@@ -668,13 +668,43 @@ summary(myData_ptpn1$rs6067472) #In helena notation 1 is the A, which according 
 #recode
 POR AQUI!!!
 
-myData_ptpn1$rs6067472 = factor(myData_ptpn1$rs6067472, levels=c(levels(myData_ptpn1$rs6067472), "X/X"))
+new_genotype = factor(myData_ptpn1$rs6067472, levels=c(levels(myData_ptpn1$rs6067472), "X/X"))
 
-myData_ptpn1[which(myData_ptpn1$rs6067472 == "1/1"),]$rs6067472 <- "X/X"
-myData_ptpn1[which(myData_ptpn1$rs6067472 == "2/2"),]$rs6067472 <- "1/1"
-myData_ptpn1[which(myData_ptpn1$rs6067472 == "X/X"),]$rs6067472 <- "2/2"
+new_genotype[which(new_genotype == "1/1")] <- "X/X"
+new_genotype[which(new_genotype == "2/2")] <- "1/1"
+new_genotype[which(new_genotype == "X/X")] <- "2/2"
 
+new_genotype = droplevels(new_genotype)
+
+summary(new_genotype)
 summary(myData_ptpn1$rs6067472)
+
+myData_ptpn1$rs6067472_second = new_genotype
+
+
+identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/1"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))], myData_ptpn1[which(myData_ptpn1$rs6067472 == "2/2"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))])
+
+identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/2"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))], myData_ptpn1[which(myData_ptpn1$rs6067472 == "1/2"), -which(colnames(myData_ptpn1) %in% c("rs6067472", "rs6067472_second"))])
+
+myData_ptpn1$rs6067472 = snp(myData_ptpn1$rs6067472_second)
+
+myData_ptpn1 = myData_ptpn1[,-which(colnames(myData_ptpn1) == "rs6067472_second")]
+
+
+
+alleles
+    #according to corrected alleles, rs6067472 has A as major allele and T as minor. Remember that in this HELENA dataset, the numbers follow an alphabetic order. So if you have A and T alleles in helena (helena and ncbi matches the allele names), then 1 is A and T is 2. 
+summary(myData_ptpn1$rs6067472) 
+    #In the recoded genotype, 1 (A) is major allele, while 2 (T) is the minor allele. This matches the information in ncbi for the 1000 GKP:
+        #rs6067472: T=0.3648
+        #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+    #This recoded variable will be used for the haplotype analyses and the table creation, so the alleles names should be ok. We should not see any change in the results, because the groups are exactly the same, we have just exchanged the genotype names. 
+
+
+summary(myData_ptpn1)
+
+
+
 
 
 ### Linkage Disequilibrium
@@ -1382,9 +1412,36 @@ colnames(suppl_data_1)[which(colnames(suppl_data_1) == "pvals")] <- "p_value"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "fdr")] <- "fdr"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "d2_mumin")] <- "r2_percentage"
 
+#set the names of the files for saving
+suppl_data_1_file_name = "suplementary_data_1_v2.csv"
+suppl_data_1_file_name_zip = "suplementary_data_1_v2.zip"
+
 #save the table
-write.table(suppl_data_1, gzfile(paste(folder_to_save_supple_data_1, "/suplementary_data_1.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
-    #you can save directly as a compressed file using "gzfile"
+write.table(suppl_data_1, paste(folder_to_save_supple_data_1, "/", suppl_data_1_file_name, sep=""), col.names=TRUE, row.names=FALSE, sep=",")
+
+#compress the text file and remove it after compression
+system(paste("cd ", folder_to_save_supple_data_1, "; rm ", suppl_data_1_file_name_zip, "; zip ", suppl_data_1_file_name_zip, " ", suppl_data_1_file_name, " ; rm ", suppl_data_1_file_name, sep=""))
+    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows. 
+
+
+## compare this version of the supplementary with the first one. 
+
+#In that version, we did not recode a SNP that have alleles names inverted. rs6067472 had A as the minor allele and T as the major, but according to the 1KGP, for europeans is the opposite. 
+    #see section "COMPARE ALLELES HELENA VS 1000 GENOMES PROJECT" for further details
+    #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+
+#read the file of the previous version 
+suppl_data_1_previous_version = read.table(paste(folder_to_save_supple_data_1, "/suplementary_data_1_v1.txt.gz", sep=""), sep="\t", header=TRUE)
+
+#read the file of the last version 
+suppl_data_1_last_version = read.table(unz(paste(folder_to_save_supple_data_1, "/suplementary_data_1_v2.zip", sep=""), suppl_data_1_file_name), sep=",", header=TRUE)
+
+#select the non-numeric columns
+no_numeric_cols = which(colnames(suppl_data_1_last_version) %in% c("phenotype", "heritage_model", "snp"))
+
+#check that the non-numeric and numeric columns are the same between versions
+summary(suppl_data_1_previous_version[,no_numeric_cols] == suppl_data_1_last_version[,no_numeric_cols])
+summary(suppl_data_1_previous_version[,-no_numeric_cols] - suppl_data_1_last_version[,-no_numeric_cols])
 
 
 ##extract snps for further analyses
@@ -2581,9 +2638,36 @@ colnames(suppl_data_2)[which(colnames(suppl_data_2) == "p.val")] <- "p_value"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "FDR")] <- "fdr"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "d2_mumin")] <- "r2_percentage"
 
+#set the names of the files for saving
+suppl_data_2_file_name = "suplementary_data_2_v2.csv"
+suppl_data_2_file_name_zip = "suplementary_data_2_v2.zip"
+
 #save the table
-write.table(suppl_data_2, gzfile(paste(folder_to_save_supple_data_2, "/suplementary_data_2.txt.gz", sep="")), col.names=TRUE, row.names=FALSE, sep="\t")
-    #you can save directly as a compressed file using "gzfile"
+write.table(suppl_data_2, paste(folder_to_save_supple_data_2, "/", suppl_data_2_file_name, sep=""), col.names=TRUE, row.names=FALSE, sep=",")
+
+#compress the text file and remove it after compression
+system(paste("cd ", folder_to_save_supple_data_2, "; rm ", suppl_data_2_file_name_zip, "; zip ", suppl_data_2_file_name_zip, " ", suppl_data_2_file_name, " ; rm ", suppl_data_2_file_name, sep=""))
+    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows. 
+
+
+## compare this version of the supplementary with the first one. 
+
+#In that version, we did not recode a SNP that have alleles names inverted. rs6067472 had A as the minor allele and T as the major, but according to the 1KGP, for europeans is the opposite. 
+    #see section "COMPARE ALLELES HELENA VS 1000 GENOMES PROJECT" for further details
+    #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+
+#read the file of the previous version 
+suppl_data_2_previous_version = read.table(paste(folder_to_save_supple_data_2, "/suplementary_data_2_v1.txt.gz", sep=""), sep="\t", header=TRUE)
+
+#read the file of the last version 
+suppl_data_2_last_version = read.table(unz(paste(folder_to_save_supple_data_2, "/suplementary_data_2_v2.zip", sep=""), suppl_data_2_file_name), sep=",", header=TRUE)
+
+#select the non-numeric columns
+no_numeric_cols = which(colnames(suppl_data_2_last_version) %in% c("phenotype", "heritage_model", "snp"))
+
+#check that the non-numeric and numeric columns are the same between versions
+summary(suppl_data_2_previous_version[,no_numeric_cols] == suppl_data_2_last_version[,no_numeric_cols])
+summary(suppl_data_2_previous_version[,-no_numeric_cols] - suppl_data_2_last_version[,-no_numeric_cols])
 
 
 
@@ -2688,6 +2772,6 @@ if("risk_score_for_log" %in% interact_PA_results_clean$pheno_selected){
 #################################
 ##### LOAD ENVIRONMENT ##########
 #################################
-save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis.RData")
+save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis_v2.RData")
 require(SNPassoc)
 require(genetics)
