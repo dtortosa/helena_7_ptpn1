@@ -514,6 +514,34 @@ snps_maf_high_0.9
 row.names(resume_snps[which(resume_snps$major.allele.freq > 90),]) %in% snps_maf_high_0.9
 
 
+##quick check about how the function snp create the SNP variables
+
+#load the required package
+require(stringi)
+
+#check that a SNP is different in the original dataframe of ptpn1 and in the SNPassoc object
+head(myData_ptpn1$rs10485614)
+head(helena_7$rs10485614)
+
+#save the SNP from the original dataframe in a vector
+new_geno_check = helena_7$rs10485614
+
+#for each element of that vector
+for(i in 1:length(new_geno_check)){
+
+    #select the [i] element of the vector 
+    stri_sub(str=new_geno_check[i], from=2, to=1) <- "/"
+        #add a slash in the middle of the entry, that is, in the middle of the genotype.
+        #https://stackoverflow.com/questions/13863599/insert-a-character-at-a-specific-location-in-a-string
+}
+
+#check that the new SNP variable is exactly the same than the one created by SNPassoc
+summary(new_geno_check == myData_ptpn1$rs10485614)
+
+#detach the used package
+detach("package:stringi")
+
+
 
 
 #################################
@@ -634,76 +662,26 @@ nrow(alleles) == length(labels(myData_ptpn1))
 ## change allele names IF NEEDED
 #In our table, rs6067472 has T as the major and A as the minor allele. However, this is the opposite according to ncbi. T=0.3648. We have to exchange alleles A/T instead of T/A.
 
-#For rs6067472, set A as the first and T as the second allele. In the HELENA word, the notation is: first the allele major and the minor second. We have used that notation in the "alleles" files. 
+#I usually compare the alleles of each SNP with the alleles in HELENA and in ncbi. We have a word file for HELENA ("Appendix list of SNPs genotyped by GoldenGate[1].doc") that shows the major and minor allele of each SNP in HELENA. The first allele is the major, while the second allele is the minor. If for example, we have G and A as alleles in HELENA, while the same SNP in ncbi has C and T, I would understand that we are reporting the opposite strand in HELENA, so I would switch to the other strand to match the alleles of ncbi. 
 
-#add first the new combination of alleles in the helena and ncbi columns
-alleles$helena = factor(alleles$helena, levels=c(levels(alleles$helena), "A/T"))
+#In the case of rs6067472, the alleles are T and A, so this is a palindromic SNP. We have T and A as alleles in HELENA, while in ncbi we also have T and A, this leaded me to an error. I assumed that we are reporting the same strand in HELENA, but if we check the allele frequencies we can see they do not match. T is the major allele and A is the minor allele in HELENA, but ncbi shows T as the minor and A as the major according to the 1000 Genomes Project for European populations. Therefore, we have to also switch the alleles of this SNP to match the strand of ncbi.
+
+#For the future, you should ALWAYS compare, not only the allele names, but also the allele frequencies between HELENA and ncbi. If we are reporting the same strand, the same allele should be the major, if we are reporting the opposite strand, the complementary allele of the major in HELENA should be the major in ncbi. If the SNP is palindromic (A/T - C/G), the same major allele would indicate that we are reporting the same strand, if not, we are reporting the opposite strand. 
+
+#Therefore, in this case, HELENA alleles should be T/A, the 1 (A) is less frequent, while 2 (T) is more frequent. In the case of ncbi, it should be the opposite: A/T. A is the major allele, while T is the minor.
+summary(myData_ptpn1$rs6067472)
+
+#add first the new combination of alleles in the ncbi columns
 alleles$ncbi = factor(alleles$ncbi, levels=c(levels(alleles$ncbi), "A/T"))
 
 #now change the allele order for the problematic SNP.
-alleles[which(alleles$snp == "rs6067472"),]$helena <- "A/T"
 alleles[which(alleles$snp == "rs6067472"),]$ncbi <- "A/T"
 
 #remove unused levels
-alleles$helena = droplevels(alleles$helena)
 alleles$ncbi = droplevels(alleles$ncbi)
 
 #save the table with alleles names
 write.table(alleles, "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", sep=",", col.names=TRUE, row.names=FALSE)
-
-
-## recode the genotype data of SNPs IF NEEDED
-
-#we have also to recode the genotype variable of the SNPs that are wrong about allele names. If we change the genotype data here, we do not have to do anything else about this in the next steps. We have change the allele names in "alleles" and also the numbers in the genotype data.
-
-#In helena notation 1 is the A, which according the initial dataset, it is the minor. But we know now that for rs6067472, A is the major not the minor, so A (1) should be a frequency of 1285, while T (2) should have a frequency of 829.
-summary(myData_ptpn1$rs6067472) 
-
-#create a new object with the genotyping data of rs6067472 but adding a new genotype level that we will use to the recode
-new_genotype = factor(myData_ptpn1$rs6067472, levels=c(levels(myData_ptpn1$rs6067472), "X/X"))
-
-#recode the variable, 1/1 (A/A) has to be 2/2 (T/T) and viceversa. We have to convert 1/1 to X/X because if we change 1/1 to 2/2 directly, when we then change 2/2 to 1/1 all genotypes will be converted to 1/1!!
-new_genotype[which(new_genotype == "1/1")] <- "X/X" #change 1/1 to X/X
-new_genotype[which(new_genotype == "2/2")] <- "1/1" #then change 2/2 to 1/1
-new_genotype[which(new_genotype == "X/X")] <- "2/2" #and now you can change X/X (1/1) to 2/2
-    #The heterozygous do not have to change. 
-
-#remove unused levels (X/X)
-new_genotype = droplevels(new_genotype)
-
-#check that everything is the same but the other way around
-summary(new_genotype)
-summary(myData_ptpn1$rs6067472)
-    #Now, A/A (1/1) is the most frequent allele
-
-#save the new genotype as a column
-myData_ptpn1$rs6067472_second = new_genotype
-
-#check that individuals with 1/1 genotype in the new SNP variable are exactly the same than 2/2 in the previous variable. We have just exchange the genotypes. 
-identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/1"),], myData_ptpn1[which(myData_ptpn1$rs6067472 == "2/2"),])
-
-#do the same but for the heterozygous, they should be the same.
-identical(myData_ptpn1[which(myData_ptpn1$rs6067472_second == "1/2"),], myData_ptpn1[which(myData_ptpn1$rs6067472 == "1/2"),])
-
-#overwrite the initial variable with the new one. We use the function snp from SNPassoc so the new column is detected as a SNP.
-myData_ptpn1$rs6067472 = snp(myData_ptpn1$rs6067472_second)
-    #CHECK THIS FUNCTION
-
-#remove the previous column with the new genotype data that is not an SNP-SNPassoc column
-myData_ptpn1 = myData_ptpn1[,-which(colnames(myData_ptpn1) == "rs6067472_second")]
-
-
-## check that everything is ok
-alleles
-    #according to corrected alleles, rs6067472 has A as major allele and T as minor. Remember that in this HELENA dataset, the numbers follow an alphabetic order. So if you have A and T alleles in helena (helena and ncbi matches the allele names), then 1 is A and T is 2. 
-summary(myData_ptpn1$rs6067472) 
-    #In the recoded genotype, 1 (A) is major allele, while 2 (T) is the minor allele. This matches the information in ncbi for the 1000 GKP:
-        #rs6067472: T=0.3648
-        #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
-    #This recoded variable will be used for the haplotype analyses and the table creation, so the alleles names should be ok. We should not see any change in the results, because the groups are exactly the same, we have just exchanged the genotype names. 
-
-#check that everything worked it out. 
-summary(myData_ptpn1)
 
 
 
