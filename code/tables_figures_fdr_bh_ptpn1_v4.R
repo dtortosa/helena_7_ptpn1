@@ -562,15 +562,35 @@ assoc_fdr_less_01[which(!assoc_fdr_less_01$pheno_snp_combination %in% assoc_fdr_
 
 ### make a loop to extract phenotype values per genotype ###
 
-##for each row in the supple 1, considering only associations with FDR<0.1
-for(i in 1:nrow(assoc_fdr_less_01_only_add_cod)){
+#open empty data.frame to save results
+table_4 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA, NA, NA))
+names(table_4)[1] <- "Phenotype"
+names(table_4)[2] <- "SNP"
+names(table_4)[3] <- "Minor homozygous"
+names(table_4)[4] <- "Heterozygous"
+names(table_4)[5] <- "Major homozygous"
+names(results)[6] <- "FDR - additive"
+names(results)[7] <- "R2 - additive"
+names(results)[8] <- "FDR - codominant"
+names(results)[9] <- "R2 - codominant"
 
-    #select the [i] row
-    selected_row = assoc_fdr_less_01_only_add_cod[i,]
+
+pheno_snp_combinations_table_4 = assoc_fdr_less_01_only_add_cod$pheno_snp_combination
+
+##for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
+for(i in 1:length(pheno_snp_combinations_table_4)){
+
+    #select the [i] combination
+    selected_combination = pheno_snp_combinations_table_4[i]
+
+    #select the rows of the significant associations for the [i] pheno-snp combination
+    selected_rows = assoc_fdr_less_01_only_add_cod[which(assoc_fdr_less_01_only_add_cod$pheno_snp_combination %in% selected_combination),]
+        #We can have the same phenotype-snp combination for two models, additive and codominant.
 
     #select the [i] phenotype and snp
-    selected_pheno = selected_row$phenotype
-    selected_snp = selected_row$snp
+    selected_pheno = unique(selected_rows$phenotype)
+    selected_snp = unique(selected_rows$snp)
+        #unique because we can have two rows (additive and codominant)
 
     #extract the genotype data of the [i] snp
     geno_data = eval(parse(text=paste("na.omit(myData_ptpn1$", selected_snp, ")", sep="")))
@@ -614,26 +634,90 @@ for(i in 1:nrow(assoc_fdr_less_01_only_add_cod)){
     #if the selected phenotype is not a factor
     if(!is.factor(eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep=""))))){
 
+        #set the number decimals
+        #if the phenotype is Age, weight, height, triceps and subscapular fold and BMI
+        if(selected_pheno %in% c("CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap", "CRF_BMI", "CRF_waist", "CRF_hip", "FMI")){
+
+            #1 decimal
+            number_decimals = 1
+        } else {#if not
+
+            #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
+            if(pheno_selected %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
+
+                #0 decimals
+                number_decimals = 0
+            } else {#if the phenotype is none of the latter
+
+                #2 decimals
+                number_decimals = 2
+            }
+        }
+
         #extract the average of each genotype
-        minor_homo_average = eval(parse(text=paste("mean(na.omit(subset_minor_homo$", selected_pheno, "))", sep="")))
-        major_homo_average = eval(parse(text=paste("mean(na.omit(subset_major_homo$", selected_pheno, "))", sep="")))
-        hetero_average = eval(parse(text=paste("mean(na.omit(subset_hetero$", selected_pheno, "))", sep="")))
+        minor_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
+        major_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
+        hetero_average = round(mean(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
 
         #extract the SD of each genotype
-        minor_homo_sd = eval(parse(text=paste("sd(na.omit(subset_minor_homo$", selected_pheno, "))", sep="")))
-        major_homo_sd = eval(parse(text=paste("sd(na.omit(subset_major_homo$", selected_pheno, "))", sep="")))
-        hetero_sd = eval(parse(text=paste("sd(na.omit(subset_hetero$", selected_pheno, "))", sep="")))
-        
-        #    
-        paste(minor_homo_average, " \\pm ", minor_homo_sd, sep="")
-
+        minor_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
+        major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
+        hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
     } else {
         stop(paste("ERROR: You are trying to calculate average of a factor and the script is not prepared for that", sep=""))
     }
 
+    if(nrow(selected_rows) == 2){
 
-    cbind.data.frame(selected_pheno, selected_snp, minor_homo_average, major_homo_average, hetero_average, minor_homo_average, major_homo_average, hetero_average
+        fdr_additive = selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr
+        r2_additive = selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage
 
+        fdr_codominant = selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr
+        r2_codominant = selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage
+    } else {
+        if(nrow(selected_rows) == 1){
+            
+            model_significant = selected_rows$heritage_model
+            model_no_significant = ifelse(selected_rows$heritage_model == "additive", "codominant", "additive")
+
+
+            assign(paste("fdr_", model_significant, sep=""), selected_rows$fdr)
+            assign(paste("r2_", model_significant, sep=""), selected_rows$r2_percentage)
+
+
+            results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$heritage_model == model_no_significant),]
+                #we need the whole supple, but with the combination pheno-snp
+
+            assign(paste("fdr_", model_no_significant, sep=""), results_model_no_significant$fdr)
+            assign(paste("r2_", model_no_significant, sep=""), results_model_no_significant$r2_percentage)
+        }
+    }
+
+    #bind results into one row
+    results = cbind.data.frame(
+        selected_pheno,
+        selected_snp, 
+        paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep=""),
+        paste(hetero_average, "$\\pm$", hetero_sd, sep=""),
+        paste(major_homo_average, "$\\pm$", major_homo_sd, sep=""),
+        fdr_additive,
+        r2_additive,
+        fdr_codominant,
+        r2_codominant)
+
+    #change columns names to match names table 2
+    names(results)[1] <- "Phenotype"
+    names(results)[2] <- "SNP"
+    names(results)[3] <- "Minor homozygous"
+    names(results)[4] <- "Heterozygous"
+    names(results)[5] <- "Major homozygous"
+    names(results)[6] <- "FDR - additive"
+    names(results)[7] <- "R2 - additive"
+    names(results)[8] <- "FDR - codominant"
+    names(results)[9] <- "R2 - codominant"
+
+
+    table_4 = rbind.data.frame(table_4, results)
 
 }
 
