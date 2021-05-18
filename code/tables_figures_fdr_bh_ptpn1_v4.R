@@ -534,9 +534,108 @@ length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be
 ##### TABLE 4 ######
 ####################
 
-#haz un filtro para comparar que aditivo/codominign pilla la mayoría de asociaciones significativas
+#This table will show the average values of phenotypes per each genotype along with the FDR of the additive and codominant model.
 
-#hay que cambiar el nombre del major/minor del SNP chungo en la tabla de snp helena names
+
+### check if considering additive/codominant models cover all significant associations ###
+
+#copy the supple data to do some operations
+crude_assocs = suppl_data_1
+    #we use the supple dataset file because it has the final phenotypes and columns we need
+
+#create a variable with the combination of phenotype and snp of each association
+crude_assocs$pheno_snp_combination = interaction(crude_assocs$phenotype, crude_assocs$snp, sep="-")
+
+#select those associations with an FDR<0.1
+assoc_fdr_less_01 = crude_assocs[which(crude_assocs$fdr<0.1),]
+
+#from these associations, select those with the additive and codominant model
+assoc_fdr_less_01_only_add_cod = crude_assocs[which(crude_assocs$fdr<0.1 & crude_assocs$heritage_model %in% c("additive", "codominant")),]
+
+#check whether all significant combinations are included when restricting to add/codominant
+summary(unique(assoc_fdr_less_01$pheno_snp_combination) %in% unique(assoc_fdr_less_01_only_add_cod$pheno_snp_combination))
+
+#select those not included
+assoc_fdr_less_01[which(!assoc_fdr_less_01$pheno_snp_combination %in% assoc_fdr_less_01_only_add_cod$pheno_snp_combination),]
+    #The only phenoype*snp combination with FDR<0.1 not covered by additive/codominant models is Leptin_ng_ml.rs10485614. This is only association for leptin with an FDR below 0.1 (FDR=0.075). This is not a relevant association for the manuscript, and in any case, it is mentioned in the discussion along with the genotype with higher leptin, corresponding FDR and R2. We can leave it that way. 
+
+
+### make a loop to extract phenotype values per genotype ###
+
+##for each row in the supple 1, considering only associations with FDR<0.1
+for(i in 1:nrow(assoc_fdr_less_01_only_add_cod)){
+
+    #select the [i] row
+    selected_row = assoc_fdr_less_01_only_add_cod[i,]
+
+    #select the [i] phenotype and snp
+    selected_pheno = selected_row$phenotype
+    selected_snp = selected_row$snp
+
+    #extract the genotype data of the [i] snp
+    geno_data = eval(parse(text=paste("na.omit(myData_ptpn1$", selected_snp, ")", sep="")))
+
+    #extract genotype levels
+    geno_data_levels = unique(geno_data)
+
+    #for each genotype level calculate the number of individuals
+    genotype_sample_size = data.frame(selected_genotype=NA, sample_size=NA)
+    for(j in 1:length(geno_data_levels)){
+
+        #select the [j] genotype
+        selected_genotype = geno_data_levels[j]
+
+        #calculate the number of individuals with the [j] snp
+        sample_size = length(which(geno_data == selected_genotype))
+
+        #save the results
+        genotype_sample_size = rbind.data.frame(genotype_sample_size, cbind.data.frame(selected_genotype, sample_size))
+    }
+
+    #remove the first row with all NAs
+    genotype_sample_size = genotype_sample_size[-which(rowSums(is.na(genotype_sample_size)) == ncol(genotype_sample_size)),]
+
+    #select genotypes of the homozygotes
+    genotype_sample_size_homo = genotype_sample_size[which(!genotype_sample_size$selected_genotype %in% c("1/2", "2/1")),]
+
+    #select the homozygote genotype with the lowest sample size, that is, minor homozygote
+    minor_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == min(genotype_sample_size_homo$sample_size)),]$selected_genotype
+
+    #select the homozygote genotype with the highest sample size, that is, major homozygote
+    major_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == max(genotype_sample_size_homo$sample_size)),]$selected_genotype
+
+    #select those individuals with each type of genotype
+    subset_minor_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", minor_homo, "' ),]", sep="")))
+    subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
+    subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "')),]", sep="")))
+
+    #CHEK SUBSET
+
+    #if the selected phenotype is not a factor
+    if(!is.factor(eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep=""))))){
+
+        #extract the average of each genotype
+        minor_homo_average = eval(parse(text=paste("mean(na.omit(subset_minor_homo$", selected_pheno, "))", sep="")))
+        major_homo_average = eval(parse(text=paste("mean(na.omit(subset_major_homo$", selected_pheno, "))", sep="")))
+        hetero_average = eval(parse(text=paste("mean(na.omit(subset_hetero$", selected_pheno, "))", sep="")))
+
+        #extract the SD of each genotype
+        minor_homo_sd = eval(parse(text=paste("sd(na.omit(subset_minor_homo$", selected_pheno, "))", sep="")))
+        major_homo_sd = eval(parse(text=paste("sd(na.omit(subset_major_homo$", selected_pheno, "))", sep="")))
+        hetero_sd = eval(parse(text=paste("sd(na.omit(subset_hetero$", selected_pheno, "))", sep="")))
+        
+        #    
+        paste(minor_homo_average, " \\pm ", minor_homo_sd, sep="")
+
+    } else {
+        stop(paste("ERROR: You are trying to calculate average of a factor and the script is not prepared for that", sep=""))
+    }
+
+
+    cbind.data.frame(selected_pheno, selected_snp, minor_homo_average, major_homo_average, hetero_average, minor_homo_average, major_homo_average, hetero_average
+
+
+}
 
 #se coge directamente el alelo más frecuente y menos de SNP assoc y se hace subset con eso.
 
@@ -555,6 +654,8 @@ length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be
 ################### FIGURES #####################
 #################################################
 #Figures are removed in this script version.
+
+#FOR FUTURE FIGURES, IMPORTANT: The SNP "rs6067472" is palindromic, so it has T/A in HELENA and A/T in ncbi (see "alleles" object). If you plot this snp with the current plot_assoc functions, the result will be TT TT TT, because the function changes T to A in the genotype data to set A as the major, but then when changing the minor, that A should be T, we have all A, so the result is all T. In these cases, you should first copy the SNP in a new vector, change AA to XX, then TT to AA, and then XX to AA. In the commit "5a18508cb30745ee26117b0aa5aa87985edcf268" of "analyses_fdr_bh_ptpn1_v2.R" you have code for doing that. 
 
 
 
