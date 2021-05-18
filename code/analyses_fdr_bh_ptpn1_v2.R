@@ -643,7 +643,7 @@ alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/
 nrow(alleles) == length(labels(myData_ptpn1))
     #First allele is major, and second is minor.
     #IMPORTANT NOTE: I have matched the allele names of HELENA and ncbi (at 10/09/2019). Now, they all matched, but I have noted that UCP alleles have changed in ncbi. For example, alleles that I changed to match ncbi, now are in ncbi exactly as original HELENA. If you check this for these SNPs, and you see changes no panic! The important thing is you are using the complementary chain and the first allele is always the major. Indeed, in many cases both options (i.e., both chains) are included as synonimous in ncbi (i.e., HGVS).
-    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans. 
+    #UPDATE APRIL 2021: One of the alleles seems to be wrong. From now on, you must always check that the minor allele in HELENA is the allele with the lowest frequency in 1000 Genomes Project for Europeans.
 
 
 ## Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
@@ -662,11 +662,11 @@ nrow(alleles) == length(labels(myData_ptpn1))
 ## change allele names IF NEEDED
 #In our table, rs6067472 has T as the major and A as the minor allele. However, this is the opposite according to ncbi. T=0.3648. We have to exchange alleles A/T instead of T/A.
 
-#I usually compare the alleles of each SNP with the alleles in HELENA and in ncbi. We have a word file for HELENA ("Appendix list of SNPs genotyped by GoldenGate[1].doc") that shows the major and minor allele of each SNP in HELENA. The first allele is the major, while the second allele is the minor. If for example, we have G and A as alleles in HELENA, while the same SNP in ncbi has C and T, I would understand that we are reporting the opposite strand in HELENA, so I would switch to the other strand to match the alleles of ncbi. 
+#I usually compare the alleles of each SNP with the alleles in HELENA and in ncbi. We have a word file for HELENA ("Appendix list of SNPs genotyped by GoldenGate[1].doc") that shows the major and minor allele of each SNP in HELENA. The first allele is the major, while the second allele is the minor. If for example, we have G and A as alleles in HELENA, while the same SNP in ncbi has C and T, I would understand that we are reporting the opposite strand in HELENA, so I would switch to the other strand to match the alleles of ncbi.
 
 #In the case of rs6067472, the alleles are T and A, so this is a palindromic SNP. We have T and A as alleles in HELENA, while in ncbi we also have T and A, this leaded me to an error. I assumed that we are reporting the same strand in HELENA, but if we check the allele frequencies we can see they do not match. T is the major allele and A is the minor allele in HELENA, but ncbi shows T as the minor and A as the major according to the 1000 Genomes Project for European populations. Therefore, we have to also switch the alleles of this SNP to match the strand of ncbi.
 
-#For the future, you should ALWAYS compare, not only the allele names, but also the allele frequencies between HELENA and ncbi. If we are reporting the same strand, the same allele should be the major, if we are reporting the opposite strand, the complementary allele of the major in HELENA should be the major in ncbi. If the SNP is palindromic (A/T - C/G), the same major allele would indicate that we are reporting the same strand, if not, we are reporting the opposite strand. 
+#For the future, you should ALWAYS compare, not only the allele names, but also the allele frequencies between HELENA and ncbi. If we are reporting the same strand, the same allele should be the major, if we are reporting the opposite strand, the complementary allele of the major in HELENA should be the major in ncbi. If the SNP is palindromic (A/T - C/G), the same major allele would indicate that we are reporting the same strand, if not, we are reporting the opposite strand.
 
 #Therefore, in this case, HELENA alleles should be T/A, the 1 (A) is less frequent, while 2 (T) is more frequent. In the case of ncbi, it should be the opposite: A/T. A is the major allele, while T is the minor.
 summary(myData_ptpn1$rs6067472)
@@ -1408,9 +1408,7 @@ system(paste("cd ", folder_to_save_supple_data_1, "; rm ", suppl_data_1_file_nam
 
 ## compare this version of the supplementary with the first one. 
 
-#In that version, we did not recode a SNP that have alleles names inverted. rs6067472 had A as the minor allele and T as the major, but according to the 1KGP, for europeans is the opposite. 
-    #see section "COMPARE ALLELES HELENA VS 1000 GENOMES PROJECT" for further details
-    #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+#Initially, I made some changes in this version for recoding the a problematic SNP respect allele names between HELENA and ncbi. But after thinking, I discover a more minimalistic way to solve this problem without touching the dataset. 
 
 #read the file of the previous version 
 suppl_data_1_previous_version = read.table(paste(folder_to_save_supple_data_1, "/suplementary_data_1_v1.txt.gz", sep=""), sep="\t", header=TRUE)
