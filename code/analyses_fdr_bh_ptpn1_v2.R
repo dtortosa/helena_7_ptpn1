@@ -529,7 +529,7 @@ new_geno_check = helena_7$rs10485614
 #for each element of that vector
 for(i in 1:length(new_geno_check)){
 
-    #select the [i] element of the vector 
+    #select the [i] element of the vector
     stri_sub(str=new_geno_check[i], from=2, to=1) <- "/"
         #add a slash in the middle of the entry, that is, in the middle of the genotype.
         #https://stackoverflow.com/questions/13863599/insert-a-character-at-a-specific-location-in-a-string
