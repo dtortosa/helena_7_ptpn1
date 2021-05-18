@@ -1403,17 +1403,17 @@ write.table(suppl_data_1, paste(folder_to_save_supple_data_1, "/", suppl_data_1_
 
 #compress the text file and remove it after compression
 system(paste("cd ", folder_to_save_supple_data_1, "; rm ", suppl_data_1_file_name_zip, "; zip ", suppl_data_1_file_name_zip, " ", suppl_data_1_file_name, " ; rm ", suppl_data_1_file_name, sep=""))
-    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows. 
+    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows.
 
 
-## compare this version of the supplementary with the first one. 
+## compare this version of the supplementary with the first one.
 
-#Initially, I made some changes in this version for recoding the a problematic SNP respect allele names between HELENA and ncbi. But after thinking, I discover a more minimalistic way to solve this problem without touching the dataset. 
+#Initially, I made some changes in this version for recoding the a problematic SNP respect allele names between HELENA and ncbi. But after thinking, I discover a more minimalistic way to solve this problem without touching the dataset.
 
-#read the file of the previous version 
+#read the file of the previous version
 suppl_data_1_previous_version = read.table(paste(folder_to_save_supple_data_1, "/suplementary_data_1_v1.txt.gz", sep=""), sep="\t", header=TRUE)
 
-#read the file of the last version 
+#read the file of the last version
 suppl_data_1_last_version = read.table(unz(paste(folder_to_save_supple_data_1, "/suplementary_data_1_v2.zip", sep=""), suppl_data_1_file_name), sep=",", header=TRUE)
 
 #select the non-numeric columns
@@ -2632,19 +2632,17 @@ write.table(suppl_data_2, paste(folder_to_save_supple_data_2, "/", suppl_data_2_
 
 #compress the text file and remove it after compression
 system(paste("cd ", folder_to_save_supple_data_2, "; rm ", suppl_data_2_file_name_zip, "; zip ", suppl_data_2_file_name_zip, " ", suppl_data_2_file_name, " ; rm ", suppl_data_2_file_name, sep=""))
-    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows. 
+    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows.
 
 
-## compare this version of the supplementary with the first one. 
+## compare this version of the supplementary with the first one.
 
-#In that version, we did not recode a SNP that have alleles names inverted. rs6067472 had A as the minor allele and T as the major, but according to the 1KGP, for europeans is the opposite. 
-    #see section "COMPARE ALLELES HELENA VS 1000 GENOMES PROJECT" for further details
-    #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+#Initially, I made some changes in this version for recoding the a problematic SNP respect allele names between HELENA and ncbi. But after thinking, I discover a more minimalistic way to solve this problem without touching the dataset.
 
-#read the file of the previous version 
+#read the file of the previous version
 suppl_data_2_previous_version = read.table(paste(folder_to_save_supple_data_2, "/suplementary_data_2_v1.txt.gz", sep=""), sep="\t", header=TRUE)
 
-#read the file of the last version 
+#read the file of the last version
 suppl_data_2_last_version = read.table(unz(paste(folder_to_save_supple_data_2, "/suplementary_data_2_v2.zip", sep=""), suppl_data_2_file_name), sep=",", header=TRUE)
 
 #select the non-numeric columns
