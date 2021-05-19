@@ -234,12 +234,6 @@ table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_position$snp))
 colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 
 
-## convert to a latex table
-require(xtable)
-print.xtable(xtable(table_1_1KGP, align="lcccccc"), include.rownames=FALSE, NA.string="", floating = FALSE)
-
-
-
 
 
 ####################
@@ -429,8 +423,8 @@ for (i in 1:length(response_pheno)){
         }else{
 
             #set the number decimals
-            #if the phenotype is Age, weight, height, triceps and subscapular fold and BMI
-            if(pheno_selected %in% c("CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap", "CRF_BMI", "CRF_waist", "CRF_hip", "FMI")){
+            #some phenotypes will have 1 decimal
+            if(pheno_selected %in% c()){
 
                 #1 decimal
                 number_decimals = 1
@@ -514,12 +508,7 @@ pheno_slash = which(grepl("%", table_2$Phenotype))
 table_2[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_2[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 table_2$Phenotype
 
-#convert to a latex table
-require(xtable)
-print.xtable(xtable(table_2, align="lccccccc"), include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
 
-#Copia la tabla en tables_latex.tex y corre este comando
-system("cd /media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables; pandoc -s tables_latex_v3.tex -o tables_latex_v3.odt")
     
 #check for all phenotypes there is at least one data
 #select phenotype columns    
@@ -563,22 +552,24 @@ assoc_fdr_less_01[which(!assoc_fdr_less_01$pheno_snp_combination %in% assoc_fdr_
 ### make a loop to extract phenotype values per genotype ###
 
 #open empty data.frame to save results
-table_4 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA, NA, NA))
-names(table_4)[1] <- "Phenotype"
-names(table_4)[2] <- "SNP"
-names(table_4)[3] <- "Minor homozygous"
-names(table_4)[4] <- "Heterozygous"
-names(table_4)[5] <- "Major homozygous"
-names(results)[6] <- "FDR - additive"
-names(results)[7] <- "R2 - additive"
-names(results)[8] <- "FDR - codominant"
-names(results)[9] <- "R2 - codominant"
+table_4 = rbind.data.frame(rep(NA, 11))
+colnames(table_4)[1] <- "Phenotype"
+colnames(table_4)[2] <- "SNP"
+colnames(table_4)[3] <- "Minor homozygous"
+colnames(table_4)[4] <- "Heterozygous"
+colnames(table_4)[5] <- "Major homozygous"
+colnames(table_4)[6] <- "p-value add"    
+colnames(table_4)[7] <- "FDR add"
+colnames(table_4)[8] <- "R2 add"
+colnames(table_4)[9] <- "p-value cod"    
+colnames(table_4)[10] <- "FDR cod"
+colnames(table_4)[11] <- "R2 cod"
 
 
 pheno_snp_combinations_table_4 = assoc_fdr_less_01_only_add_cod$pheno_snp_combination
 
 ##for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
-for(i in 1:length(pheno_snp_combinations_table_4)){
+for(i in 2:length(pheno_snp_combinations_table_4)){
 
     #select the [i] combination
     selected_combination = pheno_snp_combinations_table_4[i]
@@ -635,15 +626,15 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     if(!is.factor(eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep=""))))){
 
         #set the number decimals
-        #if the phenotype is Age, weight, height, triceps and subscapular fold and BMI
-        if(selected_pheno %in% c("CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap", "CRF_BMI", "CRF_waist", "CRF_hip", "FMI")){
+        #some phenotypes will have 1 decimal
+        if(selected_pheno %in% c()){
 
             #1 decimal
             number_decimals = 1
         } else {#if not
 
             #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
-            if(pheno_selected %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
+            if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
 
                 #0 decimals
                 number_decimals = 0
@@ -669,11 +660,13 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
 
     if(nrow(selected_rows) == 2){
 
-        fdr_additive = selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr
-        r2_additive = selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage
+        p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
+        fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
+        r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
 
-        fdr_codominant = selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr
-        r2_codominant = selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage
+        p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
+        fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
+        r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
     } else {
         if(nrow(selected_rows) == 1){
             
@@ -681,27 +674,36 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
             model_no_significant = ifelse(selected_rows$heritage_model == "additive", "codominant", "additive")
 
 
-            assign(paste("fdr_", model_significant, sep=""), selected_rows$fdr)
-            assign(paste("r2_", model_significant, sep=""), selected_rows$r2_percentage)
+            assign(paste("p_value_", model_significant, sep=""), round(selected_rows$p_value, 3))
+            assign(paste("fdr_", model_significant, sep=""), round(selected_rows$fdr, 3))
+            assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
 
 
             results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$heritage_model == model_no_significant),]
                 #we need the whole supple, but with the combination pheno-snp
 
-            assign(paste("fdr_", model_no_significant, sep=""), results_model_no_significant$fdr)
-            assign(paste("r2_", model_no_significant, sep=""), results_model_no_significant$r2_percentage)
+            assign(paste("p_value_", model_no_significant, sep=""), round(results_model_no_significant$p_value,3))
+            assign(paste("fdr_", model_no_significant, sep=""), round(results_model_no_significant$fdr,3))
+            assign(paste("r2_", model_no_significant, sep=""), round(results_model_no_significant$r2_percentage,3))
         }
     }
 
+    
+
+    pheno_table = pheno_names$final_name[which(pheno_names$var_name == selected_pheno)]
+
+
     #bind results into one row
     results = cbind.data.frame(
-        selected_pheno,
+        pheno_table,
         selected_snp, 
         paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep=""),
         paste(hetero_average, "$\\pm$", hetero_sd, sep=""),
         paste(major_homo_average, "$\\pm$", major_homo_sd, sep=""),
+        p_value_additive,
         fdr_additive,
         r2_additive,
+        p_value_codominant,
         fdr_codominant,
         r2_codominant)
 
@@ -711,15 +713,37 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     names(results)[3] <- "Minor homozygous"
     names(results)[4] <- "Heterozygous"
     names(results)[5] <- "Major homozygous"
-    names(results)[6] <- "FDR - additive"
-    names(results)[7] <- "R2 - additive"
-    names(results)[8] <- "FDR - codominant"
-    names(results)[9] <- "R2 - codominant"
+    names(results)[6] <- "p-value add"    
+    names(results)[7] <- "FDR add"
+    names(results)[8] <- "R2 add"
+    names(results)[9] <- "p-value cod"    
+    names(results)[10] <- "FDR cod"
+    names(results)[11] <- "R2 cod"
 
 
     table_4 = rbind.data.frame(table_4, results)
-
 }
+
+
+table_4 = table_4[-which(rowSums(is.na(table_4)) == ncol(table_4)),]
+
+colnames(table_4)[which(colnames(table_4) == "R2 add")] <- "R\\textsuperscript{2} add (\\%)"
+colnames(table_4)[which(colnames(table_4) == "R2 cod")] <- "R\\textsuperscript{2} cod (\\%)"
+
+
+#for the phenotupes with percentahe (%) in the name, we add slash (\\) to avoid problemas i latex (two because 1 is a en expression for R).
+#pheno with slash
+pheno_slash = which(grepl("%", table_4$Phenotype))
+#change names of these phenotypes modifying "%" by "\\%"
+table_4[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_4[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+table_4$Phenotype
+
+
+#pheno with slash
+pheno_squared = which(grepl("\\^2", table_4$Phenotype))
+#change names of these phenotypes modifying "%" by "\\%"
+table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[pheno_squared,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+table_4$Phenotype
 
 #se coge directamente el alelo más frecuente y menos de SNP assoc y se hace subset con eso.
 
@@ -732,6 +756,65 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
 # genotyping success rate; Major allele: 1; Minor allele: 2; HW: P-value for Hardy-Weinberg equilibrium. Data are n (frequency).
 
 #fenotipo, snp, media and sd de cada genotipo, FDR the moedl add y co, R2 de ambos modelos. 
+
+
+
+
+
+################################################
+##### CONVERT TABLES TO LATEX AND COMPILE ######
+################################################
+
+#path to save tex table
+path_tex_table = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/"
+
+#name tex table
+name_tex_table = "tables_latex_v3.tex"
+
+#remove the previous file with tables in latex
+system(paste("rm ", path_tex_table, name_tex_table, sep=""))
+
+#convert table 1 to a latex table
+require(xtable)
+print.xtable(xtable(table_1_1KGP, align="lcccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE)
+
+        #arguments xtable
+            #caption: caption of the table
+            #label: label of the table
+            #align: position of the content within the cell. The number is ncols + 1 because it also consider the row names, even if you remove them in print.xtable
+            #digits: number of decimals. You can set negative decimals here to have scientific notation, but this can be also done in the next argument. You can set a different number of decimals per column (ncol+1)
+            #display: way to show content. s for string, f for usual numbers xxxx.xxxx and E/e for scientific notation (in upper and lower case, respectively).
+        #arguments print.xtable
+            #type: type of table, latex or html
+            #file: file to save the table
+            #append: logical to indicate if the table should be appended in the file or that file should be overwritten.
+            #floating: logical indicating whether this a floating table of latex
+            #table.placement: position of the floating table. Only valid with floating=TRUE. The default is [ht], indicating "here" and "top".
+            #caption.placement: position of the caption. 
+            #caption.width: width of the column.
+            #latex.environments: environment in which the table is embedded. For example begin center.
+            #hline.after: place to include bold lines in the table. The default is c(-1,0,nrow(table)) which indicated lines at both sides of the first row and in the bottom of the last row. This DOES NOT work in padoc to odf because of the odf file with the style.
+            #NA.string: string to include in the cases with NA
+            #include.rownames: logical indication whether to include row.names or not
+            #comment: logical indicating whether a comment is included in the table or not.
+            #timestamp: timestamp included in case "comment" is TRUE. The default is date().    
+
+#convert table 2 to a latex table
+require(xtable)
+print.xtable(xtable(table_2, align="lccccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
+
+#convert table 3 to a latex table
+require(xtable)
+print.xtable(xtable(table_4, align="cccccccccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
+
+#convert table 4 to a latex table
+require(xtable)
+print.xtable(xtable(table_4, align="cccccccccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
+
+#compile to odt with pandoc
+system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o tables_latex_v3.odt", sep=""))
+
+
 
 
 #################################################
