@@ -621,12 +621,12 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
 
     #select those individuals with each type of genotype
     subset_minor_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", minor_homo, "' ),]", sep="")))
-    subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
     subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "')),]", sep="")))
+    subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
 
     #check
     print(paste("############################"))
-    print(paste("CHECK THE SUBSET WAS WELL"))
+    print(paste("CHECK THE SUBSET WAS WELL FOR: ", selected_combination, sep=""))
     print(paste("############################"))
     #no other genotype rather than minor homo should exist in subset_minor_homo
     print(nrow(eval(parse(text=paste("subset_minor_homo[which(!subset_minor_homo$", selected_snp, " == c('", minor_homo, "')),]", sep="")))) == 0)
@@ -665,33 +665,37 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
 
         #extract the SD of each genotype
         minor_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
-        major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
         hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
+        major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
     
+        #create a single variable with each average and sd
         minor_homo_pheno = paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep="")
         hetero_pheno = paste(hetero_average, "$\\pm$", hetero_sd, sep="")
         major_homo_pheno = paste(major_homo_average, "$\\pm$", major_homo_sd, sep="")
     } else { #if not, and hence the phenotype is a factor
 
+        #calculate the number of minor homo with obesity and the total number of minor homo with data about obesity status
         cases_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_pheno, "== 1),]", sep=""))))
         total_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo[which(!is.na(subset_minor_homo$", selected_pheno, ")),]", sep=""))))
             #we need all rows with data for the selected phenotype included in the subset of the genotype
         
+        #calculate the number of hetero with obesity and the total number of hetero with data about obesity status
         cases_hetero = nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_pheno, "== 1),]", sep=""))))
         total_hetero = nrow(eval(parse(text=paste("subset_hetero[which(!is.na(subset_hetero$", selected_pheno, ")),]", sep=""))))
             #we need all rows with data for the selected phenotype included in the subset of the genotype
 
+        #calculate the number of major homo with obesity and the total number of major homo with data about obesity status
         cases_major_homo = nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_pheno, "== 1),]", sep=""))))
         total_major_homo = nrow(eval(parse(text=paste("subset_major_homo[which(!is.na(subset_major_homo$", selected_pheno, ")),]", sep=""))))
             #we need all rows with data for the selected phenotype included in the subset of the genotype
 
-
+        #calculate the percentage of individuals with obesity respect the total number of individual within each genotype
         minor_homo_pheno=round((cases_minor_homo/total_minor_homo)*100, number_decimals)
         hetero_pheno=round((cases_hetero/total_hetero)*100, number_decimals)
         major_homo_pheno=round((cases_major_homo/total_major_homo)*100, number_decimals)
 
-        #I have checked the figure of PTPN1 for obesity (rs2143511 - additive: pdf with FDR<0.1). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can how TT (major homo) decreases much more in overweight compare to the other genotype, suggesting it is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
-        
+        #I have checked the figure of PTPN1 for obesity (rs2143511 - additive: pdf with FDR<0.1). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can se how TT (major homo) frequency decreases a lot in overweight, while the minor homo (CC) increases, suggesting the former is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
+
             #sample size in each category
                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 0),])
                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 0),])
@@ -716,40 +720,49 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 1),])/total_cases_obese
     }
 
+    #if the number of selected rows is 2, and hence the spn-phenotype association is significant for additive and codominant model
     if(nrow(selected_rows) == 2){
 
+        #extract the association results of additive model from selected rows
         p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
         fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
         r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
 
+        #extract the association results of codominant model from selected rows
         p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
         fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
         r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
-    } else {
+    } else { #if not, only one heritage model is significant
+
+        #thus we should have only 1 selected row
         if(nrow(selected_rows) == 1){
             
+            #save the name of the significant
             model_significant = selected_rows$heritage_model
+                #the significant model is in selected row, because this is the association selected as significant
+            
+            #save the name of the non-significant model
             model_no_significant = ifelse(selected_rows$heritage_model == "additive", "codominant", "additive")
+                #if the significant model is additive, then the non-significant model is codominant. If not, then the significant model is codominant and hence the non-significant is additive.
 
-
+            #extract the results of the significant model from selected rows (there you have the significant associations) and then assign these results to objects named with the name of the significant model
             assign(paste("p_value_", model_significant, sep=""), round(selected_rows$p_value, 3))
             assign(paste("fdr_", model_significant, sep=""), round(selected_rows$fdr, 3))
             assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
 
-
+            #extract the results of the non-significant model from crude_assocs (there you have all associations)
             results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$heritage_model == model_no_significant),]
-                #we need the whole supple, but with the combination pheno-snp
+                #we need the whole supple, but with the combination pheno-snp selected and the non-significant model
 
+            #then assign these results to objects named with the name of the non-significant model
             assign(paste("p_value_", model_no_significant, sep=""), round(results_model_no_significant$p_value,3))
             assign(paste("fdr_", model_no_significant, sep=""), round(results_model_no_significant$fdr,3))
             assign(paste("r2_", model_no_significant, sep=""), round(results_model_no_significant$r2_percentage,3))
         }
     }
 
-    
-
+    #extract the final name of the selected phenotype for the table
     pheno_table = pheno_names$final_name[which(pheno_names$var_name == selected_pheno)]
-
 
     #bind results into one row
     results = cbind.data.frame(
@@ -778,33 +791,35 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     names(results)[10] <- "FDR cod"
     names(results)[11] <- "R2 cod"
 
-
+    #add the results as a row in the final data.frame
     table_4 = rbind.data.frame(table_4, results)
 }
 
-
+#remove the first row with all NAs
 table_4 = table_4[-which(rowSums(is.na(table_4)) == ncol(table_4)),]
 
+
+## change some name entries
+#add R squared and percentage to the column names with R2
 colnames(table_4)[which(colnames(table_4) == "R2 add")] <- "R\\textsuperscript{2} add (\\%)"
 colnames(table_4)[which(colnames(table_4) == "R2 cod")] <- "R\\textsuperscript{2} cod (\\%)"
 
 
-#for the phenotupes with percentahe (%) in the name, we add slash (\\) to avoid problemas i latex (two because 1 is a en expression for R).
-#pheno with slash
-pheno_slash = which(grepl("%", table_4$Phenotype))
-#change names of these phenotypes modifying "%" by "\\%"
-table_4[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_4[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-table_4$Phenotype
+##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
 
+#We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+
+#pheno with slash
+pheno_slash = which(grepl("%", table_4$Phenotype)) #rows with percentage as phenotype name
+#change names of these phenotypes modifying "%" by "\\%"
+table_4[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_4[pheno_slash,]$Phenotype, fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
 #pheno with ^2
-pheno_squared = which(grepl("\\^2", table_4$Phenotype))
-#change names of these phenotypes modifying "%" by "\\%"
-table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[pheno_squared,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-table_4$Phenotype
-
-
-#lo mismo puede hacer un check con el codigoq que transforma los numeros a letras en los alleles names. 
+pheno_squared = which(grepl("\\^2", table_4$Phenotype)) #rows with squared as phenotype name
+#change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
+table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[pheno_squared,]$Phenotype, fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
 
 
@@ -881,6 +896,8 @@ system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name
 #Figures are removed in this script version.
 
 #FOR FUTURE FIGURES, IMPORTANT: The SNP "rs6067472" is palindromic, so it has T/A in HELENA and A/T in ncbi (see "alleles" object). If you plot this snp with the current plot_assoc functions, the result will be TT TT TT, because the function changes T to A in the genotype data to set A as the major, but then when changing the minor, that A should be T, we have all A, so the result is all T. In these cases, you should first copy the SNP in a new vector, change AA to XX, then TT to AA, and then XX to AA. In the commit "5a18508cb30745ee26117b0aa5aa87985edcf268" of "analyses_fdr_bh_ptpn1_v2.R" you have code for doing that. 
+
+#The figure of obesity are not really understandable. I calculated the percentage of individuals with each genotype within obesity and non-obesity. This is not intuitive. It is better to calculate the percentage of obesity within each genotype. See the script of table 4 (for factor phenotypes) for further details.
 
 
 
