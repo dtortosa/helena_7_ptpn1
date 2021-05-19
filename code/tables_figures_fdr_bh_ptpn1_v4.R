@@ -58,7 +58,7 @@ setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_p
 ### create a data.frame withe the names of phenotypes in dataset and the real name per the figure
 pheno_names = cbind.data.frame(
     c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP"),
-    c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% individuals", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
+    c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% obesity/overweight", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
 colnames(pheno_names) <- c("var_name", "final_name")
 
 #### binomial phenotypes included in this set of results
@@ -495,8 +495,8 @@ for (i in 1:length(response_pheno)){
 #remove the first row
 table_2 = table_2[-1,]
 
-#remove the rows of obesity phenotype ("% individuals"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
-table_2 = table_2[-which(table_2$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% individuals")),]
+#remove the rows of obesity phenotype ("% obesity/overweight"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
+table_2 = table_2[-which(table_2$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% obesity/overweight")),]
 
 #see the table
 table_2
@@ -553,29 +553,33 @@ assoc_fdr_less_01[which(!assoc_fdr_less_01$pheno_snp_combination %in% assoc_fdr_
 
 #open empty data.frame to save results
 table_4 = rbind.data.frame(rep(NA, 11))
-colnames(table_4)[1] <- "Phenotype"
-colnames(table_4)[2] <- "SNP"
-colnames(table_4)[3] <- "Minor homozygous"
-colnames(table_4)[4] <- "Heterozygous"
-colnames(table_4)[5] <- "Major homozygous"
-colnames(table_4)[6] <- "p-value add"    
+colnames(table_4)[1] <- "SNP"
+colnames(table_4)[2] <- "Phenotype"
+colnames(table_4)[3] <- "11"
+colnames(table_4)[4] <- "12"
+colnames(table_4)[5] <- "22"
+colnames(table_4)[6] <- "P add"    
 colnames(table_4)[7] <- "FDR add"
 colnames(table_4)[8] <- "R2 add"
-colnames(table_4)[9] <- "p-value cod"    
+colnames(table_4)[9] <- "P cod"    
 colnames(table_4)[10] <- "FDR cod"
 colnames(table_4)[11] <- "R2 cod"
 
+#reorder the file with significant add/cod associations based on snps
+assoc_fdr_less_01_only_add_cod_copy = assoc_fdr_less_01_only_add_cod[order(assoc_fdr_less_01_only_add_cod$snp),]
 
-pheno_snp_combinations_table_4 = assoc_fdr_less_01_only_add_cod$pheno_snp_combination
+#select those pheno-snp combinations for associations with FDr<0.1 in the additive or codominant models
+pheno_snp_combinations_table_4 = unique(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination)
+    #we need unique because an snp-pheno association that is significant for additive and codominant will be selected two times and included two times in the table. We only need it one time, if the combination is present two times in "assoc_fdr_less_01_only_add_cod_copy" (2 rows), the script will take the FDR of additive and codominant. If it is not present it will look for the non-significant model in "crude_assocs". 
 
-##for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
-for(i in 2:length(pheno_snp_combinations_table_4)){
+#for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
+for(i in 1:length(pheno_snp_combinations_table_4)){
 
     #select the [i] combination
     selected_combination = pheno_snp_combinations_table_4[i]
 
     #select the rows of the significant associations for the [i] pheno-snp combination
-    selected_rows = assoc_fdr_less_01_only_add_cod[which(assoc_fdr_less_01_only_add_cod$pheno_snp_combination %in% selected_combination),]
+    selected_rows = assoc_fdr_less_01_only_add_cod_copy[which(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination %in% selected_combination),]
         #We can have the same phenotype-snp combination for two models, additive and codominant.
 
     #select the [i] phenotype and snp
@@ -620,42 +624,96 @@ for(i in 2:length(pheno_snp_combinations_table_4)){
     subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
     subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "')),]", sep="")))
 
-    #CHEK SUBSET
+    #check
+    print(paste("############################"))
+    print(paste("CHECK THE SUBSET WAS WELL"))
+    print(paste("############################"))
+    #no other genotype rather than minor homo should exist in subset_minor_homo
+    print(nrow(eval(parse(text=paste("subset_minor_homo[which(!subset_minor_homo$", selected_snp, " == c('", minor_homo, "')),]", sep="")))) == 0)
+    #no other genotype rather than hetero should exist in subset_hetero
+    print(nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "')),]", sep="")))) == 0)
+    #no other genotype rather than major homo should exist in subset_major_homo
+    print(nrow(eval(parse(text=paste("subset_major_homo[which(!subset_major_homo$", selected_snp, " == c('", major_homo, "')),]", sep="")))) == 0)
+
+    #set the number decimals
+    #some phenotypes will have 1 decimal
+    if(selected_pheno %in% c("")){
+
+        #1 decimal
+        number_decimals = 1
+    } else {#if not
+
+        #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
+        if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
+
+            #0 decimals
+            number_decimals = 0
+        } else {#if the phenotype is none of the latter
+
+            #2 decimals
+            number_decimals = 2
+        }
+    }
 
     #if the selected phenotype is not a factor
     if(!is.factor(eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep=""))))){
 
-        #set the number decimals
-        #some phenotypes will have 1 decimal
-        if(selected_pheno %in% c()){
-
-            #1 decimal
-            number_decimals = 1
-        } else {#if not
-
-            #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
-            if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
-
-                #0 decimals
-                number_decimals = 0
-            } else {#if the phenotype is none of the latter
-
-                #2 decimals
-                number_decimals = 2
-            }
-        }
-
         #extract the average of each genotype
         minor_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
-        major_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
         hetero_average = round(mean(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
+        major_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
 
         #extract the SD of each genotype
         minor_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
         major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
         hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
-    } else {
-        stop(paste("ERROR: You are trying to calculate average of a factor and the script is not prepared for that", sep=""))
+    
+        minor_homo_pheno = paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep="")
+        hetero_pheno = paste(hetero_average, "$\\pm$", hetero_sd, sep="")
+        major_homo_pheno = paste(major_homo_average, "$\\pm$", major_homo_sd, sep="")
+    } else { #if not, and hence the phenotype is a factor
+
+        cases_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_pheno, "== 1),]", sep=""))))
+        total_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo[which(!is.na(subset_minor_homo$", selected_pheno, ")),]", sep=""))))
+            #we need all rows with data for the selected phenotype included in the subset of the genotype
+        
+        cases_hetero = nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_pheno, "== 1),]", sep=""))))
+        total_hetero = nrow(eval(parse(text=paste("subset_hetero[which(!is.na(subset_hetero$", selected_pheno, ")),]", sep=""))))
+            #we need all rows with data for the selected phenotype included in the subset of the genotype
+
+        cases_major_homo = nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_pheno, "== 1),]", sep=""))))
+        total_major_homo = nrow(eval(parse(text=paste("subset_major_homo[which(!is.na(subset_major_homo$", selected_pheno, ")),]", sep=""))))
+            #we need all rows with data for the selected phenotype included in the subset of the genotype
+
+
+        minor_homo_pheno=round((cases_minor_homo/total_minor_homo)*100, number_decimals)
+        hetero_pheno=round((cases_hetero/total_hetero)*100, number_decimals)
+        major_homo_pheno=round((cases_major_homo/total_major_homo)*100, number_decimals)
+
+        #I have checked the figure of PTPN1 for obesity (rs2143511 - additive: pdf with FDR<0.1). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can how TT (major homo) decreases much more in overweight compare to the other genotype, suggesting it is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
+        
+            #sample size in each category
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 0),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 0),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 0),])
+
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 1),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 1),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 1),])
+
+            #percentage of individuals in each category
+
+                #total_cases_non_obese = length(which(!is.na(myData_ptpn1$rs2143511) & myData_ptpn1$obesity == 0))
+                #total_cases_obese = length(which(!is.na(myData_ptpn1$rs2143511) & myData_ptpn1$obesity == 1))
+                    #number of cases with and without obesity for the three genotypes (no NA for the SNP)
+
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 0),])/total_cases_non_obese
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 0),])/total_cases_non_obese
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 0),])/total_cases_non_obese
+
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 1),])/total_cases_obese
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 1),])/total_cases_obese
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 1),])/total_cases_obese
     }
 
     if(nrow(selected_rows) == 2){
@@ -695,11 +753,11 @@ for(i in 2:length(pheno_snp_combinations_table_4)){
 
     #bind results into one row
     results = cbind.data.frame(
+        selected_snp,
         pheno_table,
-        selected_snp, 
-        paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep=""),
-        paste(hetero_average, "$\\pm$", hetero_sd, sep=""),
-        paste(major_homo_average, "$\\pm$", major_homo_sd, sep=""),
+        minor_homo_pheno,
+        hetero_pheno,
+        major_homo_pheno,
         p_value_additive,
         fdr_additive,
         r2_additive,
@@ -708,15 +766,15 @@ for(i in 2:length(pheno_snp_combinations_table_4)){
         r2_codominant)
 
     #change columns names to match names table 2
-    names(results)[1] <- "Phenotype"
-    names(results)[2] <- "SNP"
-    names(results)[3] <- "Minor homozygous"
-    names(results)[4] <- "Heterozygous"
-    names(results)[5] <- "Major homozygous"
-    names(results)[6] <- "p-value add"    
+    names(results)[1] <- "SNP"
+    names(results)[2] <- "Phenotype"
+    names(results)[3] <- "11"
+    names(results)[4] <- "12"
+    names(results)[5] <- "22"
+    names(results)[6] <- "P add"    
     names(results)[7] <- "FDR add"
     names(results)[8] <- "R2 add"
-    names(results)[9] <- "p-value cod"    
+    names(results)[9] <- "P cod"    
     names(results)[10] <- "FDR cod"
     names(results)[11] <- "R2 cod"
 
@@ -739,24 +797,14 @@ table_4[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_4[pheno_slash,]$Phenot
 table_4$Phenotype
 
 
-#pheno with slash
+#pheno with ^2
 pheno_squared = which(grepl("\\^2", table_4$Phenotype))
 #change names of these phenotypes modifying "%" by "\\%"
 table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[pheno_squared,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 table_4$Phenotype
 
-#se coge directamente el alelo más frecuente y menos de SNP assoc y se hace subset con eso.
 
 #lo mismo puede hacer un check con el codigoq que transforma los numeros a letras en los alleles names. 
-
-
-#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2903808/
-#table 2
-#11 12  22
-# genotyping success rate; Major allele: 1; Minor allele: 2; HW: P-value for Hardy-Weinberg equilibrium. Data are n (frequency).
-
-#fenotipo, snp, media and sd de cada genotipo, FDR the moedl add y co, R2 de ambos modelos. 
-
 
 
 
@@ -765,19 +813,23 @@ table_4$Phenotype
 ##### CONVERT TABLES TO LATEX AND COMPILE ######
 ################################################
 
+#load the required package
+require(xtable)
+
 #path to save tex table
 path_tex_table = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/"
 
 #name tex table
 name_tex_table = "tables_latex_v3.tex"
 
+#name doc table
+name_doc_table = "tables_latex_v3.odt"
+
 #remove the previous file with tables in latex
-system(paste("rm ", path_tex_table, name_tex_table, sep=""))
+system(paste("cd ", path_tex_table, "; rm ", name_tex_table, "; rm ", name_doc_table, sep=""))
 
 #convert table 1 to a latex table
-require(xtable)
-print.xtable(xtable(table_1_1KGP, align="lcccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE)
-
+print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="lcccccc", digits=2, display=c("s", "s", "s", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
         #arguments xtable
             #caption: caption of the table
             #label: label of the table
@@ -800,19 +852,25 @@ print.xtable(xtable(table_1_1KGP, align="lcccccc"), file=paste(path_tex_table, n
             #timestamp: timestamp included in case "comment" is TRUE. The default is date().    
 
 #convert table 2 to a latex table
-require(xtable)
-print.xtable(xtable(table_2, align="lccccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
+print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="lccccccc", digits=2, display=c("s", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+    #sanitize.text.function:
+        #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+            #in this way we can remove slash, etc...
+    #Rest of the argument in the line of the table 1
 
 #convert table 3 to a latex table
-require(xtable)
-print.xtable(xtable(table_4, align="cccccccccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
 
 #convert table 4 to a latex table
-require(xtable)
-print.xtable(xtable(table_4, align="cccccccccccc"), file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, include.rownames=FALSE, NA.string="", floating = FALSE, sanitize.text.function=function(x) {x})
+print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc", digits=3, display=c("s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+    #argument in the line of the table 1
+    #sanitize.text.function:
+        #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+            #in this way we can remove slash, etc...
+
+#convert table 5 to a latex table
 
 #compile to odt with pandoc
-system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o tables_latex_v3.odt", sep=""))
+system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name_doc_table, sep=""))
 
 
 
@@ -830,6 +888,8 @@ system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o tables_
 ####################################################
 ######## SUPLE LEPTIN - OBESITY CORRELATION ########
 ####################################################
+
+if(FALSE){
 
 #open the pdf
 pdf(paste("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/figures/figures_suple_pvals/figure_S", sequence_pheno[length(sequence_pheno)]+1, ".pdf", sep=""), height = 6, width = 12)
@@ -871,3 +931,4 @@ mtext(paste("Online supplementary figure S", sequence_pheno[length(sequence_phen
 
 #close the pdf
 dev.off()
+}
