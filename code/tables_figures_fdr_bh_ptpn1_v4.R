@@ -152,6 +152,7 @@ df_check_alleles = merge(alleles_from_table_1, alleles)
 
 #check that the colums of alleles names are similar
 identical(df_check_alleles$alleles_from_ncbi, df_check_alleles$ncbi)
+    #CHECK THIS LINE, IT GIVES FALSE!!!
 
 #reorder the table following the order in the chromosome 
 table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
