@@ -579,7 +579,7 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     print(paste("##############################################"))
 
     #select the rows of the significant associations for the [i] pheno-snp combination
-    selected_rows = assoc_fdr_less_01_only_add_cod_copy[which(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination %in% selected_combination),]
+    selected_rows = assoc_fdr_less_01_only_add_cod_copy[which(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination == selected_combination),]
         #We can have the same phenotype-snp combination for two models, additive and codominant.
 
     #select the [i] phenotype and snp
@@ -829,6 +829,326 @@ table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[
 
 
 
+####################
+##### TABLE 5 ######
+####################
+
+#This table will show the average values of phenotypes per each genotype*PA level along with the FDR of the additive and codominant model.
+
+
+### check if considering additive/codominant models cover all significant associations ###
+
+#copy the supple data to do some operations
+crude_interacts = suppl_data_2
+    #we use the supple dataset file because it has the final phenotypes and columns we need
+
+#create a variable with the combination of phenotype and snp of each association
+crude_interacts$pheno_snp_combination = interaction(crude_interacts$phenotype, crude_interacts$snp, sep="-")
+#check
+summary(crude_interacts$pheno_snp_combination == paste(crude_interacts$phenotype, crude_interacts$snp, sep="-"))
+
+#select those associations with an FDR<0.1
+interact_fdr_less_005 = crude_interacts[which(crude_interacts$fdr<0.05),]
+
+#from these associations, select those with the additive and codominant model
+interact_fdr_less_005_only_add_cod = crude_interacts[which(crude_interacts$fdr<0.05 & crude_interacts$heritage_model %in% c("additive", "codominant")),]
+#check
+nrow(interact_fdr_less_005_only_add_cod[which(interact_fdr_less_005_only_add_cod$fdr<0.05 & interact_fdr_less_005_only_add_cod$heritage_model %in% c("additive", "codominant")),]) == nrow(interact_fdr_less_005_only_add_cod)
+
+#check whether all significant combinations are included when restricting to add/codominant
+summary(unique(interact_fdr_less_005$pheno_snp_combination) %in% unique(interact_fdr_less_005_only_add_cod$pheno_snp_combination))
+
+#select those not included
+interact_fdr_less_005[which(!interact_fdr_less_005$pheno_snp_combination %in% interact_fdr_less_005_only_add_cod$pheno_snp_combination),]
+    #There are only 3 interactions not included: 
+        #obesity overdominant rs2143511 0.01062509724 0.04250038896
+        # FMI    recessive    rs6067472 0.02494014612 0.04500762131
+        # FMI    recessive    rs6020608 0.03375571598 0.04500762131
+    #All three are very close to FDR=0.05.
+        #FMI is very associated with other two snps in other models.
+        #Obesity is not associated with other snps or models, but I am not very confident with this association. It only shows significance for the overdominant model, similar phenotype for the homozygous.
+    #There is no problem if we lose these associations in the table of main text. The main results and analyses remain similar in main text, and the these three can be found in supplementary 2.
+
+
+### make a loop to extract phenotype values per genotype ###
+
+#open empty data.frame to save results
+table_5 = rbind.data.frame(rep(NA, 14))
+colnames(table_5)[1] <- "SNP"
+colnames(table_5)[2] <- "Phenotype"
+colnames(table_5)[3] <- "11 PI"
+colnames(table_5)[4] <- "12 PI"
+colnames(table_5)[5] <- "22 PI"
+colnames(table_5)[6] <- "11 PA"
+colnames(table_5)[7] <- "12 PA"
+colnames(table_5)[8] <- "22 PA"
+colnames(table_5)[9] <- "P add" 
+colnames(table_5)[10] <- "FDR add"
+colnames(table_5)[11] <- "R2 add"
+colnames(table_5)[12] <- "P cod"
+colnames(table_5)[13] <- "FDR cod"
+colnames(table_5)[14] <- "R2 cod"
+
+#reorder the file with significant add/cod associations based on snps
+interact_fdr_less_005_only_add_cod_copy = interact_fdr_less_005_only_add_cod[order(interact_fdr_less_005_only_add_cod$snp),]
+
+#select those pheno-snp combinations for associations with FDr<0.1 in the additive or codominant models
+pheno_snp_combinations_table_5 = unique(interact_fdr_less_005_only_add_cod_copy$pheno_snp_combination)
+    #we need unique because an snp-pheno association that is significant for additive and codominant will be selected two times and included two times in the table. We only need it one time, if the combination is present two times in "interact_fdr_less_005_only_add_cod_copy" (2 rows), the script will take the FDR of additive and codominant. If it is not present it will look for the non-significant model in "crude_interacts". 
+
+#set the name of the environmental variable
+env_variable_table_5 = "PA_factor"
+
+#for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
+for(i in 1:length(pheno_snp_combinations_table_5)){
+
+    #select the [i] combination
+    selected_combination = pheno_snp_combinations_table_5[i]
+
+    #check
+    print(paste("##############################################"))
+    print(paste("STARTING WITH TABLE 5: ", selected_combination, sep=""))
+    print(paste("##############################################"))
+
+    #select the rows of the significant associations for the [i] pheno-snp combination
+    selected_rows = interact_fdr_less_005_only_add_cod_copy[which(interact_fdr_less_005_only_add_cod_copy$pheno_snp_combination == selected_combination),]
+        #We can have the same phenotype-snp combination for two models, additive and codominant.
+
+    #select the [i] phenotype and snp
+    selected_pheno = unique(selected_rows$phenotype)
+    selected_snp = unique(selected_rows$snp)
+        #unique because we can have two rows (additive and codominant), but in both cases the snp and phenotype should be the same indicated in selected_combination
+    #check
+    print(paste("############################"))
+    print(paste("WE SELECTED THE CORRECT PHENOTYPE AND SNP?"))
+    print(paste(selected_pheno, "-", selected_snp, sep="") == selected_combination)
+    print(paste("############################"))
+
+    #extract the genotype data of the [i] snp
+    geno_data = eval(parse(text=paste("na.omit(myData_ptpn1$", selected_snp, ")", sep="")))
+
+    #extract genotype levels
+    geno_data_levels = unique(geno_data)
+
+    #for each genotype level calculate the number of individuals
+    genotype_sample_size = data.frame(selected_genotype=NA, sample_size=NA) #open an empty data.frame to save resuls
+    for(j in 1:length(geno_data_levels)){
+
+        #select the [j] genotype
+        selected_genotype = geno_data_levels[j]
+
+        #calculate the number of individuals with the [j] snp
+        sample_size = length(which(geno_data == selected_genotype))
+
+        #save the results
+        genotype_sample_size = rbind.data.frame(genotype_sample_size, cbind.data.frame(selected_genotype, sample_size))
+    }
+
+    #remove the first row with all NAs
+    genotype_sample_size = genotype_sample_size[-which(rowSums(is.na(genotype_sample_size)) == ncol(genotype_sample_size)),]
+
+    #select genotypes of the homozygotes
+    genotype_sample_size_homo = genotype_sample_size[which(!genotype_sample_size$selected_genotype %in% c("1/2", "2/1")),]
+
+    #select the homozygote genotype with the lowest sample size, that is, minor homozygote
+    minor_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == min(genotype_sample_size_homo$sample_size)),]$selected_genotype
+
+    #select the homozygote genotype with the highest sample size, that is, major homozygote
+    major_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == max(genotype_sample_size_homo$sample_size)),]$selected_genotype
+
+    #select those individuals with each type of genotype
+    subset_minor_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", minor_homo, "' ),]", sep="")))
+    subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') & !is.na(myData_ptpn1$", selected_snp, ")),]", sep="")))
+    subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
+        #"parse()" returns the parsed but unevaluated expressions in an "expression" object. Therefore, the code is not run yet.
+        #"eval()" evaluates an R expression. It runs the expression. 
+            #dummy example:
+                #expression_sum = parse(text="1+1") #create a expression to sum 1+1
+                #eval(expression_sum) #evaluate the expression, giving 2.
+
+    #check the subset worked
+    print(paste("############################"))
+    print(paste("CHECK THE SUBSET WAS WELL FOR: ", selected_combination, sep=""))
+    print(paste("############################"))
+    #no other genotype rather than minor homo should exist in subset_minor_homo
+    print(nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_snp, " != '", minor_homo, "'),]", sep="")))) == 0)
+    #no other genotype rather than hetero should exist in subset_hetero
+    print(nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') | is.na(subset_hetero$", selected_snp, ")),]", sep="")))) == 0)
+    #no other genotype rather than major homo should exist in subset_major_homo
+    print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
+
+    #set the number decimals
+    #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
+    if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
+
+        #0 decimals
+        number_decimals = 0
+    } else {#if the phenotype is none of the latter
+
+        #2 decimals
+        number_decimals = 2
+    }
+
+    #extract the data of the selected phenotype to make a condition
+    selected_pheno_data = eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep="")))
+
+    #extract the environmental variable to do a loop inside the ifelse
+    selected_env_var_levels = sort(unique(eval(parse(text=paste("myData_ptpn1$", env_variable_table_5, sep="")))))
+
+
+    #if the selected phenotype is not a factor
+    if(!is.factor(selected_pheno_data)){
+
+        #for each level of the environmental variable
+        for(j in 1:length(selected_env_var_levels)){
+
+            #select the [j] level
+            selected_env_level = selected_env_var_levels[j]
+
+            #select those individuals with the [j] level of the environmental variable in each genotype
+            subset_minor_homo_env = eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
+            subset_hetero_env = eval(parse(text=paste("subset_hetero[which(subset_hetero$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
+            subset_major_homo_env = eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
+
+            #check the subset worked
+            print(paste("############################"))
+            print(paste("CHECK THE ENV SUBSET WAS WELL FOR: ", selected_combination, sep=""))
+            print(paste("############################"))
+            #no other genotype rather than minor homo should exist in subset_minor_homo
+            print(nrow(eval(parse(text=paste("subset_minor_homo_env[which(subset_minor_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
+            print(nrow(eval(parse(text=paste("subset_hetero_env[which(subset_hetero_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
+            print(nrow(eval(parse(text=paste("subset_major_homo_env[which(subset_major_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
+
+            #extract the average of each genotype
+            minor_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_minor_homo_env$", selected_pheno, sep=""))))), number_decimals)
+            hetero_average = round(mean(na.omit(eval(parse(text=paste("subset_hetero_env$", selected_pheno, sep=""))))), number_decimals)
+            major_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_major_homo_env$", selected_pheno, sep=""))))), number_decimals)
+
+            #extract the SD of each genotype
+            minor_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_minor_homo_env$", selected_pheno, sep=""))))), number_decimals)
+            hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero_env$", selected_pheno, sep=""))))), number_decimals)
+            major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo_env$", selected_pheno, sep=""))))), number_decimals)
+    
+            #create a single variable with each average and sd
+            assign(paste("minor_homo_", env_variable_table_5, "_", selected_env_level, sep=""), paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep=""))
+            assign(paste("hetero_", env_variable_table_5, "_", selected_env_level, sep=""), paste(hetero_average, "$\\pm$", hetero_sd, sep=""))
+            assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), paste(major_homo_average, "$\\pm$", major_homo_sd, sep=""))
+        }
+    } else { #if not, and hence the phenotype is a factor
+        stop("ERROR: You are trying to include a factor phenotype, but the script is not ready for that")
+        #do it? maybe it is easy with the loop I have prepared for continous variables and the script of table 4. Think.
+    }
+
+    #if the number of selected rows is 2, and hence the spn-phenotype association is significant for additive and codominant model
+    if(nrow(selected_rows) == 2){
+
+        #extract the association results of additive model from selected rows
+        p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
+        fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
+        r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
+
+        #extract the association results of codominant model from selected rows
+        p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
+        fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
+        r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
+    } else { #if not, only one heritage model is significant
+
+        #thus we should have only 1 selected row
+        if(nrow(selected_rows) == 1){
+            
+            #save the name of the significant
+            model_significant = selected_rows$heritage_model
+                #the significant model is in selected row, because this is the association selected as significant
+            
+            #save the name of the non-significant model
+            model_no_significant = ifelse(model_significant == "additive", "codominant", "additive")
+                #if the significant model is additive, then the non-significant model is codominant. If not, then the significant model is codominant and hence the non-significant is additive.
+
+            #extract the results of the significant model from selected rows (there you have the significant associations) and then assign these results to objects named with the name of the significant model
+            assign(paste("p_value_", model_significant, sep=""), round(selected_rows$p_value, 3))
+            assign(paste("fdr_", model_significant, sep=""), round(selected_rows$fdr, 3))
+            assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
+
+            #extract the results of the non-significant model from crude_interacts (there you have all associations)
+            results_model_no_significant = crude_interacts[which(crude_interacts$pheno_snp_combination == selected_combination & crude_interacts$heritage_model == model_no_significant),]
+                #we need the whole supple (non-significant associations), but with the combination pheno-snp selected and the non-significant model
+
+            #then assign these results to objects named with the name of the non-significant model
+            assign(paste("p_value_", model_no_significant, sep=""), round(results_model_no_significant$p_value,3))
+            assign(paste("fdr_", model_no_significant, sep=""), round(results_model_no_significant$fdr,3))
+            assign(paste("r2_", model_no_significant, sep=""), round(results_model_no_significant$r2_percentage,3))
+        }
+    }
+
+    #extract the final name of the selected phenotype for the table
+    pheno_table = pheno_names[which(pheno_names$var_name == selected_pheno),]$final_name
+
+    #bind results into one row
+    results = cbind.data.frame(
+        selected_snp,
+        pheno_table,
+        minor_homo_PA_factor_0,
+        hetero_PA_factor_0,
+        major_homo_PA_factor_0,
+        minor_homo_PA_factor_1,
+        hetero_PA_factor_1,
+        major_homo_PA_factor_1,
+        p_value_additive,
+        fdr_additive,
+        r2_additive,
+        p_value_codominant,
+        fdr_codominant,
+        r2_codominant)
+
+    #change columns names to match names table 2
+    names(results)[1] <- "SNP"
+    names(results)[2] <- "Phenotype"
+    names(results)[3] <- "11 PI"
+    names(results)[4] <- "12 PI"
+    names(results)[5] <- "22 PI"
+    names(results)[6] <- "11 PA"
+    names(results)[7] <- "12 PA"
+    names(results)[8] <- "22 PA"
+    names(results)[9] <- "P add"    
+    names(results)[10] <- "FDR add"
+    names(results)[11] <- "R2 add"
+    names(results)[12] <- "P cod"    
+    names(results)[13] <- "FDR cod"
+    names(results)[14] <- "R2 cod"
+
+    #add the results as a row in the final data.frame
+    table_5 = rbind.data.frame(table_5, results)
+}
+
+#remove the first row with all NAs
+table_5 = table_5[-which(rowSums(is.na(table_5)) == ncol(table_5)),]
+
+
+## change some name entries
+#add R squared and percentage to the column names with R2
+colnames(table_5)[which(colnames(table_5) == "R2 add")] <- "R\\textsuperscript{2} add (\\%)"
+colnames(table_5)[which(colnames(table_5) == "R2 cod")] <- "R\\textsuperscript{2} cod (\\%)"
+
+
+##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+
+#We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+
+#pheno with slash
+pheno_slash = which(grepl("%", table_5$Phenotype)) #rows with percentage as phenotype name
+#change names of these phenotypes modifying "%" by "\\%"
+table_5[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_5[pheno_slash,]$Phenotype, fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+
+#pheno with ^2
+pheno_squared = which(grepl("\\^2", table_5$Phenotype)) #rows with squared as phenotype name
+#change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
+table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[pheno_squared,]$Phenotype, fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+
+
+
+
 ################################################
 ##### CONVERT TABLES TO LATEX AND COMPILE ######
 ################################################
@@ -888,6 +1208,11 @@ print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc"
             #in this way we can remove slash, etc...
 
 #convert table 5 to a latex table
+print.xtable(xtable(table_5, caption="Table 5", label=NULL, align="ccccccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_5)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+    #argument in the line of the table 1
+    #sanitize.text.function:
+        #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+            #in this way we can remove slash, etc...
 
 #compile to odt with pandoc
 system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name_doc_table, sep=""))
