@@ -995,7 +995,6 @@ for(i in 1:length(pheno_snp_combinations_table_5)){
     #extract the environmental variable to do a loop inside the ifelse
     selected_env_var_levels = sort(unique(eval(parse(text=paste("myData_ptpn1$", env_variable_table_5, sep="")))))
 
-
     #if the selected phenotype is not a factor
     if(!is.factor(selected_pheno_data)){
 
@@ -1029,14 +1028,83 @@ for(i in 1:length(pheno_snp_combinations_table_5)){
             hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero_env$", selected_pheno, sep=""))))), number_decimals)
             major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo_env$", selected_pheno, sep=""))))), number_decimals)
     
-            #create a single variable with each average and sd
+            #create a single variable with each average and sd and assign it to the corresponding object
             assign(paste("minor_homo_", env_variable_table_5, "_", selected_env_level, sep=""), paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep=""))
             assign(paste("hetero_", env_variable_table_5, "_", selected_env_level, sep=""), paste(hetero_average, "$\\pm$", hetero_sd, sep=""))
             assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), paste(major_homo_average, "$\\pm$", major_homo_sd, sep=""))
         }
     } else { #if not, and hence the phenotype is a factor
-        stop("ERROR: You are trying to include a factor phenotype, but the script is not ready for that")
-        #do it? maybe it is easy with the loop I have prepared for continous variables and the script of table 4. Think.
+        
+        #for each level of the environmental variable
+        for(j in 1:length(selected_env_var_levels)){
+
+            #select the [j] level
+            selected_env_level = selected_env_var_levels[j]
+
+            #select those individuals with the [j] level of the environmental variable in each genotype
+            subset_minor_homo_env = eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
+            subset_hetero_env = eval(parse(text=paste("subset_hetero[which(subset_hetero$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
+            subset_major_homo_env = eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
+
+            #check the subset worked
+            print(paste("############################"))
+            print(paste("CHECK THE ENV SUBSET WAS WELL FOR: ", selected_combination, sep=""))
+            print(paste("############################"))
+            #no other genotype rather than minor homo should exist in subset_minor_homo
+            print(nrow(eval(parse(text=paste("subset_minor_homo_env[which(subset_minor_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
+            print(nrow(eval(parse(text=paste("subset_hetero_env[which(subset_hetero_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
+            print(nrow(eval(parse(text=paste("subset_major_homo_env[which(subset_major_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
+
+            #calculate the number of minor homo with obesity and the total number of minor homo with data about obesity status
+            cases_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo_env[which(subset_minor_homo_env$", selected_pheno, "== 1),]", sep=""))))
+            total_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo_env[which(!is.na(subset_minor_homo_env$", selected_pheno, ")),]", sep=""))))
+                #we need all rows with data for the selected phenotype included in the subset of the genotype
+
+            #calculate the number of hetero with obesity and the total number of hetero with data about obesity status
+            cases_hetero = nrow(eval(parse(text=paste("subset_hetero_env[which(subset_hetero_env$", selected_pheno, "== 1),]", sep=""))))
+            total_hetero = nrow(eval(parse(text=paste("subset_hetero_env[which(!is.na(subset_hetero_env$", selected_pheno, ")),]", sep=""))))
+                #we need all rows with data for the selected phenotype included in the subset of the genotype
+
+            #calculate the number of major homo with obesity and the total number of major homo with data about obesity status
+            cases_major_homo = nrow(eval(parse(text=paste("subset_major_homo_env[which(subset_major_homo_env$", selected_pheno, "== 1),]", sep=""))))
+            total_major_homo = nrow(eval(parse(text=paste("subset_major_homo_env[which(!is.na(subset_major_homo_env$", selected_pheno, ")),]", sep=""))))
+                #we need all rows with data for the selected phenotype included in the subset of the genotype
+
+            #calculate the percentage of individuals with obesity respect the total number of individual within each genotype and assign it to the corresponding object
+            assign(paste("minor_homo_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_minor_homo/total_minor_homo)*100, number_decimals))
+            assign(paste("hetero_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_hetero/total_hetero)*100, number_decimals))
+            assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_major_homo/total_major_homo)*100, number_decimals))
+        }
+
+        #REVISA ESTO!! QUE VIENE DEL CODIGO TABLE 4. I have checked the figure of PTPN1 for obesity (rs2143511 - overdominant: pdf with FDR<0.05). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can se how TT (major homo) frequency decreases a lot in overweight, while the minor homo (CC) increases, suggesting the former is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
+
+            #sample size in each category
+
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
+                
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
+
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
+                
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
+
+            #percentage of individuals in each category
+
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & !is.na(myData_ptpn1$obesity)),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & !is.na(myData_ptpn1$obesity)),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & !is.na(myData_ptpn1$obesity)),])
+                 
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & !is.na(myData_ptpn1$obesity)),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & !is.na(myData_ptpn1$obesity)),])
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & !is.na(myData_ptpn1$obesity)),])
     }
 
     #if the number of selected rows is 2, and hence the spn-phenotype association is significant for additive and codominant model
