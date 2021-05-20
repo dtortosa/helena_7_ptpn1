@@ -1,0 +1,2104 @@
+
+R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[1] FALSE
+Warning message:
+In file.remove(".RData") :
+  cannot remove file '.RData', reason 'No such file or directory'
+         used (Mb) gc trigger (Mb) max used (Mb)
+Ncells 125133  6.7     350000 18.7   201111 10.8
+Vcells 242045  1.9    8388608 64.0   997272  7.7
+Loading required package: colorout
+Loading required package: SistWrapper
+> #!/usr/bin/env Rscript
+> 
+> #This is done to have the possibility to run this script as an executable: 'chmod +x myscript.R' and then ' ./myscript.R'. If you run the script as 'R CMD BATCH myscript.R', i THINK this is not used, because it is annotated. 
+>     #https://www.jonzelner.net/statistics/make/docker/reproducibility/2016/05/31/script-is-a-program/
+> 
+> #In case you run this script as an executable, you can save the output without warnings "./myscript.R > myscript.Rout" or with errors "./myscript.R &> myscript.Rout"
+>     #https://askubuntu.com/questions/420981/how-do-i-save-terminal-output-to-a-file
+> 
+> 
+> 
+> 
+> ##################################################################################
+> ####################### SCRIPT FOR PREPARING TABLES AND FIGURES ##################
+> ##################################################################################
+> 
+> #Script where we create all the figures and tables of the manuscript
+> 
+> 
+> 
+> 
+> ####################################################
+> ##### CHANGES RESPECT TO PREVIOS VERSIONS ##########
+> ####################################################
+> 
+> #Respect previous papers
+>     #Here, I changed the code for table 2 in lpl code to include some suggestions for reviewers of cntf
+> 
+> #Version 2
+>     #The version 2 is run in the David Enard laptop. I changed the titles of the supplementary figures and calculate the correlation between leptin and adiposity.
+>     #also remove the binding of supplementary pdfs, now this is not needed.
+> 
+> #Version 3
+>     #In the version 3 I have changed the name of the supplementary figures 2,3,4. Now it is called figure SX...
+> 
+> #Version 4
+>     #In the version 4, I have included the reviewer suggestions of ped obesity.
+>     #New versions of the 2 tables, and complete removal of all figures
+> 
+> 
+> 
+> 
+> ########################################
+> ############ DATA PREPARATION ##########
+> ########################################
+> 
+> ### load the environment with the analyses run
+> load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis_v2.RData")
+> require(SNPassoc)
+Loading required package: SNPassoc
+Loading required package: haplo.stats
+Loading required package: survival
+Loading required package: mvtnorm
+Loading required package: parallel
+Registered S3 method overwritten by 'SNPassoc':
+  method            from       
+  summary.haplo.glm haplo.stats
+> require(genetics)
+Loading required package: genetics
+Loading required package: combinat
+
+Attaching package: ‘combinat’
+
+The following object is masked from ‘package:utils’:
+
+    combn
+
+Loading required package: gdata
+gdata: read.xls support for 'XLS' (Excel 97-2004) files ENABLED.
+
+gdata: read.xls support for 'XLSX' (Excel 2007+) files ENABLED.
+
+Attaching package: ‘gdata’
+
+The following object is masked from ‘package:stats’:
+
+    nobs
+
+The following object is masked from ‘package:utils’:
+
+    object.size
+
+The following object is masked from ‘package:base’:
+
+    startsWith
+
+Loading required package: gtools
+Loading required package: MASS
+Registered S3 methods overwritten by 'genetics':
+  method                      from    
+  print.LD                    SNPassoc
+  print.LD.data.frame         SNPassoc
+  print.summary.LD.data.frame SNPassoc
+  summary.LD.data.frame       SNPassoc
+
+
+NOTE: THIS PACKAGE IS NOW OBSOLETE.
+
+
+
+  The R-Genetics project has developed an set of enhanced genetics
+
+  packages to replace 'genetics'. Please visit the project homepage
+
+  at http://rgenetics.org for informtion.
+
+
+
+
+Attaching package: ‘genetics’
+
+The following objects are masked from ‘package:SNPassoc’:
+
+    LD, LDplot, LDtable
+
+The following object is masked from ‘package:haplo.stats’:
+
+    locus
+
+The following objects are masked from ‘package:base’:
+
+    %in%, as.factor, order
+
+> 
+> 
+> ### set the working directory
+> setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7")
+> 
+> 
+> ### create a data.frame withe the names of phenotypes in dataset and the real name per the figure
+> pheno_names = cbind.data.frame(
++     c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP"),
++     c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% obesity/overweight", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
+> colnames(pheno_names) <- c("var_name", "final_name")
+> 
+> ### binomial phenotypes included in this set of results
+> binomial_pheno = c("obesity", "CVi_BP")
+> 
+> 
+> ### the same for SSB variable
+> ssb_names = cbind.data.frame(
++     c("mean_Alspac_v42","CVi_softdrink_cont_2000"),
++     c("mean_Alspac_v42","CVi_softdrink_cont_2000"))
+> colnames(ssb_names) <- c("var_name", "final_name")
+> 
+> 
+> ### level names of factor variables
+> factor_variables_levels = list(c("Non-overweight", "Overweight"), c("Low physic. act. (<60 min/day)", "High physic. act. (≥60 min/day)"))
+> names(factor_variables_levels) <- c("obesity", "PA_factor")
+> 
+> 
+> ### load allele and genes names of SNPs according to HELENA and ncbi
+> #gene names
+> gene_names = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
+> #select snps from the studied gene
+> gene_names = gene_names[which(gene_names$selected_snp %in% labels(myData_ptpn1)),]
+> nrow(gene_names) == length(labels(myData_ptpn1))
+[1] TRUE
+> 
+> #load allele names
+> #alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", sep=",", header=T)
+>     #allele names have been updated in the main script of the analyses after checking allele frequencies with the 1KGP.
+> nrow(alleles) == length(labels(myData_ptpn1))
+[1] TRUE
+> 
+> 
+> 
+> 
+> ###################
+> ##### TABLE 1 #####
+> ###################
+> 
+> ### start the table
+> #extract summary of snps
+> summary_snps = summary(myData_ptpn1)
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     60.8              0.605704 0.0        
+rs10485614 1/2     92.9              0.355921 0.0        
+rs2143511  1/2     56.3              0.531653 0.1        
+rs6020608  2/1     71.4              0.598695 0.0        
+rs968701   2/1     50.3              1.000000 0.1        
+> 
+> #extract the major allele frequency and convert to minor allele frequency
+> MAF = 1-(summary_snps[, which(names(summary_snps) == "major.allele.freq")]/100)
+> 
+> #extract the HWE p.values
+> HWE = summary_snps[, which(names(summary_snps) == "HWE")]
+> 
+> #bind both metrics
+> table_1 = cbind.data.frame(MAF, HWE)
+> rownames(table_1) <- row.names(summary_snps)
+> table_1
+             MAF      HWE
+rs6067472  0.392 0.605704
+rs10485614 0.071 0.355921
+rs2143511  0.437 0.531653
+rs6020608  0.286 0.598695
+rs968701   0.497 1.000000
+> 
+> #check that the HWE and MAF correspond to the same snps
+> table_1$MAF == 1-(summary_snps$major.allele.freq/100)
+[1] TRUE TRUE TRUE TRUE TRUE
+> table_1$HWE == summary_snps$HWE
+[1] TRUE TRUE TRUE TRUE TRUE
+> 
+> 
+> ### add alleles to table 1
+> 
+> #add two columns for Major and minor alleles
+> table_1 = cbind.data.frame(NA, NA, table_1)
+> 
+> #add the corresponding names (first major, second minor)
+> colnames(table_1)[which(colnames(table_1) == "NA")] <- c("Major allele", "Minor allele")
+> 
+> #add the alleles
+> for(i in 1:nrow(table_1)){#for each row of table 1
++ 
++     #select the [i] row
++     selected_row = table_1[i,]
++ 
++     #select the snp of the [i] row
++     selected_snp = row.names(selected_row)
++ 
++     #extract the ncbi snps from [i] row
++     ncbi_name = alleles[which(alleles$snp == selected_snp),]$ncbi
++     
++     #select major and minor allele (they are ordered, major always first)
++     ncbi_major = strsplit(as.character(ncbi_name), split="/")[[1]][1]
++     ncbi_minor = strsplit(as.character(ncbi_name), split="/")[[1]][2]
++ 
++     #save them in the corresponding columns
++     table_1[i,which(colnames(table_1) == "Major allele")] <- ncbi_major
++     table_1[i,which(colnames(table_1) == "Minor allele")] <- ncbi_minor
++ }
+> 
+> #extract the allele names from the table 1 (combined major and minor) along with snp names
+> alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
+> colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
+> 
+> #merge these alleles names with the original allele names from alleles df
+> df_check_alleles = merge(alleles_from_table_1, alleles)
+> 
+> #check that the colums of alleles names are similar
+> identical(df_check_alleles$alleles_from_ncbi, df_check_alleles$ncbi)
+[1] FALSE
+> 
+> #reorder the table following the order in the chromosome 
+> table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
+> row.names(table_1) == ptpn1_snps$snp
+[1] TRUE TRUE TRUE TRUE TRUE
+> 
+> 
+> ### add the gene name to the table. More sense when SNPs of multiple genes are included.
+> #loop for each gene
+> ptpn1s = unique(ptpn1_snps$gen)
+> #for each gene name
+> for(i in 1:length(ptpn1s)){
++ 
++     #select the [i] gene
++     ptpn1_selected = ptpn1s[i]
++ 
++     #select the position of the first snp of the [i] gene
++     position_to_add = which(row.names(table_1) == ptpn1_snps[ptpn1_snps$gen==ptpn1_selected,][1,]$snp)
++ 
++     #add the gene name
++     if(position_to_add == 1){# if the position is the 1
++ 
++         #add in the position of MAF and HWE two NAs in a row
++         row_to_add = cbind(NA, NA, NA, NA)
++         colnames(row_to_add) <- c("Major allele", "Minor allele", "MAF", "HWE") #add the same names that in the data.frame
++ 
++         #convert to upper case
++         row.names(row_to_add) <- toupper(ptpn1_selected)
++ 
++         #bind first the gene name
++         table_1 = rbind(row_to_add, table_1) 
++     } else{ #if the gene name have to be include in the middle of the table
++         
++         #add in the position of MAF and HWE two NAs in a row
++         row_to_add = cbind(NA, NA, NA, NA)
++         colnames(row_to_add) <- c("Major allele", "Minor allele", "MAF", "HWE")#add the same names that in the data.frame
++ 
++         #convert to upper case        
++         row.names(row_to_add) <- toupper(ptpn1_selected)
++ 
++         #add the gene name in the middle of the table, after the prior gene and before the snps of this gene [i]        
++         table_1 = rbind(table_1[1:(position_to_add-1),], row_to_add, table_1[(position_to_add):nrow(table_1),])        
++     }
++ }
+> 
+> 
+> ### add the minor alleles frequencies according to 1000 Genomes Project
+> 
+> #Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
+>     #rs6067472: T=0.3648
+>         #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
+>     #rs10485614: C=0.0755
+>         #https://www.ncbi.nlm.nih.gov/snp/rs10485614#frequency_tab
+>     #rs2143511: C=0.4543
+>         #https://www.ncbi.nlm.nih.gov/snp/rs2143511#frequency_tab
+>     #rs6020608: T=0.2744
+>         #https://www.ncbi.nlm.nih.gov/snp/rs6020608#frequency_tab
+>     #rs968701: G=0.4861
+>         #https://www.ncbi.nlm.nih.gov/snp/rs968701#frequency_tab
+> 
+> #create a table with these minor allele frequencies
+> maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
+> row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
+> colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
+> 
+> #merge with table 1 
+> table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
+> 
+> #reorder the table again following the order in the chromosome 
+> table_1_1KGP = table_1_1KGP[match(c("PTPN1", as.character(ptpn1_position$snp)), table_1_1KGP$Row.names),]
+> table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_position$snp))
+[1] TRUE TRUE TRUE TRUE TRUE TRUE
+> 
+> #remove the column name for row names
+> colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
+> 
+> 
+> 
+> 
+> ####################
+> ##### TABLE 2 ######
+> ####################
+> response_pheno = c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")
+> length(response_pheno) == nrow(pheno_names)
+[1] TRUE
+> summary(response_pheno == pheno_names$var_name)
+   Mode    TRUE 
+logical      31 
+> 
+> #calculate n for both sexes
+> n_all = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female")),])
+> n_male = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex=="male"),])
+> n_female = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex=="female"),])
+> 
+> #calculate n for sex and obesity
+> n_all_healthy_weight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female") & myData_ptpn1$obesity == 0),])
+> n_all_overweight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female") & myData_ptpn1$obesity == 1),])
+> n_male_healthy_weight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male") & myData_ptpn1$obesity == 0),])
+> n_male_overweight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male") & myData_ptpn1$obesity == 1),])
+> n_female_healthy_weight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("female") & myData_ptpn1$obesity == 0),])
+> n_female_overweight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("female") & myData_ptpn1$obesity == 1),])
+> 
+> #check that overwight and healthi weight in each group are correct
+> n_all_healthy_weight+n_all_overweight == n_all
+[1] TRUE
+> n_male_healthy_weight+n_male_overweight == n_male
+[1] TRUE
+> n_female_healthy_weight+n_female_overweight == n_female
+[1] TRUE
+>     #WARNING!! THIS TOTAL NUMBER OF INDNVIDUALS DOES OT TAKE INTO ACCOUNT THE EXISTENCE OF NAs IN SPECIFIC PHENOTYPES. This is the number of individuals for which we have data for most of studied SNPs and phenotypes.
+> 
+> #create the empty table
+> table_2 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
+> names(table_2)[1] <- "Phenotype"
+> names(table_2)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
+> names(table_2)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
+> names(table_2)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
+> names(table_2)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
+> names(table_2)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
+> names(table_2)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
+> 
+> #for each phenotype
+> for (i in 1:length(response_pheno)){
++ 
++     #select the [i] phenotype
++     pheno_selected = response_pheno[i]
++ 
++     #extract the complete name
++     pheno_table = pheno_names$final_name[which(pheno_names$var_name == pheno_selected)]
++ 
++     #if the phenotype is CVi_BP or obesity (binomial):
++     if(pheno_selected %in% c("CVi_BP", "obesity")){
++ 
++         #extract summary of the variable (sums) across both sexes between overweight and normal weight
++         all_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
++         all_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))        
++ 
++         #calculate the percentage with 1 in all separating by overweight
++         all_mean_all_sumarize_healthy_weight = round((all_sumarize_healthy_weight[2]/(all_sumarize_healthy_weight[1]+all_sumarize_healthy_weight[2]))*100,2)
++         all_sd_all_sumarize_healthy_weight = NA
++         all_mean_all_sumarize_overweight = round((all_sumarize_overweight[2]/(all_sumarize_overweight[1]+all_sumarize_overweight[2]))*100,2)
++         all_sd_all_sumarize_overweight = NA
++ 
++         #extract summary of the variable (sums) across both sexes between overweight and normal weight
++         male_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
++         male_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))
++ 
++         #calculate the percentage with 1 in male separating by overweight
++         male_mean_male_sumarize_healthy_weight = round((male_sumarize_healthy_weight[2]/(male_sumarize_healthy_weight[1]+male_sumarize_healthy_weight[2]))*100,2)
++         male_sd_male_sumarize_healthy_weight = NA
++         male_mean_male_sumarize_overweight = round((male_sumarize_overweight[2]/(male_sumarize_overweight[1]+male_sumarize_overweight[2]))*100,2)
++         male_sd_male_sumarize_overweight = NA
++ 
++         #extract summary of the variable (sums) across both sexes between overweight and normal weight
++         female_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
++         female_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))
++ 
++         #calculate the percentage with 1 in female separating by overweight
++         female_mean_female_sumarize_healthy_weight = round((female_sumarize_healthy_weight[2]/(female_sumarize_healthy_weight[1]+female_sumarize_healthy_weight[2]))*100,2)
++         female_sd_female_sumarize_healthy_weight = NA
++         female_mean_female_sumarize_overweight = round((female_sumarize_overweight[2]/(female_sumarize_overweight[1]+female_sumarize_overweight[2]))*100,2)
++         female_sd_female_sumarize_overweight = NA
++ 
++         #bind results in one row
++         results = cbind.data.frame(
++             pheno_table,
++             paste(all_mean_all_sumarize_healthy_weight, sep=""),
++             paste(all_mean_all_sumarize_overweight, sep=""),
++             paste(male_mean_male_sumarize_healthy_weight, sep=""),
++             paste(male_mean_male_sumarize_overweight, sep=""),
++             paste(female_mean_female_sumarize_healthy_weight, sep=""),
++             paste(female_mean_female_sumarize_overweight, sep=""))
++ 
++         #change columns names to match names table 2
++         names(results)[1] <- "Phenotype"
++         names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
++         names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
++         names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
++         names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
++         names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
++         names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
++ 
++         #add to the table
++         table_2 = rbind(table_2, results)  
++     } else {#if the phenotype is continuous
++ 
++         #if phenotype selected is a grouping variable like percentage of individuals in two age classes
++         if(pheno_selected %in% c("CRF_age", "center")){
++ 
++             #extract the grouping variable and check if it is a factor
++             check_factor = eval(parse(text=paste("myData_ptpn1$", pheno_selected, sep="")))
++ 
++             #extrac group levels for the group variable (facotr or continuous)
++             if(is.factor(check_factor)){
++ 
++                 #set the groups
++                 group_levels = eval(parse(text=paste("levels(myData_ptpn1$", pheno_selected, ")", sep="")))
++                 
++                 #add condition 
++                 condition_levels = paste("=='", group_levels, "'", sep="")
++             } else {
++ 
++                 #set the threshold to divided the continuos variable
++                 threshold = eval(parse(text=paste("floor(median(myData_ptpn1$", pheno_selected, "))", sep="")))
++ 
++                 #set the groups
++                 condition_levels = as.character(c(paste(">=", threshold, sep=""), paste("<", threshold, sep="")))
++             }
++ 
++             #open empty data.frame
++             percent_calc = data.frame(selected_level=NA, all_sumarize_healthy_weight=NA, all_sumarize_overweight=NA, male_sumarize_healthy_weight=NA, male_sumarize_overweight=NA, female_sumarize_healthy_weight=NA, female_sumarize_overweight=NA)
++ 
++             #for each level
++             for(l in 1:length(condition_levels)){
++ 
++                 #select the [l] level
++                 selected_level = condition_levels[l]
++ 
++                 #for these subsets we don't use "na.omit" because we include the varialbe of interest in the conditions
++                 #calculate number of individuals of both sexes for the [l] level
++                 all_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
++                 all_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
++ 
++                 #calculate number of males for the [l] level
++                 male_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
++                 male_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))                
++ 
++                 #calculate number of females for the [l] level
++                 female_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
++                 female_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))  
++ 
++                 #save
++                 percent_calc = rbind.data.frame(percent_calc, cbind.data.frame(selected_level, all_sumarize_healthy_weight, all_sumarize_overweight, male_sumarize_healthy_weight, male_sumarize_overweight, female_sumarize_healthy_weight, female_sumarize_overweight))
++             }
++        
++             #remove the first row with NAs
++             percent_calc = percent_calc[-1,]
++ 
++             #remove " ' " and the equal ("==") from the selected levels (was use to set the conditions with "which")
++             percent_calc$selected_level = gsub("'", "", percent_calc$selected_level, fixed=TRUE)
++             percent_calc$selected_level = gsub("==", "", percent_calc$selected_level, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
++ 
++             #set final names of the levels
++             percent_calc$selected_level = paste(pheno_table, ": ", percent_calc$selected_level, sep="")
++ 
++             #copy to save final percentages
++             final_percent = percent_calc
++ 
++             #calculate percentage of each level
++             for(c in 2:ncol(final_percent)){
++ 
++                 #calculat total individuals for the [c] category (sex and overweight)
++                 total_indv = sum(final_percent[,c])
++ 
++                 #calculate and save percentages
++                 final_percent[,c] = round((final_percent[,c]/total_indv)*100, 2)
++             }       
++ 
++             #change columns names to match names table 2
++             names(final_percent)[1] <- "Phenotype"
++             names(final_percent)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
++             names(final_percent)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
++             names(final_percent)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
++             names(final_percent)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
++             names(final_percent)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
++             names(final_percent)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
++ 
++             #bind to the table
++             table_2 = rbind(table_2, final_percent)
++         }else{
++ 
++             #set the number decimals
++             #some phenotypes will have 1 decimal
++             if(pheno_selected %in% c()){
++ 
++                 #1 decimal
++                 number_decimals = 1
++             } else {#if not
++ 
++                 #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
++                 if(pheno_selected %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
++ 
++                     #0 decimals
++                     number_decimals = 0
++                 } else {#if the phenotype is none of the latter
++ 
++                     #2 decimals
++                     number_decimals = 2
++                 }
++             }
++ 
++             #calculate the mean and sd across the whole panel in healthy weight
++             all_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++             all_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++             #calculate the mean and sd across the whole panel in overweight individuals
++             all_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++             all_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++ 
++             #calculate the mean and sd across male with healthy weight
++             male_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++             male_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++             #calculate the mean and sd across the whole panel in overweight individuals
++             male_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++             male_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++             #calculate the mean and sd across female with healthy weight
++             female_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++             female_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++             #calculate the mean and sd across the whole panel in overweight individuals
++             female_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++             female_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++             #bind results into one row
++             results = cbind.data.frame(
++                 pheno_table,
++                 paste(all_mean_healthy_weight, "$\\pm$", all_sd_healthy_weight, sep=""),
++                 paste(all_mean_overweight, "$\\pm$", all_sd_overweight, sep=""),
++                 paste(male_mean_healthy_weight, "$\\pm$", male_sd_healthy_weight, sep=""),
++                 paste(male_mean_overweight, "$\\pm$", male_sd_overweight, sep=""),
++                 paste(female_mean_healthy_weight, "$\\pm$", female_sd_healthy_weight, sep=""),
++                 paste(female_mean_overweight, "$\\pm$", female_sd_overweight, sep=""))
++ 
++             #change columns names to match names table 2
++             names(results)[1] <- "Phenotype"
++             names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
++             names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
++             names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
++             names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
++             names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
++             names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
++ 
++             #bind to the table
++             table_2 = rbind(table_2, results)
++         }            
++     }
++ }
+> 
+> #remove the first row
+> table_2 = table_2[-1,]
+> 
+> #remove the rows of obesity phenotype ("% obesity/overweight"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
+> table_2 = table_2[-which(table_2$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% obesity/overweight")),]
+> 
+> #see the table
+> table_2
+                          Phenotype All non-overweight (n=822)
+2      Center (%): Athens in Greece                       9.12
+4   Center (%): Dortmund in Germany                      10.34
+5       Center (%): Gent in Belgium                      12.41
+6    Center (%): Heraklion in Crete                       7.79
+7       Center (%): Lille in France                       8.64
+8       Center (%): Pecs in Hungary                       13.5
+9         Center (%): Roma in Italy                       5.96
+10  Center (%): Stockholm in Sweden                       10.1
+11    Center (%): Vienna in Austria                      11.19
+12    Center (%): Zaragoza in Spain                      10.95
+21                    Age (%): >=14                       70.8
+31                     Age (%): <14                       29.2
+14                      Weight (kg)             54.53$\\pm$8.8
+15                      Height (cm)           165.41$\\pm$9.27
+16            Triceps skinfold (mm)            13.38$\\pm$5.37
+17       Subescapular skinfold (mm)            10.62$\\pm$4.07
+19                     BMI (kg/m^2)            19.83$\\pm$2.02
+110              Waist circum. (cm)            69.27$\\pm$5.61
+111              Waist/Height ratio             0.42$\\pm$0.03
+112                Hip circum. (cm)            88.78$\\pm$6.65
+113                 Waist/Hip ratio             0.78$\\pm$0.05
+114                    Body fat (%)            20.41$\\pm$6.98
+115                    FMI (kg/m^2)             4.12$\\pm$1.67
+116       Total cholesterol (mg/dL)          160.26$\\pm$27.36
+117                   LDL-C (mg/dL)                 93$\\pm$25
+118                   HDL-C (mg/dL)                 57$\\pm$11
+119         Total cholesterol/HDL-C              2.9$\\pm$0.61
+120                     LDL-C/HDL-C              1.7$\\pm$0.59
+121           Triglycerides (mg/dL)                 65$\\pm$31
+122             Triglycerides/HDL-C             1.22$\\pm$0.74
+123                   ApoA1 (mg/dL)             1.53$\\pm$0.22
+124                    ApoB (mg/dL)             0.64$\\pm$0.15
+125                      ApoB/ApoA1             0.43$\\pm$0.12
+126                      ApoB/LDL-C             0.27$\\pm$0.03
+127           Insulin (micro lU/mL)                   9$\\pm$6
+128                            HOMA              2.1$\\pm$1.52
+129                          QUICKI             0.35$\\pm$0.03
+130                  Leptin (ng/ml)                 15$\\pm$16
+131                     SBP (mm Hg)                118$\\pm$13
+132                     DBP (mm Hg)                  67$\\pm$9
+    All overweight (n=235) Male non-overweight (n=380) Male overweight(n=125)
+2                    12.34                        8.95                    8.8
+4                    13.19                       12.89                   14.4
+5                     2.98                       14.74                      0
+6                     16.6                        7.37                   19.2
+7                     6.81                        7.63                    5.6
+8                    11.06                       11.58                    7.2
+9                    13.19                        7.11                     16
+10                    7.23                       10.26                    8.8
+11                    8.09                        9.74                    8.8
+12                    8.51                        9.74                   11.2
+21                    63.4                       71.84                     64
+31                    36.6                       28.16                     36
+14        73.38$\\pm$13.24             56.76$\\pm$9.98       77.38$\\pm$14.26
+15        165.62$\\pm$9.61            169.44$\\pm$9.99       169.68$\\pm$9.69
+16          22.93$\\pm$6.7             10.31$\\pm$4.17         21.6$\\pm$7.54
+17         20.72$\\pm$7.21              8.78$\\pm$2.79        19.77$\\pm$7.56
+19         26.61$\\pm$3.29             19.62$\\pm$1.96        26.76$\\pm$3.76
+110        83.55$\\pm$8.56             70.68$\\pm$5.29        85.95$\\pm$8.77
+111          0.5$\\pm$0.05              0.42$\\pm$0.03         0.51$\\pm$0.05
+112       101.47$\\pm$8.29             87.06$\\pm$6.45       100.68$\\pm$8.17
+113         0.83$\\pm$0.07              0.81$\\pm$0.04         0.85$\\pm$0.05
+114         34.57$\\pm$8.9             15.54$\\pm$5.69        34.3$\\pm$11.05
+115         9.35$\\pm$3.25              3.09$\\pm$1.32         9.38$\\pm$3.91
+116       162.4$\\pm$28.82           152.91$\\pm$24.72      157.45$\\pm$29.86
+117            101$\\pm$25                  88$\\pm$23             98$\\pm$27
+118             50$\\pm$10                  55$\\pm$10              49$\\pm$8
+119         3.29$\\pm$0.72              2.87$\\pm$0.64         3.29$\\pm$0.74
+120         2.06$\\pm$0.66              1.69$\\pm$0.62         2.07$\\pm$0.68
+121             82$\\pm$44                  60$\\pm$27             77$\\pm$39
+122         1.72$\\pm$1.17              1.17$\\pm$0.68         1.68$\\pm$1.09
+123         1.43$\\pm$0.22              1.48$\\pm$0.21         1.39$\\pm$0.18
+124          0.7$\\pm$0.16              0.61$\\pm$0.14         0.68$\\pm$0.16
+125          0.5$\\pm$0.14              0.42$\\pm$0.12          0.5$\\pm$0.15
+126         0.27$\\pm$0.03              0.27$\\pm$0.03         0.27$\\pm$0.02
+127             14$\\pm$11                    9$\\pm$6             14$\\pm$13
+128         3.24$\\pm$2.87              2.03$\\pm$1.53         3.39$\\pm$3.45
+129         0.33$\\pm$0.03              0.36$\\pm$0.03         0.33$\\pm$0.03
+130             36$\\pm$31                    5$\\pm$6             23$\\pm$22
+131            126$\\pm$14                 122$\\pm$13            130$\\pm$15
+132              70$\\pm$9                   67$\\pm$9              70$\\pm$9
+    Female non-overweight (n=442) Female overweight (n=110)
+2                            9.28                     16.36
+4                            8.14                     11.82
+5                           10.41                      6.36
+6                            8.14                     13.64
+7                             9.5                      8.18
+8                           15.16                     15.45
+9                            4.98                        10
+10                           9.95                      5.45
+11                          12.44                      7.27
+12                          11.99                      5.45
+21                          69.91                     62.73
+31                          30.09                     37.27
+14                52.62$\\pm$7.11          68.83$\\pm$10.29
+15               161.94$\\pm$6.94          161.02$\\pm$7.16
+16                16.02$\\pm$4.85           24.41$\\pm$5.29
+17                12.19$\\pm$4.33           21.77$\\pm$6.67
+19                20.02$\\pm$2.04           26.45$\\pm$2.65
+110                68.06$\\pm$5.6            80.89$\\pm$7.5
+111                0.42$\\pm$0.03             0.5$\\pm$0.04
+112               90.27$\\pm$6.47          102.35$\\pm$8.37
+113                0.75$\\pm$0.05            0.79$\\pm$0.08
+114               24.19$\\pm$5.36           34.86$\\pm$5.81
+115                4.92$\\pm$1.46            9.32$\\pm$2.35
+116              166.6$\\pm$27.96         168.02$\\pm$26.62
+117                    96$\\pm$26               104$\\pm$23
+118                    58$\\pm$11                52$\\pm$11
+119                2.92$\\pm$0.59             3.3$\\pm$0.69
+120                1.71$\\pm$0.57            2.06$\\pm$0.64
+121                    70$\\pm$33                86$\\pm$50
+122                1.28$\\pm$0.78            1.76$\\pm$1.26
+123                1.57$\\pm$0.22            1.48$\\pm$0.25
+124                0.67$\\pm$0.16            0.73$\\pm$0.16
+125                0.43$\\pm$0.12            0.51$\\pm$0.14
+126                0.27$\\pm$0.03            0.27$\\pm$0.03
+127                     10$\\pm$6                 14$\\pm$8
+128                2.16$\\pm$1.51            3.07$\\pm$1.99
+129                0.35$\\pm$0.03            0.33$\\pm$0.02
+130                    23$\\pm$18                50$\\pm$32
+131                   115$\\pm$11               121$\\pm$12
+132                     68$\\pm$9                 70$\\pm$9
+> 
+> #for the phenotupes with percentahe (%) in the name, we add slash (\\) to avoid problemas i latex (two because 1 is a en expression for R).
+> #pheno with slash
+> pheno_slash = which(grepl("%", table_2$Phenotype))
+> #change names of these phenotypes modifying "%" by "\\%"
+> table_2[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_2[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> table_2$Phenotype
+ [1] "Center (\\%): Athens in Greece"    "Center (\\%): Dortmund in Germany"
+ [3] "Center (\\%): Gent in Belgium"     "Center (\\%): Heraklion in Crete" 
+ [5] "Center (\\%): Lille in France"     "Center (\\%): Pecs in Hungary"    
+ [7] "Center (\\%): Roma in Italy"       "Center (\\%): Stockholm in Sweden"
+ [9] "Center (\\%): Vienna in Austria"   "Center (\\%): Zaragoza in Spain"  
+[11] "Age (\\%): >=14"                   "Age (\\%): <14"                   
+[13] "Weight (kg)"                       "Height (cm)"                      
+[15] "Triceps skinfold (mm)"             "Subescapular skinfold (mm)"       
+[17] "BMI (kg/m^2)"                      "Waist circum. (cm)"               
+[19] "Waist/Height ratio"                "Hip circum. (cm)"                 
+[21] "Waist/Hip ratio"                   "Body fat (\\%)"                   
+[23] "FMI (kg/m^2)"                      "Total cholesterol (mg/dL)"        
+[25] "LDL-C (mg/dL)"                     "HDL-C (mg/dL)"                    
+[27] "Total cholesterol/HDL-C"           "LDL-C/HDL-C"                      
+[29] "Triglycerides (mg/dL)"             "Triglycerides/HDL-C"              
+[31] "ApoA1 (mg/dL)"                     "ApoB (mg/dL)"                     
+[33] "ApoB/ApoA1"                        "ApoB/LDL-C"                       
+[35] "Insulin (micro lU/mL)"             "HOMA"                             
+[37] "QUICKI"                            "Leptin (ng/ml)"                   
+[39] "SBP (mm Hg)"                       "DBP (mm Hg)"                      
+> 
+> #check for all phenotypes there is at least one data
+> #select phenotype columns    
+> only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1))]
+> #which rows (individuals) have NA for all columns (phenotypes)
+> length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be zero
+[1] TRUE
+>     
+> 
+> 
+> 
+> ####################
+> ##### TABLE 4 ######
+> ####################
+> 
+> #This table will show the average values of phenotypes per each genotype along with the FDR of the additive and codominant model.
+> 
+> 
+> ### check if considering additive/codominant models cover all significant associations ###
+> 
+> #copy the supple data to do some operations
+> crude_assocs = suppl_data_1
+>     #we use the supple dataset file because it has the final phenotypes and columns we need
+> 
+> #create a variable with the combination of phenotype and snp of each association
+> crude_assocs$pheno_snp_combination = interaction(crude_assocs$phenotype, crude_assocs$snp, sep="-")
+> #check
+> summary(crude_assocs$pheno_snp_combination == paste(crude_assocs$phenotype, crude_assocs$snp, sep="-"))
+   Mode    TRUE 
+logical     625 
+> 
+> #select those associations with an FDR<0.1
+> assoc_fdr_less_01 = crude_assocs[which(crude_assocs$fdr<0.1),]
+> 
+> #from these associations, select those with the additive and codominant model
+> assoc_fdr_less_01_only_add_cod = crude_assocs[which(crude_assocs$fdr<0.1 & crude_assocs$heritage_model %in% c("additive", "codominant")),]
+> #check
+> nrow(assoc_fdr_less_01_only_add_cod[which(assoc_fdr_less_01_only_add_cod$fdr<0.1 & assoc_fdr_less_01_only_add_cod$heritage_model %in% c("additive", "codominant")),]) == nrow(assoc_fdr_less_01_only_add_cod)
+[1] TRUE
+> 
+> #check whether all significant combinations are included when restricting to add/codominant
+> summary(unique(assoc_fdr_less_01$pheno_snp_combination) %in% unique(assoc_fdr_less_01_only_add_cod$pheno_snp_combination))
+   Mode   FALSE    TRUE 
+logical       1      16 
+> 
+> #select those not included
+> assoc_fdr_less_01[which(!assoc_fdr_less_01$pheno_snp_combination %in% assoc_fdr_less_01_only_add_cod$pheno_snp_combination),]
+       phenotype heritage_model        snp min_sample_size       p_value
+508 Leptin_ng_ml       dominant rs10485614             139 0.01509078744
+              fdr r2_percentage   pheno_snp_combination
+508 0.07545393721  0.6051647047 Leptin_ng_ml-rs10485614
+>     #The only phenoype*snp combination with FDR<0.1 not covered by additive/codominant models is Leptin_ng_ml.rs10485614. This is only association for leptin with an FDR below 0.1 (FDR=0.075). This is not a relevant association for the manuscript, and in any case, it is mentioned in the discussion along with the genotype with higher leptin, corresponding FDR and R2. We can leave it that way. 
+> 
+> 
+> ### make a loop to extract phenotype values per genotype ###
+> 
+> #open empty data.frame to save results
+> table_4 = rbind.data.frame(rep(NA, 11))
+> colnames(table_4)[1] <- "SNP"
+> colnames(table_4)[2] <- "Phenotype"
+> colnames(table_4)[3] <- "11"
+> colnames(table_4)[4] <- "12"
+> colnames(table_4)[5] <- "22"
+> colnames(table_4)[6] <- "P add" 
+> colnames(table_4)[7] <- "FDR add"
+> colnames(table_4)[8] <- "R2 add"
+> colnames(table_4)[9] <- "P cod"
+> colnames(table_4)[10] <- "FDR cod"
+> colnames(table_4)[11] <- "R2 cod"
+> 
+> #reorder the file with significant add/cod associations based on snps
+> assoc_fdr_less_01_only_add_cod_copy = assoc_fdr_less_01_only_add_cod[order(assoc_fdr_less_01_only_add_cod$snp),]
+> 
+> #select those pheno-snp combinations for associations with FDr<0.1 in the additive or codominant models
+> pheno_snp_combinations_table_4 = unique(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination)
+>     #we need unique because an snp-pheno association that is significant for additive and codominant will be selected two times and included two times in the table. We only need it one time, if the combination is present two times in "assoc_fdr_less_01_only_add_cod_copy" (2 rows), the script will take the FDR of additive and codominant. If it is not present it will look for the non-significant model in "crude_assocs". 
+> 
+> #for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
+> for(i in 1:length(pheno_snp_combinations_table_4)){
++ 
++     #select the [i] combination
++     selected_combination = pheno_snp_combinations_table_4[i]
++ 
++     #check
++     print(paste("##############################################"))
++     print(paste("STARTING WITH TABLE 4: ", selected_combination, sep=""))
++     print(paste("##############################################"))
++ 
++     #select the rows of the significant associations for the [i] pheno-snp combination
++     selected_rows = assoc_fdr_less_01_only_add_cod_copy[which(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination == selected_combination),]
++         #We can have the same phenotype-snp combination for two models, additive and codominant.
++ 
++     #select the [i] phenotype and snp
++     selected_pheno = unique(selected_rows$phenotype)
++     selected_snp = unique(selected_rows$snp)
++         #unique because we can have two rows (additive and codominant), but in both cases the snp and phenotype should be the same indicated in selected_combination
++     #check
++     print(paste("############################"))
++     print(paste("WE SELECTED THE CORRECT PHENOTYPE AND SNP?"))
++     print(paste(selected_pheno, "-", selected_snp, sep="") == selected_combination)
++     print(paste("############################"))
++ 
++     #extract the genotype data of the [i] snp
++     geno_data = eval(parse(text=paste("na.omit(myData_ptpn1$", selected_snp, ")", sep="")))
++ 
++     #extract genotype levels
++     geno_data_levels = unique(geno_data)
++ 
++     #for each genotype level calculate the number of individuals
++     genotype_sample_size = data.frame(selected_genotype=NA, sample_size=NA) #open an empty data.frame to save resuls
++     for(j in 1:length(geno_data_levels)){
++ 
++         #select the [j] genotype
++         selected_genotype = geno_data_levels[j]
++ 
++         #calculate the number of individuals with the [j] snp
++         sample_size = length(which(geno_data == selected_genotype))
++ 
++         #save the results
++         genotype_sample_size = rbind.data.frame(genotype_sample_size, cbind.data.frame(selected_genotype, sample_size))
++     }
++ 
++     #remove the first row with all NAs
++     genotype_sample_size = genotype_sample_size[-which(rowSums(is.na(genotype_sample_size)) == ncol(genotype_sample_size)),]
++ 
++     #select genotypes of the homozygotes
++     genotype_sample_size_homo = genotype_sample_size[which(!genotype_sample_size$selected_genotype %in% c("1/2", "2/1")),]
++ 
++     #select the homozygote genotype with the lowest sample size, that is, minor homozygote
++     minor_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == min(genotype_sample_size_homo$sample_size)),]$selected_genotype
++ 
++     #select the homozygote genotype with the highest sample size, that is, major homozygote
++     major_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == max(genotype_sample_size_homo$sample_size)),]$selected_genotype
++ 
++     #select those individuals with each type of genotype
++     subset_minor_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", minor_homo, "' ),]", sep="")))
++     subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') & !is.na(myData_ptpn1$", selected_snp, ")),]", sep="")))
++     subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
++         #"parse()" returns the parsed but unevaluated expressions in an "expression" object. Therefore, the code is not run yet.
++         #"eval()" evaluates an R expression. It runs the expression. 
++             #dummy example:
++                 #expression_sum = parse(text="1+1") #create a expression to sum 1+1
++                 #eval(expression_sum) #evaluate the expression, giving 2.
++ 
++     #check the subset worked
++     print(paste("############################"))
++     print(paste("CHECK THE SUBSET WAS WELL FOR: ", selected_combination, sep=""))
++     print(paste("############################"))
++     #no other genotype rather than minor homo should exist in subset_minor_homo
++     print(nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_snp, " != '", minor_homo, "'),]", sep="")))) == 0)
++     #no other genotype rather than hetero should exist in subset_hetero
++     print(nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') | is.na(subset_hetero$", selected_snp, ")),]", sep="")))) == 0)
++     #no other genotype rather than major homo should exist in subset_major_homo
++     print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
++ 
++     #set the number decimals
++     #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
++     if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
++ 
++         #0 decimals
++         number_decimals = 0
++     } else {#if the phenotype is none of the latter
++ 
++         #2 decimals
++         number_decimals = 2
++     }
++ 
++     #extract the data of the selected phenotype to make a condition
++     selected_pheno_data = eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep="")))
++ 
++     #if the selected phenotype is not a factor
++     if(!is.factor(selected_pheno_data)){
++ 
++         #extract the average of each genotype
++         minor_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
++         hetero_average = round(mean(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
++         major_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
++ 
++         #extract the SD of each genotype
++         minor_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
++         hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero$", selected_pheno, sep=""))))), number_decimals)
++         major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo$", selected_pheno, sep=""))))), number_decimals)
++     
++         #create a single variable with each average and sd
++         minor_homo_pheno = paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep="")
++         hetero_pheno = paste(hetero_average, "$\\pm$", hetero_sd, sep="")
++         major_homo_pheno = paste(major_homo_average, "$\\pm$", major_homo_sd, sep="")
++     } else { #if not, and hence the phenotype is a factor
++ 
++         #calculate the number of minor homo with obesity and the total number of minor homo with data about obesity status
++         cases_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_pheno, "== 1),]", sep=""))))
++         total_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo[which(!is.na(subset_minor_homo$", selected_pheno, ")),]", sep=""))))
++             #we need all rows with data for the selected phenotype included in the subset of the genotype
++         
++         #calculate the number of hetero with obesity and the total number of hetero with data about obesity status
++         cases_hetero = nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_pheno, "== 1),]", sep=""))))
++         total_hetero = nrow(eval(parse(text=paste("subset_hetero[which(!is.na(subset_hetero$", selected_pheno, ")),]", sep=""))))
++             #we need all rows with data for the selected phenotype included in the subset of the genotype
++ 
++         #calculate the number of major homo with obesity and the total number of major homo with data about obesity status
++         cases_major_homo = nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_pheno, "== 1),]", sep=""))))
++         total_major_homo = nrow(eval(parse(text=paste("subset_major_homo[which(!is.na(subset_major_homo$", selected_pheno, ")),]", sep=""))))
++             #we need all rows with data for the selected phenotype included in the subset of the genotype
++ 
++         #calculate the percentage of individuals with obesity respect the total number of individual within each genotype
++         minor_homo_pheno=round((cases_minor_homo/total_minor_homo)*100, number_decimals)
++         hetero_pheno=round((cases_hetero/total_hetero)*100, number_decimals)
++         major_homo_pheno=round((cases_major_homo/total_major_homo)*100, number_decimals)
++ 
++         #I have checked the figure of PTPN1 for obesity (rs2143511 - additive: pdf with FDR<0.1). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can se how TT (major homo) frequency decreases a lot in overweight, while the minor homo (CC) increases, suggesting the former is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
++ 
++             #sample size in each category
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 0),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 0),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 0),])
++ 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 1),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 1),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 1),])
++ 
++             #percentage of individuals in each category
++ 
++                 #total_cases_non_obese = length(which(!is.na(myData_ptpn1$rs2143511) & myData_ptpn1$obesity == 0))
++                 #total_cases_obese = length(which(!is.na(myData_ptpn1$rs2143511) & myData_ptpn1$obesity == 1))
++                     #number of cases with and without obesity for the three genotypes (no NA for the SNP)
++ 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 0),])/total_cases_non_obese
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 0),])/total_cases_non_obese
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 0),])/total_cases_non_obese
++ 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$obesity == 1),])/total_cases_obese
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$obesity == 1),])/total_cases_obese
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$obesity == 1),])/total_cases_obese
++     }
++ 
++     #if the number of selected rows is 2, and hence the spn-phenotype association is significant for additive and codominant model
++     if(nrow(selected_rows) == 2){
++ 
++         #extract the association results of additive model from selected rows
++         p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
++         fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
++         r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
++ 
++         #extract the association results of codominant model from selected rows
++         p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
++         fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
++         r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
++     } else { #if not, only one heritage model is significant
++ 
++         #thus we should have only 1 selected row
++         if(nrow(selected_rows) == 1){
++             
++             #save the name of the significant
++             model_significant = selected_rows$heritage_model
++                 #the significant model is in selected row, because this is the association selected as significant
++             
++             #save the name of the non-significant model
++             model_no_significant = ifelse(model_significant == "additive", "codominant", "additive")
++                 #if the significant model is additive, then the non-significant model is codominant. If not, then the significant model is codominant and hence the non-significant is additive.
++ 
++             #extract the results of the significant model from selected rows (there you have the significant associations) and then assign these results to objects named with the name of the significant model
++             assign(paste("p_value_", model_significant, sep=""), round(selected_rows$p_value, 3))
++             assign(paste("fdr_", model_significant, sep=""), round(selected_rows$fdr, 3))
++             assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
++ 
++             #extract the results of the non-significant model from crude_assocs (there you have all associations)
++             results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$heritage_model == model_no_significant),]
++                 #we need the whole supple (non-significant associations), but with the combination pheno-snp selected and the non-significant model
++ 
++             #then assign these results to objects named with the name of the non-significant model
++             assign(paste("p_value_", model_no_significant, sep=""), round(results_model_no_significant$p_value,3))
++             assign(paste("fdr_", model_no_significant, sep=""), round(results_model_no_significant$fdr,3))
++             assign(paste("r2_", model_no_significant, sep=""), round(results_model_no_significant$r2_percentage,3))
++         }
++     }
++ 
++     #extract the final name of the selected phenotype for the table
++     pheno_table = pheno_names[which(pheno_names$var_name == selected_pheno),]$final_name
++ 
++     #bind results into one row
++     results = cbind.data.frame(
++         selected_snp,
++         pheno_table,
++         minor_homo_pheno,
++         hetero_pheno,
++         major_homo_pheno,
++         p_value_additive,
++         fdr_additive,
++         r2_additive,
++         p_value_codominant,
++         fdr_codominant,
++         r2_codominant)
++ 
++     #change columns names to match names table 2
++     names(results)[1] <- "SNP"
++     names(results)[2] <- "Phenotype"
++     names(results)[3] <- "11"
++     names(results)[4] <- "12"
++     names(results)[5] <- "22"
++     names(results)[6] <- "P add"    
++     names(results)[7] <- "FDR add"
++     names(results)[8] <- "R2 add"
++     names(results)[9] <- "P cod"    
++     names(results)[10] <- "FDR cod"
++     names(results)[11] <- "R2 cod"
++ 
++     #add the results as a row in the final data.frame
++     table_4 = rbind.data.frame(table_4, results)
++ }
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: obesity-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: obesity-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_hip-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_hip-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_BMI-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_BMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_Body_fat_PC-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: FMI-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: FMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_hip-rs6020608"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_hip-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_BMI-rs6020608"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_BMI-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_Body_fat_PC-rs6020608"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: FMI-rs6020608"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: FMI-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_hip-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_hip-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_BMI-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_BMI-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_Body_fat_PC-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: FMI-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: FMI-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: SBP-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: SBP-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: CRF_Body_fat_PC-rs968701"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 4: FMI-rs968701"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: FMI-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+> 
+> #remove the first row with all NAs
+> table_4 = table_4[-which(rowSums(is.na(table_4)) == ncol(table_4)),]
+> 
+> 
+> ## change some name entries
+> #add R squared and percentage to the column names with R2
+> colnames(table_4)[which(colnames(table_4) == "R2 add")] <- "R\\textsuperscript{2} add (\\%)"
+> colnames(table_4)[which(colnames(table_4) == "R2 cod")] <- "R\\textsuperscript{2} cod (\\%)"
+> 
+> 
+> ##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+> 
+> #We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+> 
+> #pheno with slash
+> pheno_slash = which(grepl("%", table_4$Phenotype)) #rows with percentage as phenotype name
+> #change names of these phenotypes modifying "%" by "\\%"
+> table_4[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_4[pheno_slash,]$Phenotype, fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> 
+> #pheno with ^2
+> pheno_squared = which(grepl("\\^2", table_4$Phenotype)) #rows with squared as phenotype name
+> #change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
+> table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[pheno_squared,]$Phenotype, fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> 
+> 
+> 
+> 
+> ####################
+> ##### TABLE 5 ######
+> ####################
+> 
+> #This table will show the average values of phenotypes per each genotype*PA level along with the FDR of the additive and codominant model.
+> 
+> 
+> ### check if considering additive/codominant models cover all significant associations ###
+> 
+> #copy the supple data to do some operations
+> crude_interacts = suppl_data_2
+>     #we use the supple dataset file because it has the final phenotypes and columns we need
+> 
+> #create a variable with the combination of phenotype and snp of each association
+> crude_interacts$pheno_snp_combination = interaction(crude_interacts$phenotype, crude_interacts$snp, sep="-")
+> #check
+> summary(crude_interacts$pheno_snp_combination == paste(crude_interacts$phenotype, crude_interacts$snp, sep="-"))
+   Mode    TRUE 
+logical      85 
+> 
+> #select those associations with an FDR<0.1
+> interact_fdr_less_005 = crude_interacts[which(crude_interacts$fdr<0.05),]
+> 
+> #from these associations, select those with the additive and codominant model
+> interact_fdr_less_005_only_add_cod = crude_interacts[which(crude_interacts$fdr<0.05 & crude_interacts$heritage_model %in% c("additive", "codominant")),]
+> #check
+> nrow(interact_fdr_less_005_only_add_cod[which(interact_fdr_less_005_only_add_cod$fdr<0.05 & interact_fdr_less_005_only_add_cod$heritage_model %in% c("additive", "codominant")),]) == nrow(interact_fdr_less_005_only_add_cod)
+[1] TRUE
+> 
+> #check whether all significant combinations are included when restricting to add/codominant
+> summary(unique(interact_fdr_less_005$pheno_snp_combination) %in% unique(interact_fdr_less_005_only_add_cod$pheno_snp_combination))
+   Mode   FALSE    TRUE 
+logical       3      10 
+> 
+> #select those not included
+> interact_fdr_less_005[which(!interact_fdr_less_005$pheno_snp_combination %in% interact_fdr_less_005_only_add_cod$pheno_snp_combination),]
+    phenotype heritage_model       snp min_sample_size       p_value
+14    obesity   overdominant rs2143511              24 0.01062509724
+74        FMI      recessive rs6067472              53 0.02494014612
+104       FMI      recessive rs6020608              28 0.03375571598
+              fdr r2_percentage pheno_snp_combination
+14  0.04250038896  0.9320662592     obesity-rs2143511
+74  0.04500762131  0.7470769463         FMI-rs6067472
+104 0.04500762131  0.6701840005         FMI-rs6020608
+>     #There are only 3 interactions not included: 
+>         #obesity overdominant rs2143511 0.01062509724 0.04250038896
+>         # FMI    recessive    rs6067472 0.02494014612 0.04500762131
+>         # FMI    recessive    rs6020608 0.03375571598 0.04500762131
+>     #All three are very close to FDR=0.05.
+>         #FMI is very associated with other two snps in other models.
+>         #Obesity is not associated with other snps or models, but I am not very confident with this association. It only shows significance for the overdominant model, similar phenotype for the homozygous.
+>     #There is no problem if we lose these associations in the table of main text. The main results and analyses remain similar in main text, and the these three can be found in supplementary 2.
+> 
+> 
+> ### make a loop to extract phenotype values per genotype ###
+> 
+> #open empty data.frame to save results
+> table_5 = rbind.data.frame(rep(NA, 14))
+> colnames(table_5)[1] <- "SNP"
+> colnames(table_5)[2] <- "Phenotype"
+> colnames(table_5)[3] <- "11 PI"
+> colnames(table_5)[4] <- "12 PI"
+> colnames(table_5)[5] <- "22 PI"
+> colnames(table_5)[6] <- "11 PA"
+> colnames(table_5)[7] <- "12 PA"
+> colnames(table_5)[8] <- "22 PA"
+> colnames(table_5)[9] <- "P add" 
+> colnames(table_5)[10] <- "FDR add"
+> colnames(table_5)[11] <- "R2 add"
+> colnames(table_5)[12] <- "P cod"
+> colnames(table_5)[13] <- "FDR cod"
+> colnames(table_5)[14] <- "R2 cod"
+> 
+> #reorder the file with significant add/cod associations based on snps
+> interact_fdr_less_005_only_add_cod_copy = interact_fdr_less_005_only_add_cod[order(interact_fdr_less_005_only_add_cod$snp),]
+> 
+> #select those pheno-snp combinations for associations with FDr<0.1 in the additive or codominant models
+> pheno_snp_combinations_table_5 = unique(interact_fdr_less_005_only_add_cod_copy$pheno_snp_combination)
+>     #we need unique because an snp-pheno association that is significant for additive and codominant will be selected two times and included two times in the table. We only need it one time, if the combination is present two times in "interact_fdr_less_005_only_add_cod_copy" (2 rows), the script will take the FDR of additive and codominant. If it is not present it will look for the non-significant model in "crude_interacts". 
+> 
+> #set the name of the environmental variable
+> env_variable_table_5 = "PA_factor"
+> 
+> #for each pheno-snp combination, considering only associations with FDR<0.1 and additive model
+> for(i in 1:length(pheno_snp_combinations_table_5)){
++ 
++     #select the [i] combination
++     selected_combination = pheno_snp_combinations_table_5[i]
++ 
++     #check
++     print(paste("##############################################"))
++     print(paste("STARTING WITH TABLE 5: ", selected_combination, sep=""))
++     print(paste("##############################################"))
++ 
++     #select the rows of the significant associations for the [i] pheno-snp combination
++     selected_rows = interact_fdr_less_005_only_add_cod_copy[which(interact_fdr_less_005_only_add_cod_copy$pheno_snp_combination == selected_combination),]
++         #We can have the same phenotype-snp combination for two models, additive and codominant.
++ 
++     #select the [i] phenotype and snp
++     selected_pheno = unique(selected_rows$phenotype)
++     selected_snp = unique(selected_rows$snp)
++         #unique because we can have two rows (additive and codominant), but in both cases the snp and phenotype should be the same indicated in selected_combination
++     #check
++     print(paste("############################"))
++     print(paste("WE SELECTED THE CORRECT PHENOTYPE AND SNP?"))
++     print(paste(selected_pheno, "-", selected_snp, sep="") == selected_combination)
++     print(paste("############################"))
++ 
++     #extract the genotype data of the [i] snp
++     geno_data = eval(parse(text=paste("na.omit(myData_ptpn1$", selected_snp, ")", sep="")))
++ 
++     #extract genotype levels
++     geno_data_levels = unique(geno_data)
++ 
++     #for each genotype level calculate the number of individuals
++     genotype_sample_size = data.frame(selected_genotype=NA, sample_size=NA) #open an empty data.frame to save resuls
++     for(j in 1:length(geno_data_levels)){
++ 
++         #select the [j] genotype
++         selected_genotype = geno_data_levels[j]
++ 
++         #calculate the number of individuals with the [j] snp
++         sample_size = length(which(geno_data == selected_genotype))
++ 
++         #save the results
++         genotype_sample_size = rbind.data.frame(genotype_sample_size, cbind.data.frame(selected_genotype, sample_size))
++     }
++ 
++     #remove the first row with all NAs
++     genotype_sample_size = genotype_sample_size[-which(rowSums(is.na(genotype_sample_size)) == ncol(genotype_sample_size)),]
++ 
++     #select genotypes of the homozygotes
++     genotype_sample_size_homo = genotype_sample_size[which(!genotype_sample_size$selected_genotype %in% c("1/2", "2/1")),]
++ 
++     #select the homozygote genotype with the lowest sample size, that is, minor homozygote
++     minor_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == min(genotype_sample_size_homo$sample_size)),]$selected_genotype
++ 
++     #select the homozygote genotype with the highest sample size, that is, major homozygote
++     major_homo = genotype_sample_size_homo[which(genotype_sample_size_homo$sample_size == max(genotype_sample_size_homo$sample_size)),]$selected_genotype
++ 
++     #select those individuals with each type of genotype
++     subset_minor_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", minor_homo, "' ),]", sep="")))
++     subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') & !is.na(myData_ptpn1$", selected_snp, ")),]", sep="")))
++     subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
++         #"parse()" returns the parsed but unevaluated expressions in an "expression" object. Therefore, the code is not run yet.
++         #"eval()" evaluates an R expression. It runs the expression. 
++             #dummy example:
++                 #expression_sum = parse(text="1+1") #create a expression to sum 1+1
++                 #eval(expression_sum) #evaluate the expression, giving 2.
++ 
++     #check the subset worked
++     print(paste("############################"))
++     print(paste("CHECK THE SUBSET WAS WELL FOR: ", selected_combination, sep=""))
++     print(paste("############################"))
++     #no other genotype rather than minor homo should exist in subset_minor_homo
++     print(nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_snp, " != '", minor_homo, "'),]", sep="")))) == 0)
++     #no other genotype rather than hetero should exist in subset_hetero
++     print(nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') | is.na(subset_hetero$", selected_snp, ")),]", sep="")))) == 0)
++     #no other genotype rather than major homo should exist in subset_major_homo
++     print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
++ 
++     #set the number decimals
++     #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
++     if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
++ 
++         #0 decimals
++         number_decimals = 0
++     } else {#if the phenotype is none of the latter
++ 
++         #2 decimals
++         number_decimals = 2
++     }
++ 
++     #extract the data of the selected phenotype to make a condition
++     selected_pheno_data = eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep="")))
++ 
++     #extract the environmental variable to do a loop inside the ifelse
++     selected_env_var_levels = sort(unique(eval(parse(text=paste("myData_ptpn1$", env_variable_table_5, sep="")))))
++ 
++     #if the selected phenotype is not a factor
++     if(!is.factor(selected_pheno_data)){
++ 
++         #for each level of the environmental variable
++         for(j in 1:length(selected_env_var_levels)){
++ 
++             #select the [j] level
++             selected_env_level = selected_env_var_levels[j]
++ 
++             #select those individuals with the [j] level of the environmental variable in each genotype
++             subset_minor_homo_env = eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
++             subset_hetero_env = eval(parse(text=paste("subset_hetero[which(subset_hetero$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
++             subset_major_homo_env = eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
++ 
++             #check the subset worked
++             print(paste("############################"))
++             print(paste("CHECK THE ENV SUBSET WAS WELL FOR: ", selected_combination, sep=""))
++             print(paste("############################"))
++             #no other genotype rather than minor homo should exist in subset_minor_homo
++             print(nrow(eval(parse(text=paste("subset_minor_homo_env[which(subset_minor_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
++             print(nrow(eval(parse(text=paste("subset_hetero_env[which(subset_hetero_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
++             print(nrow(eval(parse(text=paste("subset_major_homo_env[which(subset_major_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
++ 
++             #extract the average of each genotype
++             minor_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_minor_homo_env$", selected_pheno, sep=""))))), number_decimals)
++             hetero_average = round(mean(na.omit(eval(parse(text=paste("subset_hetero_env$", selected_pheno, sep=""))))), number_decimals)
++             major_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_major_homo_env$", selected_pheno, sep=""))))), number_decimals)
++ 
++             #extract the SD of each genotype
++             minor_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_minor_homo_env$", selected_pheno, sep=""))))), number_decimals)
++             hetero_sd = round(sd(na.omit(eval(parse(text=paste("subset_hetero_env$", selected_pheno, sep=""))))), number_decimals)
++             major_homo_sd = round(sd(na.omit(eval(parse(text=paste("subset_major_homo_env$", selected_pheno, sep=""))))), number_decimals)
++     
++             #create a single variable with each average and sd and assign it to the corresponding object
++             assign(paste("minor_homo_", env_variable_table_5, "_", selected_env_level, sep=""), paste(minor_homo_average, "$\\pm$", minor_homo_sd, sep=""))
++             assign(paste("hetero_", env_variable_table_5, "_", selected_env_level, sep=""), paste(hetero_average, "$\\pm$", hetero_sd, sep=""))
++             assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), paste(major_homo_average, "$\\pm$", major_homo_sd, sep=""))
++         }
++     } else { #if not, and hence the phenotype is a factor
++         
++         #for each level of the environmental variable
++         for(j in 1:length(selected_env_var_levels)){
++ 
++             #select the [j] level
++             selected_env_level = selected_env_var_levels[j]
++ 
++             #select those individuals with the [j] level of the environmental variable in each genotype
++             subset_minor_homo_env = eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
++             subset_hetero_env = eval(parse(text=paste("subset_hetero[which(subset_hetero$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
++             subset_major_homo_env = eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", env_variable_table_5, "==", selected_env_level, "),]", sep="")))
++ 
++             #check the subset worked
++             print(paste("############################"))
++             print(paste("CHECK THE ENV SUBSET WAS WELL FOR: ", selected_combination, sep=""))
++             print(paste("############################"))
++             #no other genotype rather than minor homo should exist in subset_minor_homo
++             print(nrow(eval(parse(text=paste("subset_minor_homo_env[which(subset_minor_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
++             print(nrow(eval(parse(text=paste("subset_hetero_env[which(subset_hetero_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
++             print(nrow(eval(parse(text=paste("subset_major_homo_env[which(subset_major_homo_env$", env_variable_table_5, " != '", selected_env_level, "'),]", sep="")))) == 0)
++ 
++             #calculate the number of minor homo with obesity and the total number of minor homo with data about obesity status
++             cases_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo_env[which(subset_minor_homo_env$", selected_pheno, "== 1),]", sep=""))))
++             total_minor_homo = nrow(eval(parse(text=paste("subset_minor_homo_env[which(!is.na(subset_minor_homo_env$", selected_pheno, ")),]", sep=""))))
++                 #we need all rows with data for the selected phenotype included in the subset of the genotype
++ 
++             #calculate the number of hetero with obesity and the total number of hetero with data about obesity status
++             cases_hetero = nrow(eval(parse(text=paste("subset_hetero_env[which(subset_hetero_env$", selected_pheno, "== 1),]", sep=""))))
++             total_hetero = nrow(eval(parse(text=paste("subset_hetero_env[which(!is.na(subset_hetero_env$", selected_pheno, ")),]", sep=""))))
++                 #we need all rows with data for the selected phenotype included in the subset of the genotype
++ 
++             #calculate the number of major homo with obesity and the total number of major homo with data about obesity status
++             cases_major_homo = nrow(eval(parse(text=paste("subset_major_homo_env[which(subset_major_homo_env$", selected_pheno, "== 1),]", sep=""))))
++             total_major_homo = nrow(eval(parse(text=paste("subset_major_homo_env[which(!is.na(subset_major_homo_env$", selected_pheno, ")),]", sep=""))))
++                 #we need all rows with data for the selected phenotype included in the subset of the genotype
++ 
++             #calculate the percentage of individuals with obesity respect the total number of individual within each genotype and assign it to the corresponding object
++             assign(paste("minor_homo_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_minor_homo/total_minor_homo)*100, number_decimals))
++             assign(paste("hetero_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_hetero/total_hetero)*100, number_decimals))
++             assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_major_homo/total_major_homo)*100, number_decimals))
++         }
++ 
++         #REVISA ESTO!! QUE VIENE DEL CODIGO TABLE 4. I have checked the figure of PTPN1 for obesity (rs2143511 - overdominant: pdf with FDR<0.05). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can se how TT (major homo) frequency decreases a lot in overweight, while the minor homo (CC) increases, suggesting the former is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
++ 
++             #sample size in each category
++ 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
++                 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
++ 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
++                 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
++ 
++             #percentage of individuals in each category
++ 
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==0 & !is.na(myData_ptpn1$obesity)),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==0 & !is.na(myData_ptpn1$obesity)),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==0 & !is.na(myData_ptpn1$obesity)),])
++                  
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/1" & myData_ptpn1$PA_factor==1 & !is.na(myData_ptpn1$obesity)),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "1/2" & myData_ptpn1$PA_factor==1 & !is.na(myData_ptpn1$obesity)),])
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 == "2/2" & myData_ptpn1$PA_factor==1 & !is.na(myData_ptpn1$obesity)),])
++     }
++ 
++     #if the number of selected rows is 2, and hence the spn-phenotype association is significant for additive and codominant model
++     if(nrow(selected_rows) == 2){
++ 
++         #extract the association results of additive model from selected rows
++         p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
++         fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
++         r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
++ 
++         #extract the association results of codominant model from selected rows
++         p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
++         fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
++         r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
++     } else { #if not, only one heritage model is significant
++ 
++         #thus we should have only 1 selected row
++         if(nrow(selected_rows) == 1){
++             
++             #save the name of the significant
++             model_significant = selected_rows$heritage_model
++                 #the significant model is in selected row, because this is the association selected as significant
++             
++             #save the name of the non-significant model
++             model_no_significant = ifelse(model_significant == "additive", "codominant", "additive")
++                 #if the significant model is additive, then the non-significant model is codominant. If not, then the significant model is codominant and hence the non-significant is additive.
++ 
++             #extract the results of the significant model from selected rows (there you have the significant associations) and then assign these results to objects named with the name of the significant model
++             assign(paste("p_value_", model_significant, sep=""), round(selected_rows$p_value, 3))
++             assign(paste("fdr_", model_significant, sep=""), round(selected_rows$fdr, 3))
++             assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
++ 
++             #extract the results of the non-significant model from crude_interacts (there you have all associations)
++             results_model_no_significant = crude_interacts[which(crude_interacts$pheno_snp_combination == selected_combination & crude_interacts$heritage_model == model_no_significant),]
++                 #we need the whole supple (non-significant associations), but with the combination pheno-snp selected and the non-significant model
++ 
++             #then assign these results to objects named with the name of the non-significant model
++             assign(paste("p_value_", model_no_significant, sep=""), round(results_model_no_significant$p_value,3))
++             assign(paste("fdr_", model_no_significant, sep=""), round(results_model_no_significant$fdr,3))
++             assign(paste("r2_", model_no_significant, sep=""), round(results_model_no_significant$r2_percentage,3))
++         }
++     }
++ 
++     #extract the final name of the selected phenotype for the table
++     pheno_table = pheno_names[which(pheno_names$var_name == selected_pheno),]$final_name
++ 
++     #bind results into one row
++     results = cbind.data.frame(
++         selected_snp,
++         pheno_table,
++         minor_homo_PA_factor_0,
++         hetero_PA_factor_0,
++         major_homo_PA_factor_0,
++         minor_homo_PA_factor_1,
++         hetero_PA_factor_1,
++         major_homo_PA_factor_1,
++         p_value_additive,
++         fdr_additive,
++         r2_additive,
++         p_value_codominant,
++         fdr_codominant,
++         r2_codominant)
++ 
++     #change columns names to match names table 2
++     names(results)[1] <- "SNP"
++     names(results)[2] <- "Phenotype"
++     names(results)[3] <- "11 PI"
++     names(results)[4] <- "12 PI"
++     names(results)[5] <- "22 PI"
++     names(results)[6] <- "11 PA"
++     names(results)[7] <- "12 PA"
++     names(results)[8] <- "22 PA"
++     names(results)[9] <- "P add"    
++     names(results)[10] <- "FDR add"
++     names(results)[11] <- "R2 add"
++     names(results)[12] <- "P cod"    
++     names(results)[13] <- "FDR cod"
++     names(results)[14] <- "R2 cod"
++ 
++     #add the results as a row in the final data.frame
++     table_5 = rbind.data.frame(table_5, results)
++ }
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_hip-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_hip-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_hip-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_hip-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_BMI-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_BMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_BMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_BMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_Body_fat_PC-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: FMI-rs2143511"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: FMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: FMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: FMI-rs2143511"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_hip-rs6020608"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_hip-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_hip-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_hip-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_BMI-rs6020608"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_BMI-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_BMI-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_BMI-rs6020608"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_hip-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_hip-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_hip-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_hip-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_BMI-rs6067472"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_BMI-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_BMI-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_BMI-rs6067472"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: CRF_Body_fat_PC-rs968701"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: CRF_Body_fat_PC-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "##############################################"
+[1] "STARTING WITH TABLE 5: FMI-rs968701"
+[1] "##############################################"
+[1] "############################"
+[1] "WE SELECTED THE CORRECT PHENOTYPE AND SNP?"
+[1] TRUE
+[1] "############################"
+[1] "############################"
+[1] "CHECK THE SUBSET WAS WELL FOR: FMI-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: FMI-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "############################"
+[1] "CHECK THE ENV SUBSET WAS WELL FOR: FMI-rs968701"
+[1] "############################"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+> 
+> #remove the first row with all NAs
+> table_5 = table_5[-which(rowSums(is.na(table_5)) == ncol(table_5)),]
+> 
+> 
+> ## change some name entries
+> #add R squared and percentage to the column names with R2
+> colnames(table_5)[which(colnames(table_5) == "R2 add")] <- "R\\textsuperscript{2} add (\\%)"
+> colnames(table_5)[which(colnames(table_5) == "R2 cod")] <- "R\\textsuperscript{2} cod (\\%)"
+> 
+> 
+> ##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+> 
+> #We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+> 
+> #pheno with slash
+> pheno_slash = which(grepl("%", table_5$Phenotype)) #rows with percentage as phenotype name
+> #change names of these phenotypes modifying "%" by "\\%"
+> table_5[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_5[pheno_slash,]$Phenotype, fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> 
+> #pheno with ^2
+> pheno_squared = which(grepl("\\^2", table_5$Phenotype)) #rows with squared as phenotype name
+> #change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
+> table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[pheno_squared,]$Phenotype, fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> 
+> 
+> 
+> 
+> ################################################
+> ##### CONVERT TABLES TO LATEX AND COMPILE ######
+> ################################################
+> 
+> #load the required package
+> require(xtable)
+Loading required package: xtable
+> 
+> #path to save tex table
+> path_tex_table = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/"
+> 
+> #name tex table
+> name_tex_table = "tables_latex_v3.tex"
+> 
+> #name doc table
+> name_doc_table = "tables_latex_v3.odt"
+> 
+> #remove the previous file with tables in latex
+> system(paste("cd ", path_tex_table, "; rm ", name_tex_table, "; rm ", name_doc_table, sep=""))
+> 
+> #convert table 1 to a latex table
+> print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccc", digits=2, display=c("s", "s", "s", "s", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
+>         #arguments xtable
+>             #caption: caption of the table
+>             #label: label of the table
+>             #align: position of the content within the cell. The number is ncols + 1 because it also consider the row names, even if you remove them in print.xtable. The first position is for NO column, the second one is for the first column, the third is for the second column, etc.
+>             #digits: number of decimals. You can set negative decimals here to have scientific notation, but this can be also done in the next argument. You can set a different number of decimals per column (ncol+1)
+>             #display: way to show content. s for string, f for usual numbers xxxx.xxxx and E/e for scientific notation (in upper and lower case, respectively). The first position is for NO column, the second one is for the first column, the third is for the second column, etc.
+>         #arguments print.xtable
+>             #type: type of table, latex or html
+>             #file: file to save the table
+>             #append: logical to indicate if the table should be appended in the file or that file should be overwritten.
+>             #floating: logical indicating whether this a floating table of latex
+>             #table.placement: position of the floating table. Only valid with floating=TRUE. The default is [ht], indicating "here" and "top".
+>             #caption.placement: position of the caption. 
+>             #caption.width: width of the column.
+>             #latex.environments: environment in which the table is embedded. For example begin center.
+>             #hline.after: place to include bold lines in the table. The default is c(-1,0,nrow(table)) which indicated lines at both sides of the first row and in the bottom of the last row. This DOES NOT work in padoc to odf because of the odf file with the style.
+>             #NA.string: string to include in the cases with NA
+>             #include.rownames: logical indication whether to include row.names or not
+>             #comment: logical indicating whether a comment is included in the table or not.
+>             #timestamp: timestamp included in case "comment" is TRUE. The default is date().    
+> 
+> #convert table 2 to a latex table
+> print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", digits=2, display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+>     #sanitize.text.function:
+>         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+>             #in this way we can remove slash, etc...
+>     #Rest of the argument in the line of the table 1
+> 
+> #convert table 3 to a latex table
+> 
+> #convert table 4 to a latex table
+> print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+>     #argument in the line of the table 1
+>     #sanitize.text.function:
+>         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+>             #in this way we can remove slash, etc...
+> 
+> #convert table 5 to a latex table
+> print.xtable(xtable(table_5, caption="Table 5", label=NULL, align="ccccccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_5)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+>     #argument in the line of the table 1
+>     #sanitize.text.function:
+>         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+>             #in this way we can remove slash, etc...
+> 
+> #compile to odt with pandoc
+> system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name_doc_table, sep=""))
+> 
+> 
+> 
+> 
+> #################################################
+> ################### FIGURES #####################
+> #################################################
+> #Figures are removed in this script version.
+> 
+> #FOR FUTURE FIGURES, IMPORTANT: The SNP "rs6067472" is palindromic, so it has T/A in HELENA and A/T in ncbi (see "alleles" object). If you plot this snp with the current plot_assoc functions, the result will be TT TT TT, because the function changes T to A in the genotype data to set A as the major, but then when changing the minor, that A should be T, we have all A, so the result is all T. In these cases, you should first copy the SNP in a new vector, change AA to XX, then TT to AA, and then XX to AA. In the commit "5a18508cb30745ee26117b0aa5aa87985edcf268" of "analyses_fdr_bh_ptpn1_v2.R" you have code for doing that. 
+> 
+> #The figure of obesity are not really understandable. I calculated the percentage of individuals with each genotype within obesity and non-obesity. This is not intuitive. It is better to calculate the percentage of obesity within each genotype. See the script of table 4 (for factor phenotypes) for further details.
+> 
+> 
+> 
+> 
+> ####################################################
+> ######## SUPLE LEPTIN - OBESITY CORRELATION ########
+> ####################################################
+> 
+> if(FALSE){
++ 
++ #open the pdf
++ pdf(paste("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/figures/figures_suple_pvals/figure_S", sequence_pheno[length(sequence_pheno)]+1, ".pdf", sep=""), height = 6, width = 12)
++ par(mfrow=c(1,2),  mar=c(6.5, 4, 2, 2) +0.1)
++ 
++ ##plot body fat percentage vs. leptin
++ #make the plot
++ plot(myData_ptpn1$CRF_Body_fat_PC, myData_ptpn1$Leptin_ng_ml, type="p", xlab="Body fat %", ylab="Leptin (ng/ml)", cex.lab=1.5)
++ 
++ #make the correlation
++ tests_pc = cor.test(myData_ptpn1$CRF_Body_fat_PC, myData_ptpn1$Leptin_ng_ml, test="spearman")
++ 
++ #extract and plot the results of the correlation
++ tests_pc_p = bquote(italic(p.value) == .(format(tests_pc$p.value, digits = 3)))
++ text(x=17, y=160, labels = tests_pc_p, cex=1.3)
++ tests_pc_t = bquote(italic(t) == .(format(tests_pc$statistic, digits = 3)))
++ text(x=17, y=145, labels = tests_pc_t, cex=1.3)
++ tests_pc_rho = bquote(italic(rho) == .(format(tests_pc$estimate, digits = 3)))
++ text(x=17, y=130, labels = tests_pc_rho, cex=1.3)
++ 
++ 
++ ##plot FMI vs. leptin
++ #make the plot
++ plot(myData_ptpn1$FMI, myData_ptpn1$Leptin_ng_ml, type="p", xlab="Fat mass index (kg/m^2)", ylab="Leptin (ng/ml)", cex.lab=1.5)
++ 
++ #make the correlation
++ tests_fmi = cor.test(myData_ptpn1$FMI, myData_ptpn1$Leptin_ng_ml, test="spearman")
++ 
++ #extract and plot the results of the correlation
++ tests_fmi_p = bquote(italic(p.value) == .(format(tests_fmi$p.value, digits = 3)))
++ text(x=17, y=160, labels = tests_fmi_p, cex=1.3)
++ tests_fmi_t = bquote(italic(t) == .(format(tests_fmi$statistic, digits = 3)))
++ text(x=17, y=145, labels = tests_fmi_t, cex=1.3)
++ tests_fmi_rho = bquote(italic(rho) == .(format(tests_fmi$estimate, digits = 3)))
++ text(x=17, y=130, labels = tests_fmi_rho, cex=1.3)
++ 
++ #add the title plot
++ mtext(paste("Online supplementary figure S", sequence_pheno[length(sequence_pheno)]+1, sep=""), side=1, font=2, cex=2, adj=0.015, padj=1.5, outer=TRUE, line=-3)
++ 
++ #close the pdf
++ dev.off()
++ }
+> 
+> proc.time()
+   user  system elapsed 
+  4.098   0.349   4.545 
