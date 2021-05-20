@@ -33,7 +33,7 @@
     #In the version 3 I have changed the name of the supplementary figures 2,3,4. Now it is called figure SX...
 
 #Version 4
-    #In the version 4, I have included the reviewer suggestions of ped obesity. 
+    #In the version 4, I have included the reviewer suggestions of ped obesity.
     #New versions of the 2 tables, and complete removal of all figures
 
 
@@ -49,10 +49,8 @@ require(SNPassoc)
 require(genetics)
 
 
-
 ### set the working directory
 setwd("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7")
-
 
 
 ### create a data.frame withe the names of phenotypes in dataset and the real name per the figure
@@ -61,33 +59,30 @@ pheno_names = cbind.data.frame(
     c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% obesity/overweight", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
 colnames(pheno_names) <- c("var_name", "final_name")
 
-#### binomial phenotypes included in this set of results
+### binomial phenotypes included in this set of results
 binomial_pheno = c("obesity", "CVi_BP")
 
 
-
-#### the same for SSB variable
+### the same for SSB variable
 ssb_names = cbind.data.frame(
     c("mean_Alspac_v42","CVi_softdrink_cont_2000"),
     c("mean_Alspac_v42","CVi_softdrink_cont_2000"))
 colnames(ssb_names) <- c("var_name", "final_name")
 
 
-
-##### level names of factor variables
+### level names of factor variables
 factor_variables_levels = list(c("Non-overweight", "Overweight"), c("Low physic. act. (<60 min/day)", "High physic. act. (≥60 min/day)"))
 names(factor_variables_levels) <- c("obesity", "PA_factor")
 
 
-
-##### load allele and genes names of SNPs according to HELENA and ncbi
-## gene names
+### load allele and genes names of SNPs according to HELENA and ncbi
+#gene names
 gene_names = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/chromosome_snps.csv", sep=",", header=T)
 #select snps from the studied gene
 gene_names = gene_names[which(gene_names$selected_snp %in% labels(myData_ptpn1)),]
 nrow(gene_names) == length(labels(myData_ptpn1))
 
-## load allele names
+#load allele names
 #alleles = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/data/snps/alleles_ptpn1_v2.csv", sep=",", header=T)
     #allele names have been updated in the main script of the analyses after checking allele frequencies with the 1KGP.
 nrow(alleles) == length(labels(myData_ptpn1))
@@ -95,9 +90,9 @@ nrow(alleles) == length(labels(myData_ptpn1))
 
 
 
-####################
-##### TABLE 1 ######
-####################
+###################
+##### TABLE 1 #####
+###################
 
 ### start the table
 #extract summary of snps
@@ -119,12 +114,14 @@ table_1$MAF == 1-(summary_snps$major.allele.freq/100)
 table_1$HWE == summary_snps$HWE
 
 
+### add alleles to table 1
 
-### add alleles to table 1 
 #add two columns for Major and minor alleles
 table_1 = cbind.data.frame(NA, NA, table_1)
+
 #add the corresponding names (first major, second minor)
 colnames(table_1)[which(colnames(table_1) == "NA")] <- c("Major allele", "Minor allele")
+
 #add the alleles
 for(i in 1:nrow(table_1)){#for each row of table 1
 
@@ -161,8 +158,7 @@ table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
 row.names(table_1) == ptpn1_snps$snp
 
 
-
-### add the gene name to the table. More sense when SNPs of multiple genes are included. 
+### add the gene name to the table. More sense when SNPs of multiple genes are included.
 #loop for each gene
 ptpn1s = unique(ptpn1_snps$gen)
 #for each gene name
@@ -201,10 +197,9 @@ for(i in 1:length(ptpn1s)){
 }
 
 
-
 ### add the minor alleles frequencies according to 1000 Genomes Project
 
-## Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
+#Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
     #rs6067472: T=0.3648
         #https://www.ncbi.nlm.nih.gov/snp/rs6067472#frequency_tab
     #rs10485614: C=0.0755
@@ -216,21 +211,19 @@ for(i in 1:length(ptpn1s)){
     #rs968701: G=0.4861
         #https://www.ncbi.nlm.nih.gov/snp/rs968701#frequency_tab
 
-
-## create a table with these minor allele frequencies
+#create a table with these minor allele frequencies
 maf_1kgp = rbind.data.frame(NA, 0.3648, 0.0755, 0.4543, 0.2744, 0.4861)
 row.names(maf_1kgp) <- c("PTPN1", "rs6067472", "rs10485614", "rs2143511", "rs6020608", "rs968701")
 colnames(maf_1kgp) <- c("MAF 1KGP - Europe")
 
-## merge with table 1 
+#merge with table 1 
 table_1_1KGP = merge(table_1, maf_1kgp, by="row.names")
 
-## reorder the table again following the order in the chromosome 
+#reorder the table again following the order in the chromosome 
 table_1_1KGP = table_1_1KGP[match(c("PTPN1", as.character(ptpn1_position$snp)), table_1_1KGP$Row.names),]
 table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_position$snp))
 
-
-## remove the column name for row names
+#remove the column name for row names
 colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 
 
@@ -508,8 +501,6 @@ pheno_slash = which(grepl("%", table_2$Phenotype))
 table_2[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_2[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 table_2$Phenotype
 
-
-    
 #check for all phenotypes there is at least one data
 #select phenotype columns    
 only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1))]
@@ -534,12 +525,16 @@ crude_assocs = suppl_data_1
 
 #create a variable with the combination of phenotype and snp of each association
 crude_assocs$pheno_snp_combination = interaction(crude_assocs$phenotype, crude_assocs$snp, sep="-")
+#check
+summary(crude_assocs$pheno_snp_combination == paste(crude_assocs$phenotype, crude_assocs$snp, sep="-"))
 
 #select those associations with an FDR<0.1
 assoc_fdr_less_01 = crude_assocs[which(crude_assocs$fdr<0.1),]
 
 #from these associations, select those with the additive and codominant model
 assoc_fdr_less_01_only_add_cod = crude_assocs[which(crude_assocs$fdr<0.1 & crude_assocs$heritage_model %in% c("additive", "codominant")),]
+#check
+nrow(assoc_fdr_less_01_only_add_cod[which(assoc_fdr_less_01_only_add_cod$fdr<0.1 & assoc_fdr_less_01_only_add_cod$heritage_model %in% c("additive", "codominant")),]) == nrow(assoc_fdr_less_01_only_add_cod)
 
 #check whether all significant combinations are included when restricting to add/codominant
 summary(unique(assoc_fdr_less_01$pheno_snp_combination) %in% unique(assoc_fdr_less_01_only_add_cod$pheno_snp_combination))
@@ -558,10 +553,10 @@ colnames(table_4)[2] <- "Phenotype"
 colnames(table_4)[3] <- "11"
 colnames(table_4)[4] <- "12"
 colnames(table_4)[5] <- "22"
-colnames(table_4)[6] <- "P add"    
+colnames(table_4)[6] <- "P add" 
 colnames(table_4)[7] <- "FDR add"
 colnames(table_4)[8] <- "R2 add"
-colnames(table_4)[9] <- "P cod"    
+colnames(table_4)[9] <- "P cod"
 colnames(table_4)[10] <- "FDR cod"
 colnames(table_4)[11] <- "R2 cod"
 
@@ -578,6 +573,11 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     #select the [i] combination
     selected_combination = pheno_snp_combinations_table_4[i]
 
+    #check
+    print(paste("##############################################"))
+    print(paste("STARTING WITH TABLE 4: ", selected_combination, sep=""))
+    print(paste("##############################################"))
+
     #select the rows of the significant associations for the [i] pheno-snp combination
     selected_rows = assoc_fdr_less_01_only_add_cod_copy[which(assoc_fdr_less_01_only_add_cod_copy$pheno_snp_combination %in% selected_combination),]
         #We can have the same phenotype-snp combination for two models, additive and codominant.
@@ -585,7 +585,12 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     #select the [i] phenotype and snp
     selected_pheno = unique(selected_rows$phenotype)
     selected_snp = unique(selected_rows$snp)
-        #unique because we can have two rows (additive and codominant)
+        #unique because we can have two rows (additive and codominant), but in both cases the snp and phenotype should be the same indicated in selected_combination
+    #check
+    print(paste("############################"))
+    print(paste("WE SELECTED THE CORRECT PHENOTYPE AND SNP?"))
+    print(paste(selected_pheno, "-", selected_snp, sep="") == selected_combination)
+    print(paste("############################"))
 
     #extract the genotype data of the [i] snp
     geno_data = eval(parse(text=paste("na.omit(myData_ptpn1$", selected_snp, ")", sep="")))
@@ -594,7 +599,7 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     geno_data_levels = unique(geno_data)
 
     #for each genotype level calculate the number of individuals
-    genotype_sample_size = data.frame(selected_genotype=NA, sample_size=NA)
+    genotype_sample_size = data.frame(selected_genotype=NA, sample_size=NA) #open an empty data.frame to save resuls
     for(j in 1:length(geno_data_levels)){
 
         #select the [j] genotype
@@ -621,42 +626,42 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
 
     #select those individuals with each type of genotype
     subset_minor_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", minor_homo, "' ),]", sep="")))
-    subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "')),]", sep="")))
+    subset_hetero = eval(parse(text=paste("myData_ptpn1[which(!myData_ptpn1$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') & !is.na(myData_ptpn1$", selected_snp, ")),]", sep="")))
     subset_major_homo = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$", selected_snp, " == '", major_homo, "' ),]", sep="")))
+        #"parse()" returns the parsed but unevaluated expressions in an "expression" object. Therefore, the code is not run yet.
+        #"eval()" evaluates an R expression. It runs the expression. 
+            #dummy example:
+                #expression_sum = parse(text="1+1") #create a expression to sum 1+1
+                #eval(expression_sum) #evaluate the expression, giving 2.
 
-    #check
+    #check the subset worked
     print(paste("############################"))
     print(paste("CHECK THE SUBSET WAS WELL FOR: ", selected_combination, sep=""))
     print(paste("############################"))
     #no other genotype rather than minor homo should exist in subset_minor_homo
-    print(nrow(eval(parse(text=paste("subset_minor_homo[which(!subset_minor_homo$", selected_snp, " == c('", minor_homo, "')),]", sep="")))) == 0)
+    print(nrow(eval(parse(text=paste("subset_minor_homo[which(subset_minor_homo$", selected_snp, " != '", minor_homo, "'),]", sep="")))) == 0)
     #no other genotype rather than hetero should exist in subset_hetero
-    print(nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "')),]", sep="")))) == 0)
+    print(nrow(eval(parse(text=paste("subset_hetero[which(subset_hetero$", selected_snp, " %in% c('", minor_homo, "', '", major_homo, "') | is.na(subset_hetero$", selected_snp, ")),]", sep="")))) == 0)
     #no other genotype rather than major homo should exist in subset_major_homo
-    print(nrow(eval(parse(text=paste("subset_major_homo[which(!subset_major_homo$", selected_snp, " == c('", major_homo, "')),]", sep="")))) == 0)
+    print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
 
     #set the number decimals
-    #some phenotypes will have 1 decimal
-    if(selected_pheno %in% c("")){
+    #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
+    if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
 
-        #1 decimal
-        number_decimals = 1
-    } else {#if not
+        #0 decimals
+        number_decimals = 0
+    } else {#if the phenotype is none of the latter
 
-        #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
-        if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
-
-            #0 decimals
-            number_decimals = 0
-        } else {#if the phenotype is none of the latter
-
-            #2 decimals
-            number_decimals = 2
-        }
+        #2 decimals
+        number_decimals = 2
     }
 
+    #extract the data of the selected phenotype to make a condition
+    selected_pheno_data = eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep="")))
+
     #if the selected phenotype is not a factor
-    if(!is.factor(eval(parse(text=paste("myData_ptpn1$", selected_pheno, sep=""))))){
+    if(!is.factor(selected_pheno_data)){
 
         #extract the average of each genotype
         minor_homo_average = round(mean(na.omit(eval(parse(text=paste("subset_minor_homo$", selected_pheno, sep=""))))), number_decimals)
@@ -742,7 +747,7 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
                 #the significant model is in selected row, because this is the association selected as significant
             
             #save the name of the non-significant model
-            model_no_significant = ifelse(selected_rows$heritage_model == "additive", "codominant", "additive")
+            model_no_significant = ifelse(model_significant == "additive", "codominant", "additive")
                 #if the significant model is additive, then the non-significant model is codominant. If not, then the significant model is codominant and hence the non-significant is additive.
 
             #extract the results of the significant model from selected rows (there you have the significant associations) and then assign these results to objects named with the name of the significant model
@@ -752,7 +757,7 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
 
             #extract the results of the non-significant model from crude_assocs (there you have all associations)
             results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$heritage_model == model_no_significant),]
-                #we need the whole supple, but with the combination pheno-snp selected and the non-significant model
+                #we need the whole supple (non-significant associations), but with the combination pheno-snp selected and the non-significant model
 
             #then assign these results to objects named with the name of the non-significant model
             assign(paste("p_value_", model_no_significant, sep=""), round(results_model_no_significant$p_value,3))
@@ -762,7 +767,7 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     }
 
     #extract the final name of the selected phenotype for the table
-    pheno_table = pheno_names$final_name[which(pheno_names$var_name == selected_pheno)]
+    pheno_table = pheno_names[which(pheno_names$var_name == selected_pheno),]$final_name
 
     #bind results into one row
     results = cbind.data.frame(
@@ -844,13 +849,13 @@ name_doc_table = "tables_latex_v3.odt"
 system(paste("cd ", path_tex_table, "; rm ", name_tex_table, "; rm ", name_doc_table, sep=""))
 
 #convert table 1 to a latex table
-print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="lcccccc", digits=2, display=c("s", "s", "s", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
+print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccc", digits=2, display=c("s", "s", "s", "s", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
         #arguments xtable
             #caption: caption of the table
             #label: label of the table
-            #align: position of the content within the cell. The number is ncols + 1 because it also consider the row names, even if you remove them in print.xtable
+            #align: position of the content within the cell. The number is ncols + 1 because it also consider the row names, even if you remove them in print.xtable. The first position is for NO column, the second one is for the first column, the third is for the second column, etc.
             #digits: number of decimals. You can set negative decimals here to have scientific notation, but this can be also done in the next argument. You can set a different number of decimals per column (ncol+1)
-            #display: way to show content. s for string, f for usual numbers xxxx.xxxx and E/e for scientific notation (in upper and lower case, respectively).
+            #display: way to show content. s for string, f for usual numbers xxxx.xxxx and E/e for scientific notation (in upper and lower case, respectively). The first position is for NO column, the second one is for the first column, the third is for the second column, etc.
         #arguments print.xtable
             #type: type of table, latex or html
             #file: file to save the table
@@ -867,7 +872,7 @@ print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="lcccccc"
             #timestamp: timestamp included in case "comment" is TRUE. The default is date().    
 
 #convert table 2 to a latex table
-print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="lccccccc", digits=2, display=c("s", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", digits=2, display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
     #sanitize.text.function:
         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
             #in this way we can remove slash, etc...
@@ -876,7 +881,7 @@ print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="lccccccc", di
 #convert table 3 to a latex table
 
 #convert table 4 to a latex table
-print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc", digits=3, display=c("s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
     #argument in the line of the table 1
     #sanitize.text.function:
         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
