@@ -841,14 +841,16 @@ crude_interacts = suppl_data_2
     #we use the supple dataset file because it has the final phenotypes and columns we need
 
 
-### check that what happens if an interaction for a SNP-phenotype combination is not significant for codominant or additive ###
+### check that what happens if an crude SNP-phenotype is not significant for one of the models (codominant or additive) ###
 
-#No problem. For the interaction analyses, we considered those phenotypes and SNPs that were associated with FDR<0.1, independently of the heritage model. For example, if BMI was associated with rs2143511 under dominant model, we tested the interaction between that SNP and physical activity on BMI across the 5 heritage models.
+#No problem. For the interaction analyses, we considered those phenotypes and SNPs that were previously associated with FDR<0.1, independently of the heritage model. For example, if BMI was associated with rs2143511 under dominant model, we tested the interaction between that SNP and physical activity on BMI across the 5 heritage models. In other words, I the interaction between a SNP and PA on a phenotype is calculated under additive model, it is also calculated under the codominant model.
 
-#Therefore, if a SNP has an FDR for interaction under additive lower than 0.05, but not significant for codominant, no problem. We will take the non-significant FDR for codominant from crude_interacts (supple 2), where we have the results for all heritage models.
+#Therefore, if a SNP-phenotype association has an FDR lower than 0.1 under additive model, but it is not significant under the codominant model, there is no problem. The script will take the non-significant FDR for the interaction under codominant model from crude_interacts (supple 2), where the results for the interactions under all heritage models are included.
 
-#you can check that there is no problem. Unannotate this line and you will see how setting as NA the codominant model, gives NA for all entry of the table for codominant. 
+#you can check that there is no problem. Unannotate the next line and you will see how setting as NA the results from codominant model gives NA for all entry of the table for codominant. 
 #crude_interacts[which(crude_interacts$heritage_model == "codominant"), c("p_value", "fdr", "r2_percentage")] <- NA
+    #select the p_value, fdr and r2 for all interaction results belonging to the codominant model and set them as NA.
+    #The results is NA for the p_value, fdr and r2 under codominant model for all snp-phenotype combinations, while the additive model includes all results.
 
 
 ### check if considering additive/codominant models cover all significant associations ###
