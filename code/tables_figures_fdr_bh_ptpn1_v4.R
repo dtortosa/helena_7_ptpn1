@@ -834,6 +834,8 @@ table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[
 ##### TABLE 5 ######
 ####################
 
+#QUE PASA SI UNA INTERACCION SALTA EN ADITIVO, PERO LA ASOCIACION CRUDA EN CODOMINANTE NO LLEGA A FDR<0.1?
+
 #This table will show the average values of phenotypes per each genotype*PA level along with the FDR of the additive and codominant model.
 
 
