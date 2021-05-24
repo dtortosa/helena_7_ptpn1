@@ -836,12 +836,22 @@ table_4[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_4[
 
 #This table will show the average values of phenotypes per each genotype*PA level along with the FDR of the additive and codominant model.
 
-
-### check if considering additive/codominant models cover all significant associations ###
-
 #copy the supple data to do some operations
 crude_interacts = suppl_data_2
     #we use the supple dataset file because it has the final phenotypes and columns we need
+
+
+### check that what happens if an interaction for a SNP-phenotype combination is not significant for codominant or additive ###
+
+#No problem. For the interaction analyses, we considered those phenotypes and SNPs that were associated with FDR<0.1, independently of the heritage model. For example, if BMI was associated with rs2143511 under dominant model, we tested the interaction between that SNP and physical activity on BMI across the 5 heritage models.
+
+#Therefore, if a SNP has an FDR for interaction under additive lower than 0.05, but not significant for codominant, no problem. We will take the non-significant FDR for codominant from crude_interacts (supple 2), where we have the results for all heritage models.
+
+#you can check that there is no problem. Unannotate this line and you will see how setting as NA the codominant model, gives NA for all entry of the table for codominant. 
+#crude_interacts[which(crude_interacts$heritage_model == "codominant"), c("p_value", "fdr", "r2_percentage")] <- NA
+
+
+### check if considering additive/codominant models cover all significant associations ###
 
 #create a variable with the combination of phenotype and snp of each association
 crude_interacts$pheno_snp_combination = interaction(crude_interacts$phenotype, crude_interacts$snp, sep="-")
