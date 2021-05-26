@@ -991,7 +991,7 @@ for(i in 1:length(pheno_snp_combinations_table_5)){
     print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
 
     #set the number decimals
-    #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
+    #if the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
     if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
 
         #0 decimals
