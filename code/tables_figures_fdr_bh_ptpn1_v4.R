@@ -1253,7 +1253,7 @@ pheno_squared = which(grepl("\\^2", table_5$Phenotype)) #rows with squared as ph
 table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[pheno_squared,]$Phenotype, fixed=TRUE)
     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
-
+#JUST LEFT TO COMPARE WITH THE FIGURES
 
 
 ################################################
