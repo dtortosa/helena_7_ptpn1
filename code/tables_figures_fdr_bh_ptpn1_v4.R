@@ -1089,7 +1089,33 @@ for(i in 1:length(pheno_snp_combinations_table_5)){
             assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_major_homo/total_major_homo)*100, number_decimals))
         }
 
-        #I have checked the figure of PTPN1 for obesity (rs2143511 - overdominant: pdf with FDR<0.05). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can see how TT (major homo) frequency decreases a lot in overweight, while the minor homo (CC) increases, but in high PA, suggesting the former is protective only under high levels of physical activity. But it is very difficult to see. It is better to calculate the percentage of obesity within a genotype and PA level, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo between PA levels.
+        #I have checked the figure of PTPN1 for obesity (rs2143511 - overdominant: pdf with FDR<0.05). I find it very strange to me. I calculated the number of individuals with a genotype in given PA and obesity level and then divide by the total number of individuals across all genotypes in that obesity and PA level. I have checked the percentage of the figure and it seems to be calculate in this way (see below), BUT it is very strange way to present these results. You can see how TT-CC (homo) frequency is higher in overweight under low PA compared to the hetero (TC). In high PA, the TT-CC is the less frequent genotype between overweight under high levels of PA, suggesting that TT-CC is protective only under high levels of physical activity. But it is very difficult to see in this way. It is better to calculate the percentage of obesity within a genotype and PA level, in that way you can see a decrease in the percentage of obesity across genotypes and PA levels.
+
+            #percentages calculated in the initial figure
+
+                #low PA, non-obesity
+                #homo
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
+                #hetero
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
+
+                #low PA, obesity
+                #homo
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
+                #hetero
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
+
+                #high PA, non-obesity
+                #homo
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
+                #hetero
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
+
+                #high PA, obesity
+                #homo
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
+                #hetero
+                #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
 
             #sample size in each category
 
