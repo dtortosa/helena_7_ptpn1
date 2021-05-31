@@ -233,6 +233,10 @@ colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 ####################
 ##### TABLE 2 ######
 ####################
+
+#table 2 is going to have 6 columns, number of individuals and proportion of overweight across both sexes, and within each sex. 
+#TABLE 3 IS GOING TO BE TALBE 2 BUT WITHOUT OVERWEIGHT PERCENTAGE.
+
 response_pheno = c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")
 length(response_pheno) == nrow(pheno_names)
 summary(response_pheno == pheno_names$var_name)
