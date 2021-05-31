@@ -1324,6 +1324,8 @@ print.xtable(xtable(table_5, caption="Table 5", label=NULL, align="ccccccccccccc
 #compile to odt with pandoc
 system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name_doc_table, sep=""))
 
+#From the ".odt" file, you have to copy each table to excel, using advanced options for pasting ("text"). In that way, you can get the +- and other symbols correctly pasted. Once you have the first version in excel with the column names correctly displayed (squared, etc...), you can just paste the content (phenotype values, frequencies...).
+
 
 
 
