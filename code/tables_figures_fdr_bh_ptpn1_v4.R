@@ -656,8 +656,8 @@ for (i in 1:length(response_pheno_table_3)){
 
                 #calculate number of males for the [l] level
                 male_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-                male_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))                
-
+                male_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
+                
                 #calculate number of females for the [l] level
                 female_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
                 female_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))  
