@@ -516,15 +516,12 @@ length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be
 
 
 ####################
-##### TABLE 2 ######
+##### TABLE 3 ######
 ####################
 
-#table 2 is going to have 6 columns, number of individuals and proportion of overweight across both sexes, and within each sex. 
-#TABLE 3 IS GOING TO BE TALBE 2 BUT WITHOUT OVERWEIGHT PERCENTAGE.
-
-response_pheno = c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")
-length(response_pheno) == nrow(pheno_names)
-summary(response_pheno == pheno_names$var_name)
+#select the phenotypes to show in table 3
+response_pheno_table_3 = c("CRF_age", "CRF_weight", "CRF_height", "CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")
+length(response_pheno_table_3) == nrow(pheno_names[which(!pheno_names$var_name %in% c("center",  "CRF_trici", "CRF_subscap", "obesity")),])
 
 #calculate n for both sexes
 n_all = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female")),])
@@ -556,10 +553,10 @@ names(table_2)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight,
 names(table_2)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
 #for each phenotype
-for (i in 1:length(response_pheno)){
+for (i in 1:length(response_pheno_table_3)){
 
     #select the [i] phenotype
-    pheno_selected = response_pheno[i]
+    pheno_selected = response_pheno_table_3[i]
 
     #extract the complete name
     pheno_table = pheno_names$final_name[which(pheno_names$var_name == pheno_selected)]
@@ -626,7 +623,7 @@ for (i in 1:length(response_pheno)){
             #extract the grouping variable and check if it is a factor
             check_factor = eval(parse(text=paste("myData_ptpn1$", pheno_selected, sep="")))
 
-            #extrac group levels for the group variable (facotr or continuous)
+            #extract group levels for the group variable (facotr or continuous)
             if(is.factor(check_factor)){
 
                 #set the groups
