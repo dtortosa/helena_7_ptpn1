@@ -543,14 +543,14 @@ n_female_healthy_weight+n_female_overweight == n_female
     #WARNING!! THIS TOTAL NUMBER OF INDNVIDUALS DOES OT TAKE INTO ACCOUNT THE EXISTENCE OF NAs IN SPECIFIC PHENOTYPES. This is the number of individuals for which we have data for most of studied SNPs and phenotypes.
 
 #create the empty table
-table_2 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
-names(table_2)[1] <- "Phenotype"
-names(table_2)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-names(table_2)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-names(table_2)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-names(table_2)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-names(table_2)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-names(table_2)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
+table_3 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
+names(table_3)[1] <- "Phenotype"
+names(table_3)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
+names(table_3)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
+names(table_3)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
+names(table_3)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
+names(table_3)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
+names(table_3)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
 #for each phenotype
 for (i in 1:length(response_pheno_table_3)){
@@ -614,7 +614,7 @@ for (i in 1:length(response_pheno_table_3)){
         names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
         #add to the table
-        table_2 = rbind(table_2, results)  
+        table_3 = rbind(table_3, results)  
     } else {#if the phenotype is continuous
 
         #if phenotype selected is a grouping variable like percentage of individuals in two age classes
@@ -660,16 +660,16 @@ for (i in 1:length(response_pheno_table_3)){
                 
                 #calculate number of females for the [l] level
                 female_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-                female_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))  
+                female_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
 
                 #save
                 percent_calc = rbind.data.frame(percent_calc, cbind.data.frame(selected_level, all_sumarize_healthy_weight, all_sumarize_overweight, male_sumarize_healthy_weight, male_sumarize_overweight, female_sumarize_healthy_weight, female_sumarize_overweight))
             }
        
             #remove the first row with NAs
-            percent_calc = percent_calc[-1,]
+            percent_calc = percent_calc[-which(rowSums(is.na(percent_calc)) == ncol(percent_calc)),]
 
-            #remove " ' " and the equal ("==") from the selected levels (was use to set the conditions with "which")
+            #remove " ' " and the equal ("==") from the selected levels (was use to set the conditions with "which" for "center")
             percent_calc$selected_level = gsub("'", "", percent_calc$selected_level, fixed=TRUE)
             percent_calc$selected_level = gsub("==", "", percent_calc$selected_level, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
@@ -682,7 +682,7 @@ for (i in 1:length(response_pheno_table_3)){
             #calculate percentage of each level
             for(c in 2:ncol(final_percent)){
 
-                #calculat total individuals for the [c] category (sex and overweight)
+                #calculate total individuals for the [c] category (sex and overweight)
                 total_indv = sum(final_percent[,c])
 
                 #calculate and save percentages
@@ -699,7 +699,7 @@ for (i in 1:length(response_pheno_table_3)){
             names(final_percent)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
             #bind to the table
-            table_2 = rbind(table_2, final_percent)
+            table_3 = rbind(table_3, final_percent)
         }else{
 
             #set the number decimals
@@ -729,7 +729,6 @@ for (i in 1:length(response_pheno_table_3)){
             #calculate the mean and sd across the whole panel in overweight individuals
             all_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
             all_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-
 
             #calculate the mean and sd across male with healthy weight
             male_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
@@ -767,32 +766,46 @@ for (i in 1:length(response_pheno_table_3)){
             names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
             #bind to the table
-            table_2 = rbind(table_2, results)
+            table_3 = rbind(table_3, results)
         }            
     }
 }
 
 #remove the first row
-table_2 = table_2[-1,]
+table_3 = table_3[-which(rowSums(is.na(table_3)) == ncol(table_3)),]
 
 #remove the rows of obesity phenotype ("% obesity/overweight"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
-table_2 = table_2[-which(table_2$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% obesity/overweight")),]
+table_3 = table_3[which(!table_3$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% obesity/overweight")),]
 
 #see the table
-table_2
+table_3
 
-#for the phenotupes with percentahe (%) in the name, we add slash (\\) to avoid problemas i latex (two because 1 is a en expression for R).
+
+##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+
+#We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+
 #pheno with slash
-pheno_slash = which(grepl("%", table_2$Phenotype))
+pheno_slash = which(grepl("%", table_3$Phenotype)) #rows with percentage as phenotype name
 #change names of these phenotypes modifying "%" by "\\%"
-table_2[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_2[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-table_2$Phenotype
+table_3[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_3[pheno_slash,]$Phenotype, fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
-#check for all phenotypes there is at least one data
+#pheno with ^2
+pheno_squared = which(grepl("\\^2", table_3$Phenotype)) #rows with squared as phenotype name
+#change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
+table_3[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_3[pheno_squared,]$Phenotype, fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+
+#check no individual has NA for all phenotypes and that no phenotype has NA for all individuals
 #select phenotype columns    
-only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1))]
+only_pheno = myData_ptpn1[, which(!colnames(myData_ptpn1) %in% labels(myData_ptpn1))]
 #which rows (individuals) have NA for all columns (phenotypes)
-length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be zero
+length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 
+length(which(colSums(is.na(only_pheno)) == nrow(only_pheno))) == 0 
+    #first test for rows (individuals) with all column entries (phenotypes) as NA
+    #second test for columns (phenotypes) with all rows entries (individuals) as NA
+    #it should be zero in both cases
 
 
 
@@ -1553,10 +1566,10 @@ require(xtable)
 path_tex_table = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/"
 
 #name tex table
-name_tex_table = "tables_latex_v3.tex"
+name_tex_table = "tables_latex_v4.tex"
 
 #name doc table
-name_doc_table = "tables_latex_v3.odt"
+name_doc_table = "tables_latex_v4.odt"
 
 #remove the previous file with tables in latex
 system(paste("cd ", path_tex_table, "; rm ", name_tex_table, "; rm ", name_doc_table, sep=""))
@@ -1592,6 +1605,11 @@ print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", di
     #Rest of the argument in the line of the table 1
 
 #convert table 3 to a latex table
+print.xtable(xtable(table_3, caption="Table 3", label=NULL, align="llcccccc", digits=2, display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_3)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+    #sanitize.text.function:
+        #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+            #in this way we can remove slash, etc...
+    #Rest of the argument in the line of the table 1
 
 #convert table 4 to a latex table
 print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
