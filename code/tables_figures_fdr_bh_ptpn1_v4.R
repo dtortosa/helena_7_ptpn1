@@ -88,6 +88,17 @@ nrow(gene_names) == length(labels(myData_ptpn1))
 nrow(alleles) == length(labels(myData_ptpn1))
 
 
+##check no individual has NA for all phenotypes and that no phenotype has NA for all individuals
+#select phenotype columns    
+only_pheno = myData_ptpn1[, which(!colnames(myData_ptpn1) %in% labels(myData_ptpn1))]
+#which rows (individuals) have NA for all columns (phenotypes)
+length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 
+length(which(colSums(is.na(only_pheno)) == nrow(only_pheno))) == 0 
+    #first test for rows (individuals) with all column entries (phenotypes) as NA
+    #second test for columns (phenotypes) with all rows entries (individuals) as NA
+    #it should be zero in both cases
+
+
 
 
 ###################
@@ -235,280 +246,82 @@ colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 ####################
 
 #table 2 is going to have 6 columns, number of individuals and proportion of overweight across both sexes, and within each sex. 
-#select the phenotypes to show in table 2
-response_pheno_table_2 = c("center")
-length(response_pheno_table_2) == nrow(pheno_names[which(!pheno_names$var_name %in% c("CRF_trici", "CRF_subscap", "CRF_age", "CRF_weight", "CRF_height", "CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")),])
+#PON 0 DECIMAMLES SAMPLE SIZE, EN LATEX?
 
-#calculate n for both sexes
-n_all = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female")),])
-n_male = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex=="male"),])
-n_female = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex=="female"),])
-
-#calculate n for sex and obesity
-n_all_healthy_weight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female") & myData_ptpn1$obesity == 0),])
-n_all_overweight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female") & myData_ptpn1$obesity == 1),])
-n_male_healthy_weight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male") & myData_ptpn1$obesity == 0),])
-n_male_overweight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male") & myData_ptpn1$obesity == 1),])
-n_female_healthy_weight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("female") & myData_ptpn1$obesity == 0),])
-n_female_overweight = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("female") & myData_ptpn1$obesity == 1),])
-
-#check that overwight and healthi weight in each group are correct
-n_all_healthy_weight+n_all_overweight == n_all
-n_male_healthy_weight+n_male_overweight == n_male
-n_female_healthy_weight+n_female_overweight == n_female
-    #WARNING!! THIS TOTAL NUMBER OF INDNVIDUALS DOES OT TAKE INTO ACCOUNT THE EXISTENCE OF NAs IN SPECIFIC PHENOTYPES. This is the number of individuals for which we have data for most of studied SNPs and phenotypes.
+#extract the list of centers
+list_centers = unique(myData_ptpn1$center)
 
 #create the empty table
 table_2 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
-names(table_2)[1] <- "Phenotype"
-names(table_2)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-names(table_2)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-names(table_2)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-names(table_2)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-names(table_2)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-names(table_2)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
+names(table_2)[1] <- "Center"
+names(table_2)[2] <- paste("All sample size", sep="")
+names(table_2)[3] <- paste("All overweight (%)", sep="")
+names(table_2)[4] <- paste("Male sample size", sep="")
+names(table_2)[5] <- paste("Male overweight (%)", sep="")
+names(table_2)[6] <- paste("Female sample size", sep="")
+names(table_2)[7] <- paste("Female overweight (%)", sep="")
 
 #for each phenotype
-for (i in 1:length(response_pheno_table_2)){
+for (i in 1:length(list_centers)){
 
     #select the [i] phenotype
-    pheno_selected = response_pheno_table_2[i]
+    center_selected = list_centers[i]
 
-    #extract the complete name
-    pheno_table = pheno_names$final_name[which(pheno_names$var_name == pheno_selected)]
-
-    #if the phenotype is CVi_BP or obesity (binomial):
-    if(pheno_selected %in% c("CVi_BP", "obesity")){
-
-        #extract summary of the variable (sums) across both sexes between overweight and normal weight
-        all_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
-        all_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))        
-
-        #calculate the percentage with 1 in all separating by overweight
-        all_mean_all_sumarize_healthy_weight = round((all_sumarize_healthy_weight[2]/(all_sumarize_healthy_weight[1]+all_sumarize_healthy_weight[2]))*100,2)
-        all_sd_all_sumarize_healthy_weight = NA
-        all_mean_all_sumarize_overweight = round((all_sumarize_overweight[2]/(all_sumarize_overweight[1]+all_sumarize_overweight[2]))*100,2)
-        all_sd_all_sumarize_overweight = NA
-
-        #extract summary of the variable (sums) across both sexes between overweight and normal weight
-        male_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
-        male_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))
-
-        #calculate the percentage with 1 in male separating by overweight
-        male_mean_male_sumarize_healthy_weight = round((male_sumarize_healthy_weight[2]/(male_sumarize_healthy_weight[1]+male_sumarize_healthy_weight[2]))*100,2)
-        male_sd_male_sumarize_healthy_weight = NA
-        male_mean_male_sumarize_overweight = round((male_sumarize_overweight[2]/(male_sumarize_overweight[1]+male_sumarize_overweight[2]))*100,2)
-        male_sd_male_sumarize_overweight = NA
-
-        #extract summary of the variable (sums) across both sexes between overweight and normal weight
-        female_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
-        female_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))
-
-        #calculate the percentage with 1 in female separating by overweight
-        female_mean_female_sumarize_healthy_weight = round((female_sumarize_healthy_weight[2]/(female_sumarize_healthy_weight[1]+female_sumarize_healthy_weight[2]))*100,2)
-        female_sd_female_sumarize_healthy_weight = NA
-        female_mean_female_sumarize_overweight = round((female_sumarize_overweight[2]/(female_sumarize_overweight[1]+female_sumarize_overweight[2]))*100,2)
-        female_sd_female_sumarize_overweight = NA
-
-        #bind results in one row
-        results = cbind.data.frame(
-            pheno_table,
-            paste(all_mean_all_sumarize_healthy_weight, sep=""),
-            paste(all_mean_all_sumarize_overweight, sep=""),
-            paste(male_mean_male_sumarize_healthy_weight, sep=""),
-            paste(male_mean_male_sumarize_overweight, sep=""),
-            paste(female_mean_female_sumarize_healthy_weight, sep=""),
-            paste(female_mean_female_sumarize_overweight, sep=""))
-
-        #change columns names to match names table 2
-        names(results)[1] <- "Phenotype"
-        names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-        names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-        names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-        names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-        names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-        names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
-
-        #add to the table
-        table_2 = rbind(table_2, results)  
-    } else {#if the phenotype is continuous
-
-        #if phenotype selected is a grouping variable like percentage of individuals in two age classes
-        if(pheno_selected %in% c("CRF_age", "center")){
-
-            #extract the grouping variable and check if it is a factor
-            check_factor = eval(parse(text=paste("myData_ptpn1$", pheno_selected, sep="")))
-
-            #extrac group levels for the group variable (facotr or continuous)
-            if(is.factor(check_factor)){
-
-                #set the groups
-                group_levels = eval(parse(text=paste("levels(myData_ptpn1$", pheno_selected, ")", sep="")))
-                
-                #add condition 
-                condition_levels = paste("=='", group_levels, "'", sep="")
-            } else {
-
-                #set the threshold to divided the continuos variable
-                threshold = eval(parse(text=paste("floor(median(myData_ptpn1$", pheno_selected, "))", sep="")))
-
-                #set the groups
-                condition_levels = as.character(c(paste(">=", threshold, sep=""), paste("<", threshold, sep="")))
-            }
-
-            #open empty data.frame
-            percent_calc = data.frame(selected_level=NA, all_sumarize_healthy_weight=NA, all_sumarize_overweight=NA, male_sumarize_healthy_weight=NA, male_sumarize_overweight=NA, female_sumarize_healthy_weight=NA, female_sumarize_overweight=NA)
-
-            #for each level
-            for(l in 1:length(condition_levels)){
-
-                #select the [l] level
-                selected_level = condition_levels[l]
-
-                #for these subsets we don't use "na.omit" because we include the varialbe of interest in the conditions
-                #calculate number of individuals of both sexes for the [l] level
-                all_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-                all_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-
-                #calculate number of males for the [l] level
-                male_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-                male_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))                
-
-                #calculate number of females for the [l] level
-                female_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-                female_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))  
-
-                #save
-                percent_calc = rbind.data.frame(percent_calc, cbind.data.frame(selected_level, all_sumarize_healthy_weight, all_sumarize_overweight, male_sumarize_healthy_weight, male_sumarize_overweight, female_sumarize_healthy_weight, female_sumarize_overweight))
-            }
-       
-            #remove the first row with NAs
-            percent_calc = percent_calc[-1,]
-
-            #remove " ' " and the equal ("==") from the selected levels (was use to set the conditions with "which")
-            percent_calc$selected_level = gsub("'", "", percent_calc$selected_level, fixed=TRUE)
-            percent_calc$selected_level = gsub("==", "", percent_calc$selected_level, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-
-            #set final names of the levels
-            percent_calc$selected_level = paste(pheno_table, ": ", percent_calc$selected_level, sep="")
-
-            #copy to save final percentages
-            final_percent = percent_calc
-
-            #calculate percentage of each level
-            for(c in 2:ncol(final_percent)){
-
-                #calculat total individuals for the [c] category (sex and overweight)
-                total_indv = sum(final_percent[,c])
-
-                #calculate and save percentages
-                final_percent[,c] = round((final_percent[,c]/total_indv)*100, 2)
-            }       
-
-            #change columns names to match names table 2
-            names(final_percent)[1] <- "Phenotype"
-            names(final_percent)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-            names(final_percent)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-            names(final_percent)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-            names(final_percent)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-            names(final_percent)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-            names(final_percent)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
-
-            #bind to the table
-            table_2 = rbind(table_2, final_percent)
-        }else{
-
-            #set the number decimals
-            #some phenotypes will have 1 decimal
-            if(pheno_selected %in% c()){
-
-                #1 decimal
-                number_decimals = 1
-            } else {#if not
-
-                #and the phenotype is
-                if(pheno_selected %in% c()){
-
-                    #0 decimals
-                    number_decimals = 0
-                } else {#if the phenotype is none of the latter
-
-                    #2 decimals
-                    number_decimals = 2
-                }
-            }
-
-            #calculate the mean and sd across the whole panel in healthy weight
-            all_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-            all_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-
-            #calculate the mean and sd across the whole panel in overweight individuals
-            all_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-            all_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
+    all_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
+    all_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
 
 
-            #calculate the mean and sd across male with healthy weight
-            male_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-            male_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
+    male_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
+    male_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
 
-            #calculate the mean and sd across the whole panel in overweight individuals
-            male_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-            male_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
 
-            #calculate the mean and sd across female with healthy weight
-            female_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-            female_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
+    female_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
+    female_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
 
-            #calculate the mean and sd across the whole panel in overweight individuals
-            female_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-            female_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
 
-            #bind results into one row
-            results = cbind.data.frame(
-                pheno_table,
-                paste(all_mean_healthy_weight, "$\\pm$", all_sd_healthy_weight, sep=""),
-                paste(all_mean_overweight, "$\\pm$", all_sd_overweight, sep=""),
-                paste(male_mean_healthy_weight, "$\\pm$", male_sd_healthy_weight, sep=""),
-                paste(male_mean_overweight, "$\\pm$", male_sd_overweight, sep=""),
-                paste(female_mean_healthy_weight, "$\\pm$", female_sd_healthy_weight, sep=""),
-                paste(female_mean_overweight, "$\\pm$", female_sd_overweight, sep=""))
+    #bind results in one row
+    results = cbind.data.frame(
+        center_selected,
+        all_sample_size,
+        round((all_overweight / all_sample_size)*100, 2),
+        male_sample_size,
+        round((male_overweight / male_sample_size)*100, 2),
+        female_sample_size,
+        round((female_overweight / female_sample_size)*100, 2))
 
-            #change columns names to match names table 2
-            names(results)[1] <- "Phenotype"
-            names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-            names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-            names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-            names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-            names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-            names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
-            #bind to the table
-            table_2 = rbind(table_2, results)
-        }            
-    }
+    #change columns names to match names table 2
+    names(results)[1] <- "Center"
+    names(results)[2] <- paste("All sample size", sep="")
+    names(results)[3] <- paste("All overweight (%)", sep="")
+    names(results)[4] <- paste("Male sample size", sep="")
+    names(results)[5] <- paste("Male overweight (%)", sep="")
+    names(results)[6] <- paste("Female sample size", sep="")
+    names(results)[7] <- paste("Female overweight (%)", sep="")
+
+    #add to the table
+    table_2 = rbind(table_2, results)
 }
 
 #remove the first row
-table_2 = table_2[-1,]
+table_2 = table_2[-which(rowSums(is.na(table_2)) == ncol(table_2)),]
 
 #remove the rows of obesity phenotype ("% obesity/overweight"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
-table_2 = table_2[-which(table_2$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% obesity/overweight")),]
+table_2 = table_2[which(!table_2$Center %in% c("Birmingham* in UK", "Modena (Italy)")),]
 
 #see the table
 table_2
 
-#for the phenotupes with percentahe (%) in the name, we add slash (\\) to avoid problemas i latex (two because 1 is a en expression for R).
-#pheno with slash
-pheno_slash = which(grepl("%", table_2$Phenotype))
-#change names of these phenotypes modifying "%" by "\\%"
-table_2[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_2[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-table_2$Phenotype
 
-#check for all phenotypes there is at least one data
-#select phenotype columns    
-only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1))]
-#which rows (individuals) have NA for all columns (phenotypes)
-length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be zero
+##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+
+#We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+
+#pheno with slash
+column_slash = which(grepl("%", colnames(table_2))) #rows with percentage as phenotype name
+#change names of these phenotypes modifying "%" by "\\%"
+colnames(table_2)[column_slash] <- gsub("%", "\\%", colnames(table_2)[column_slash], fixed=TRUE)
+    #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
 
 
@@ -546,7 +359,7 @@ names(table_3)[1] <- "Phenotype"
 names(table_3)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
 names(table_3)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
 names(table_3)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-names(table_3)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
+names(table_3)[5] <- paste("Male overweight (n=", n_male_overweight, ")", sep="")
 names(table_3)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
 names(table_3)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
@@ -559,8 +372,8 @@ for (i in 1:length(response_pheno_table_3)){
     #extract the complete name
     pheno_table = pheno_names$final_name[which(pheno_names$var_name == pheno_selected)]
 
-    #if the phenotype is CVi_BP or obesity (binomial):
-    if(pheno_selected %in% c("CVi_BP", "obesity")){
+    #if the phenotype is obesity:
+    if(pheno_selected %in% c("obesity")){
 
         #extract summary of the variable (sums) across both sexes between overweight and normal weight
         all_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
@@ -607,7 +420,7 @@ for (i in 1:length(response_pheno_table_3)){
         names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
         names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
         names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-        names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
+        names(results)[5] <- paste("Male overweight (n=", n_male_overweight, ")", sep="")
         names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
         names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
@@ -692,7 +505,7 @@ for (i in 1:length(response_pheno_table_3)){
             names(final_percent)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
             names(final_percent)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
             names(final_percent)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-            names(final_percent)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
+            names(final_percent)[5] <- paste("Male overweight (n=", n_male_overweight, ")", sep="")
             names(final_percent)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
             names(final_percent)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
@@ -759,7 +572,7 @@ for (i in 1:length(response_pheno_table_3)){
             names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
             names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
             names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-            names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
+            names(results)[5] <- paste("Male overweight (n=", n_male_overweight, ")", sep="")
             names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
             names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 
@@ -794,16 +607,6 @@ pheno_squared = which(grepl("\\^2", table_3$Phenotype)) #rows with squared as ph
 #change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
 table_3[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_3[pheno_squared,]$Phenotype, fixed=TRUE)
     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-
-#check no individual has NA for all phenotypes and that no phenotype has NA for all individuals
-#select phenotype columns    
-only_pheno = myData_ptpn1[, which(!colnames(myData_ptpn1) %in% labels(myData_ptpn1))]
-#which rows (individuals) have NA for all columns (phenotypes)
-length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 
-length(which(colSums(is.na(only_pheno)) == nrow(only_pheno))) == 0 
-    #first test for rows (individuals) with all column entries (phenotypes) as NA
-    #second test for columns (phenotypes) with all rows entries (individuals) as NA
-    #it should be zero in both cases
 
 
 
