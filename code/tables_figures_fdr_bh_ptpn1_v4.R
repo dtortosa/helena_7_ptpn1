@@ -1221,6 +1221,28 @@ table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[
 
 
 
+###################################
+##### SUPPLEMENTARY TABLE S1 ######
+###################################
+
+#This table shows all the haplotype observed and their frequency in the sample.
+
+#for each haplotype block
+for(i in length(hap_prob_block_insertion)){
+
+    #MEJOR CALCULAR AQUI MISMO LOS BLOQUES?
+
+    selected_block_trim = hap_prob_block_insertion[i]$chr_20.block_1
+    selected_block_no_trim = hap_prob_block_no_trim[i]$chr_20.block_1
+
+    selected_block_trim$haplotype
+    selected_block_trim$hap.prob
+        #check prob
+
+}
+
+
+
 ################################################
 ##### CONVERT TABLES TO LATEX AND COMPILE ######
 ################################################
