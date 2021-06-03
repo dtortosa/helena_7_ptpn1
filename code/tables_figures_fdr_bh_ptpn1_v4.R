@@ -1230,17 +1230,112 @@ table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[
 #for each haplotype block
 for(i in length(hap_prob_block_insertion)){
 
-    #MEJOR CALCULAR AQUI MISMO LOS BLOQUES?
-
     selected_block_trim = hap_prob_block_insertion[i]$chr_20.block_1
     selected_block_no_trim = hap_prob_block_no_trim[i]$chr_20.block_1
 
-    selected_block_trim$haplotype
-    selected_block_trim$hap.prob
-        #check prob
+
+    haplo_freqs_trim = cbind.data.frame(selected_block_trim$haplotype, selected_block_trim$hap.prob)
+    colnames(haplo_freqs_trim)[which(colnames(haplo_freqs_trim) == "selected_block_trim$hap.prob")] <- "frequency"
+    haplo_freqs_no_trim = cbind.data.frame(selected_block_no_trim$haplotype, selected_block_no_trim$hap.prob)
+    colnames(haplo_freqs_no_trim)[which(colnames(haplo_freqs_no_trim) == "selected_block_no_trim$hap.prob")] <- "frequency"
+
+
+    merge_check = merge(haplo_freqs_trim, haplo_freqs_no_trim, by=colnames(haplo_freqs_trim)[which(!colnames(haplo_freqs_trim) %in% "frequency")])
+
+    summary(round(merge_check$frequency.x, 3) / round(merge_check$frequency.y, 3))
+        #the same, between the two approaches.
+        #CHECK WITH HAPLOVIEW
+
+        #we have to select the haplotype blocks calculated with "haplo.em" but without the progressive insertion. That process remove haplotypes with a low posterior probability (see script of the main analyses for further details). We want all haplotypes, including those with very low frequency. 
+
+    haplo_freqs_no_trim$frequency = round(haplo_freqs_no_trim$frequency, 3)
+
+    #change number by alleles
+    haplo_freqs_no_trim
+
+    #########OJO SNP CHUNGO
+    check_helena_ncbi_names=NULL
+    for(i in 1:nrow(allele_names)){
+    
+        #select the [i] row
+        selected_row = allele_names[i,]
+    
+        #extract helena and ncbi names
+        helena_name = as.vector(selected_row$helena)
+        ncbi_name = as.vector(selected_row$ncbi)
+    
+        #if both names are equal
+        if(helena_name == ncbi_name){
+    
+            #correct
+            check_helena_ncbi_names = append(check_helena_ncbi_names, "CORRECT")
+    
+        } else {#if they are different transform the helena name to the corresponding alleles of ncbi to check that they have the adequate order (major is the first and minor the second)
+    
+            #extract major and minor alleles
+            helena_major = strsplit(helena_name, split="/")[[1]][1]
+            helena_minor = strsplit(helena_name, split="/")[[1]][2]
+    
+            #copy helena name
+            new_helena_major =  helena_major
+            new_helena_minor =  helena_minor
+    
+            #convert major
+            #If T is included in helena name, convert T into A
+            if(grepl("T", helena_major)){
+                new_helena_major = gsub("T", "A", new_helena_major)
+            } 
+            #If C is included in helena name, convert C into G
+            if(grepl("C", helena_major)){
+                new_helena_major = gsub("C", "G", new_helena_major)                
+            }
+            #If G is included in helena name, convert G into C        
+            if(grepl("G", helena_major)){
+                new_helena_major = gsub("G", "C", new_helena_major)                
+            }
+            #If A is included in helena name, convert A into T               
+            if(grepl("A", helena_major)){
+                new_helena_major = gsub("A", "T", new_helena_major)                
+            }  
+    
+            #convert minor
+            #If T is included in helena name, convert T into A
+            if(grepl("T", helena_minor)){
+                new_helena_minor = gsub("T", "A", new_helena_minor)
+            } 
+            #If C is included in helena name, convert C into G
+            if(grepl("C", helena_minor)){
+                new_helena_minor = gsub("C", "G", new_helena_minor)                
+            }
+            #If G is included in helena name, convert G into C        
+            if(grepl("G", helena_minor)){
+                new_helena_minor = gsub("G", "C", new_helena_minor)                
+            }
+            #If A is included in helena name, convert A into T               
+            if(grepl("A", helena_minor)){
+                new_helena_minor = gsub("A", "T", new_helena_minor)                
+            }  
+    
+            #bind converted major and minor alleles
+            new_helena_name = paste(new_helena_major, new_helena_minor, sep="/")
+    
+            #if the new name is equal to ncbi name, perfect, but if not, we have a problem
+            if(ncbi_name == new_helena_name){
+                #correct
+                check_helena_ncbi_names = append(check_helena_ncbi_names, "CORRECT")
+            } else {
+    
+                #incorrect
+                check_helena_ncbi_names = append(check_helena_ncbi_names, "INCORRECT")            
+            }
+        }
+    }
 
 }
 
+myData_ptpn1[which(myData_ptpn1$rs6067472 == 2 & myData_ptpn1$rs10485614 == 2 & myData_ptpn1$rs2143511 == 2 & myData_ptpn1$rs6020608 == 1 & myData_ptpn1$rs968701 == 2),]
+
+#checking with haploview
 
 
 ################################################

@@ -1543,7 +1543,7 @@ for(i in 1:length(significant_chr)){
 }
 
 ##open haploview
-system("cd /Users/diegosalazar/My\\ Drive/science/software/haploview; java -jar Haploview.jar", wait = FALSE) ## https://www.broadinstitute.org/haploview/haploview. If you want the plot with rs number, you have to include the ".infofile" in haploview. 
+system("cd /media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/software/haploview; java -jar Haploview.jar", wait = FALSE) ## https://www.broadinstitute.org/haploview/haploview. If you want the plot with rs number, you have to include the ".infofile" in haploview. 
 
 #COMPARAR REGLA DE LOS CUATRO GAMETOS Y CONFIDENCE INTERVAL Y TENER EN CUENTA SNPS CON LOW MAF. 
 
