@@ -245,9 +245,6 @@ colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
 ##### TABLE 2 ######
 ####################
 
-#table 2 is going to have 6 columns, number of individuals and proportion of overweight across both sexes, and within each sex. 
-#PON 0 DECIMAMLES SAMPLE SIZE, EN LATEX?
-
 #extract the list of centers
 list_centers = unique(myData_ptpn1$center)
 
@@ -267,15 +264,25 @@ for (i in 1:length(list_centers)){
     #select the [i] phenotype
     center_selected = list_centers[i]
 
+
+    ## data from both sexes
+    #the total number of individuals of both sexes from the [i] center that have data for obesity
     all_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
+    #the total number of individuals of both sexes from the [i] center that are overweight
     all_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
 
 
+    ## data from males
+    #the total number of males from the [i] center that have data for obesity
     male_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
+    #the total number of males from the [i] center that are overweight
     male_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
 
 
+    ## data from females
+    #the total number of females from the [i] center that have data for obesity
     female_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
+    #the total number of females from the [i] center that are overweight    
     female_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
 
 
@@ -323,6 +330,7 @@ column_slash = which(grepl("%", colnames(table_2))) #rows with percentage as phe
 colnames(table_2)[column_slash] <- gsub("%", "\\%", colnames(table_2)[column_slash], fixed=TRUE)
     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 
+###QUEDA COMPARAR CON LA VERSION ANTERIOR DE TABLE 2 Y MIRAR SI CUMPLE TODO LO QUE PIDE EL REVISOR.
 
 
 
@@ -1399,7 +1407,9 @@ print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccc"
             #timestamp: timestamp included in case "comment" is TRUE. The default is date().    
 
 #convert table 2 to a latex table
-print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", digits=2, display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", digits=c(0,0,0,2,0,2,0,2), display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+    #digits: We select the number of digits because we want each column to have a different number of digits. 
+        #Numeric vector of length equal to one (in which case it will be replicated as necessary) or to the number of columns of the resulting table plus 1 for the column with the row.names. These row names will be then removed setting FALSE the argument "include.rownames" from print.xtable. 
     #sanitize.text.function:
         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
             #in this way we can remove slash, etc...
