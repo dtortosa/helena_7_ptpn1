@@ -152,7 +152,14 @@ for(i in 1:nrow(table_1)){#for each row of table 1
     #save them in the corresponding columns
     table_1[i,which(colnames(table_1) == "Major allele")] <- ncbi_major
     table_1[i,which(colnames(table_1) == "Minor allele")] <- ncbi_minor
+
+    #add MAF for each center
+    for(j in 1:length(unique(myData_ptpn1$center))){
+
+    }
 }
+
+##CHEQUEA SI HAY MUCHAS DIFERENCIAS ENTRE CENTROS!! ESTRATIFICACIÓN!
 
 #extract the allele names from the table 1 (combined major and minor) along with snp names
 alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
