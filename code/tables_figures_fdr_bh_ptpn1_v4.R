@@ -1227,8 +1227,12 @@ table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[
 
 #This table shows all the haplotype observed and their frequency in the sample.
 
+tables_haplo = list()
+
 #for each haplotype block
 for(i in length(hap_prob_block_insertion)){
+
+    selected_block_name = names(hap_prob_block_insertion)[i]
 
     selected_block_trim = hap_prob_block_insertion[i]$chr_20.block_1
     selected_block_no_trim = hap_prob_block_no_trim[i]$chr_20.block_1
@@ -1314,6 +1318,12 @@ for(i in length(hap_prob_block_insertion)){
 
         haplo_freqs_no_trim[,selected_snp] <- selected_geno_final
     }
+
+    haplo_freqs_no_trim = haplo_freqs_no_trim[order(haplo_freqs_no_trim$frequency, decreasing=TRUE),]
+
+    tables_haplo[[i]] <- haplo_freqs_no_trim
+
+    names(tables_haplo)[i] <- selected_block_name
 }
 
     #comprueba que los haplotipos cuadra n con paper y script de haplotipo analysis
@@ -1321,6 +1331,9 @@ for(i in length(hap_prob_block_insertion)){
 myData_ptpn1[which(myData_ptpn1$rs6067472 == 2 & myData_ptpn1$rs10485614 == 2 & myData_ptpn1$rs2143511 == 2 & myData_ptpn1$rs6020608 == 1 & myData_ptpn1$rs968701 == 2),]
 
 #checking with haploview
+
+
+supple_table_1 = tables_haplo[[1]]
 
 
 ################################################
@@ -1390,6 +1403,14 @@ print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc"
 
 #convert table 5 to a latex table
 print.xtable(xtable(table_5, caption="Table 5", label=NULL, align="ccccccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_5)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+    #argument in the line of the table 1
+    #sanitize.text.function:
+        #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+            #in this way we can remove slash, etc...
+
+
+#convert supple table 1 to a latex table
+print.xtable(xtable(supple_table_1, caption="Supplementary Table 1", label=NULL, align="ccccccc", digits=3, display=c("s", "s", "s", "s", "s", "s", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_5)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
     #argument in the line of the table 1
     #sanitize.text.function:
         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
