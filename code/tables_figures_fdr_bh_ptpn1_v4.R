@@ -1253,85 +1253,70 @@ for(i in length(hap_prob_block_insertion)){
     #change number by alleles
     haplo_freqs_no_trim
 
+    snps_names = colnames(haplo_freqs_no_trim)[which(!colnames(haplo_freqs_no_trim) %in% "frequency")]
+
     #########OJO SNP CHUNGO
-    check_helena_ncbi_names=NULL
-    for(i in 1:nrow(allele_names)){
+    for(j in 1:length(snps_names)){
     
         #select the [i] row
-        selected_row = allele_names[i,]
+        selected_snp = snps_names[j]
     
+        selected_geno = haplo_freqs_no_trim[,selected_snp]
+
+        selected_allele_names = alleles[which(alleles$snp == selected_snp),]
+
         #extract helena and ncbi names
-        helena_name = as.vector(selected_row$helena)
-        ncbi_name = as.vector(selected_row$ncbi)
-    
+        helena_name = as.vector(selected_allele_names$helena)
+        ncbi_name = as.vector(selected_allele_names$ncbi)
+
+        #extract the allele names according to helena
+        helena_alleles = strsplit(as.vector(helena_name), split="/")[[1]]
+
+        #always A is the first, because number are afabetically ordered in genotype levels in Helena
+        if("A" %in% helena_alleles){
+            selected_geno = gsub("1", "A", selected_geno)
+            selected_geno = gsub("2", helena_alleles[!"A" == helena_alleles], selected_geno)                                  
+        } else { #if not, C first
+            if("C" %in% helena_alleles){ 
+                selected_geno = gsub("1", "C", selected_geno)
+                selected_geno = gsub("2", helena_alleles[!"C" == helena_alleles], selected_geno)                                                  
+            } else { #if not G first (T always will be the last)
+                if("G" %in% helena_alleles){
+                    selected_geno = gsub("1", "G", selected_geno)
+                    selected_geno = gsub("2", helena_alleles[!"G" == helena_alleles], selected_geno)               
+                }
+            }            
+        }
+
         #if both names are equal
         if(helena_name == ncbi_name){
     
-            #correct
-            check_helena_ncbi_names = append(check_helena_ncbi_names, "CORRECT")
-    
+            selected_geno_final = selected_geno    
         } else {#if they are different transform the helena name to the corresponding alleles of ncbi to check that they have the adequate order (major is the first and minor the second)
     
             #extract major and minor alleles
             helena_major = strsplit(helena_name, split="/")[[1]][1]
             helena_minor = strsplit(helena_name, split="/")[[1]][2]
     
-            #copy helena name
-            new_helena_major =  helena_major
-            new_helena_minor =  helena_minor
-    
-            #convert major
-            #If T is included in helena name, convert T into A
-            if(grepl("T", helena_major)){
-                new_helena_major = gsub("T", "A", new_helena_major)
-            } 
-            #If C is included in helena name, convert C into G
-            if(grepl("C", helena_major)){
-                new_helena_major = gsub("C", "G", new_helena_major)                
-            }
-            #If G is included in helena name, convert G into C        
-            if(grepl("G", helena_major)){
-                new_helena_major = gsub("G", "C", new_helena_major)                
-            }
-            #If A is included in helena name, convert A into T               
-            if(grepl("A", helena_major)){
-                new_helena_major = gsub("A", "T", new_helena_major)                
-            }  
-    
-            #convert minor
-            #If T is included in helena name, convert T into A
-            if(grepl("T", helena_minor)){
-                new_helena_minor = gsub("T", "A", new_helena_minor)
-            } 
-            #If C is included in helena name, convert C into G
-            if(grepl("C", helena_minor)){
-                new_helena_minor = gsub("C", "G", new_helena_minor)                
-            }
-            #If G is included in helena name, convert G into C        
-            if(grepl("G", helena_minor)){
-                new_helena_minor = gsub("G", "C", new_helena_minor)                
-            }
-            #If A is included in helena name, convert A into T               
-            if(grepl("A", helena_minor)){
-                new_helena_minor = gsub("A", "T", new_helena_minor)                
-            }  
-    
-            #bind converted major and minor alleles
-            new_helena_name = paste(new_helena_major, new_helena_minor, sep="/")
-    
-            #if the new name is equal to ncbi name, perfect, but if not, we have a problem
-            if(ncbi_name == new_helena_name){
-                #correct
-                check_helena_ncbi_names = append(check_helena_ncbi_names, "CORRECT")
-            } else {
-    
-                #incorrect
-                check_helena_ncbi_names = append(check_helena_ncbi_names, "INCORRECT")            
-            }
-        }
-    }
+            #extract major and minor alleles
+            ncbi_major = strsplit(ncbi_name, split="/")[[1]][1]
+            ncbi_minor = strsplit(ncbi_name, split="/")[[1]][2]
 
+
+            positions_new_major = which(selected_geno == helena_major)
+            positions_new_minor = which(selected_geno == helena_minor)
+
+            selected_geno[positions_new_major] <- ncbi_major
+            selected_geno[positions_new_minor] <- ncbi_minor
+
+            selected_geno_final = selected_geno
+        }
+
+        haplo_freqs_no_trim[,selected_snp] <- selected_geno_final
+    }
 }
+
+    #comprueba que los haplotipos cuadra n con paper y script de haplotipo analysis
 
 myData_ptpn1[which(myData_ptpn1$rs6067472 == 2 & myData_ptpn1$rs10485614 == 2 & myData_ptpn1$rs2143511 == 2 & myData_ptpn1$rs6020608 == 1 & myData_ptpn1$rs968701 == 2),]
 
