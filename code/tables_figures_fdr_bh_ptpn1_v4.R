@@ -124,14 +124,28 @@ table_1
 table_1$MAF == 1-(summary_snps$major.allele.freq/100)
 table_1$HWE == summary_snps$HWE
 
+#reorder columns
+table_1 = table_1[,c("HWE", "MAF")]
 
-### add alleles to table 1
 
-#add two columns for Major and minor alleles
-table_1 = cbind.data.frame(NA, NA, table_1)
 
-#add the corresponding names (first major, second minor)
-colnames(table_1)[which(colnames(table_1) == "NA")] <- c("Major allele", "Minor allele")
+### add alleles and MAF per center to table 1
+
+#vector with centers
+vector_centers = unique(myData_ptpn1$center)
+
+#create an empty data.frame for the MAF of each center
+empty_df_centers = data.frame(matrix(NA, 1, length(vector_centers)))
+#set colnames
+colnames(empty_df_centers) <- vector_centers
+
+#create an empty data.frame for the major and minor alleles
+empty_df_alleles = data.frame(matrix(NA, 1, 2))
+#set colnames
+colnames(empty_df_alleles) <- c("Major allele", "Minor allele")
+
+#bind all DFs
+table_1 = cbind.data.frame(empty_df_alleles, table_1, empty_df_centers)
 
 #add the alleles
 for(i in 1:nrow(table_1)){#for each row of table 1
@@ -154,12 +168,47 @@ for(i in 1:nrow(table_1)){#for each row of table 1
     table_1[i,which(colnames(table_1) == "Minor allele")] <- ncbi_minor
 
     #add MAF for each center
-    for(j in 1:length(unique(myData_ptpn1$center))){
+    for(j in 1:length(vector_centers)){
 
+        #select the [j] center
+        selected_center = vector_centers[j]
+
+        #print the name of the center
+        print("###############################")
+        print(paste("STARTING CENTER: ", selected_center, sep=""))
+        print("###############################")
+
+        #subset myData_ptpn1 by center
+        subset_center = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$center == '", selected_center, "'),]", sep="")))
+        #check
+        print(summary(subset_center$center == selected_center))
+
+        #
+        allele_freqs = summary(subset_center[,which(colnames(subset_center) == selected_snp)])$allele.freq
+
+        #remove the cases with NA
+        allele_freqs = allele_freqs[which(!is.na(allele_freqs[,2])),]
+
+        allele_freq_minor = allele_freqs[which(allele_freqs[,1] == min(allele_freqs[,1]) ), 2]
+
+        allele_freq_minor = round(allele_freq_minor/100, 2)
+
+        if(length(allele_freq_minor) == 2){
+            if(allele_freq_minor[1] == allele_freq_minor[2]){
+                allele_freq_minor = unique(allele_freq_minor)
+            } else{
+                stop(paste("ERROR: PROBLEM WITH THE MAF IN CENTER: ", selected_center, sep=""))
+            }
+
+        }
+
+        table_1[which(rownames(table_1) == selected_snp), which(colnames(table_1) == selected_center)] <- allele_freq_minor
     }
 }
 
 ##CHEQUEA SI HAY MUCHAS DIFERENCIAS ENTRE CENTROS!! ESTRATIFICACIÓN!
+
+##POR AQUIII!
 
 #extract the allele names from the table 1 (combined major and minor) along with snp names
 alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
