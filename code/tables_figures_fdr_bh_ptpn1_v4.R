@@ -1227,46 +1227,81 @@ table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[
 
 #This table shows all the haplotype observed and their frequency in the sample.
 
+#open a empty list to save the table of each haplotype block
 tables_haplo = list()
 
 #for each haplotype block
-for(i in length(hap_prob_block_insertion)){
+for(i in 1:length(vector_haplotype_blocks)){ #the list of blocks comes from the script with the main analyses
 
-    selected_block_name = names(hap_prob_block_insertion)[i]
+    #select the [i] block name
+    selected_block_name = vector_haplotype_blocks[i]
 
-    selected_block_trim = hap_prob_block_insertion[i]$chr_20.block_1
-    selected_block_no_trim = hap_prob_block_no_trim[i]$chr_20.block_1
+    #print block name
+    print("########################################")
+    print(paste("STARTING WITH: ", selected_block_name, sep=""))
+    print("########################################")
 
+    #extract the results of haplo.em for the [i] haplotype block. We consider results with (trim) and without progressive insertion (no trim)
+    selected_block_trim = eval(parse(text=paste("hap_prob_block_insertion$", selected_block_name, sep="")))
+    selected_block_no_trim = eval(parse(text=paste("hap_prob_block_no_trim$", selected_block_name, sep="")))
+        #Progressive insertion: This process removes haplotypes with a low posterior probability (see script of the main analyses for further details).
+        #no trim includes haplotypes with frequency equal to zero
 
+    #in each case, bind the haplotypes with the frequencies
     haplo_freqs_trim = cbind.data.frame(selected_block_trim$haplotype, selected_block_trim$hap.prob)
-    colnames(haplo_freqs_trim)[which(colnames(haplo_freqs_trim) == "selected_block_trim$hap.prob")] <- "frequency"
     haplo_freqs_no_trim = cbind.data.frame(selected_block_no_trim$haplotype, selected_block_no_trim$hap.prob)
+    
+    #change the name to the column with frequencies
+    colnames(haplo_freqs_trim)[which(colnames(haplo_freqs_trim) == "selected_block_trim$hap.prob")] <- "frequency"
     colnames(haplo_freqs_no_trim)[which(colnames(haplo_freqs_no_trim) == "selected_block_no_trim$hap.prob")] <- "frequency"
 
+    #first check to see whether the same frequencies is present in both approaches
+    #from no trim, select only haplotypes with frequency higher than zero
+    haplo_freqs_no_trim_no_zero = haplo_freqs_no_trim[which(round(haplo_freqs_no_trim$frequency, 5) > 0),]
+        #we filter rounding until 5, because we do not want very loooow frequencies (0.000000000...)
+    #check that the selected haplotypes above zero are included in the trimmed results
+    print(paste("CHECK 1 to test whether frequencies are the same with and without progressive insertion", sep=""))
+    print(round(haplo_freqs_no_trim_no_zero$frequency, 5) %in% round(haplo_freqs_trim$frequency, 5))
+    #check that the haplotypes of the trimmed results are included in the selected haplotypes above zero from no trimmed
+    print(paste("CHECK 2 to test whether frequencies are the same with and without progressive insertion", sep=""))
+    print(round(haplo_freqs_trim$frequency, 5) %in% round(haplo_freqs_no_trim_no_zero$frequency, 5))
 
+    #second check using this time the merging function to merge both data.frames (with and without insertion)
     merge_check = merge(haplo_freqs_trim, haplo_freqs_no_trim, by=colnames(haplo_freqs_trim)[which(!colnames(haplo_freqs_trim) %in% "frequency")])
+        #merge considering all columns except that with frequency, that is, the SNPs
+    #both frequencies are the same
+    print(paste("CHECK 3 to test whether frequencies are the same with and without progressive insertion", sep=""))    
+    print(summary(round(merge_check$frequency.x, 5) / round(merge_check$frequency.y, 5)))
+        
+    #conclusions checks
+    #With and without insertion, we get the same frequencies.
+    #I have compared frequencies form haplo.em, haplo.glm and haploview. They are almost the same for the haplotypes with frequency higher than 0.005, which are the ones analyzed as independent haplotypes. Some differences are normal, specially in the case of haplo.glm because it depends on the number of individuals with data for each genotype.
+    #The rest were included in "geno_block.rare" and I have not use it. In that category you have individuals with different low-frequency haplotypes. For these haplotypes, there are some cases with differences (e.g., 0.0014 instead 0.002).
+    #We have the correct frequencies and we will use the most frequent haplotypes used in haplo.glm. An haplotype of 0.0054 is included in some phenotypes like hip circumference.
 
-    summary(round(merge_check$frequency.x, 3) / round(merge_check$frequency.y, 3))
-        #the same, between the two approaches.
-        #CHECK WITH HAPLOVIEW
+    #We continue only with no trimmed results.
+    selected_haplo_block = haplo_freqs_no_trim
+    #we reorder rows based on frequency
+    selected_haplo_block = selected_haplo_block[order(selected_haplo_block$frequency, decreasing=TRUE),]
+    #We selected only those haplotype with a frequency higher than 0.005
+    selected_haplo_block = selected_haplo_block[which(selected_haplo_block$frequency > 0.005),]
+    #We round the frequency
+    selected_haplo_block$frequency = round(selected_haplo_block$frequency, 3)
 
-        #we have to select the haplotype blocks calculated with "haplo.em" but without the progressive insertion. That process remove haplotypes with a low posterior probability (see script of the main analyses for further details). We want all haplotypes, including those with very low frequency. 
+    #extract names of the snps in the selected block
+    snps_names = colnames(selected_haplo_block)[which(!colnames(selected_haplo_block) %in% "frequency")]
 
-    haplo_freqs_no_trim$frequency = round(haplo_freqs_no_trim$frequency, 3)
-
-    #change number by alleles
-    haplo_freqs_no_trim
-
-    snps_names = colnames(haplo_freqs_no_trim)[which(!colnames(haplo_freqs_no_trim) %in% "frequency")]
-
-    #########OJO SNP CHUNGO
+    #for each SNP
     for(j in 1:length(snps_names)){
     
-        #select the [i] row
+        #select the [j] snp
         selected_snp = snps_names[j]
     
-        selected_geno = haplo_freqs_no_trim[,selected_snp]
+        #extract the alleles of the [j] SNP across all blocks
+        selected_geno = selected_haplo_block[,selected_snp]
+            #you have to select all the alleles across haplotype for a given snp because we need to change the numbers to letters
 
+        #from the list of alleles (ncbi vs helena), select those of the [j] SNP
         selected_allele_names = alleles[which(alleles$snp == selected_snp),]
 
         #extract helena and ncbi names
@@ -1276,6 +1311,7 @@ for(i in length(hap_prob_block_insertion)){
         #extract the allele names according to helena
         helena_alleles = strsplit(as.vector(helena_name), split="/")[[1]]
 
+        #change numbers to alleles, and we have to use the helena allele names
         #always A is the first, because number are afabetically ordered in genotype levels in Helena
         if("A" %in% helena_alleles){
             selected_geno = gsub("1", "A", selected_geno)
@@ -1294,46 +1330,52 @@ for(i in length(hap_prob_block_insertion)){
 
         #if both names are equal
         if(helena_name == ncbi_name){
-    
+        
+            #there is nothing more to do
             selected_geno_final = selected_geno    
-        } else {#if they are different transform the helena name to the corresponding alleles of ncbi to check that they have the adequate order (major is the first and minor the second)
+        } else {#if they are different, then transform the helena name to the corresponding alleles of ncbi
     
             #extract major and minor alleles
             helena_major = strsplit(helena_name, split="/")[[1]][1]
             helena_minor = strsplit(helena_name, split="/")[[1]][2]
-    
+                #IMPORTANT, THIS SCRIPT ASSUME THAT THE FIRST ALLELE IS THE MAJOR AND SECOND IS THE MINOR. This should be the order in "alleles" table.
+
             #extract major and minor alleles
             ncbi_major = strsplit(ncbi_name, split="/")[[1]][1]
             ncbi_minor = strsplit(ncbi_name, split="/")[[1]][2]
+                #IMPORTANT, THIS SCRIPT ASSUME THAT THE FIRST ALLELE IS THE MAJOR AND SECOND IS THE MINOR. This should be the order in "alleles" table.
 
+            #select the positions (haplotypes) of selected_geno with the major for the [j] SNP
+            positions_major = which(selected_geno == helena_major) #these positions belongs to the major allele, but this allele is not the current indicated, but the other base
 
-            positions_new_major = which(selected_geno == helena_major)
-            positions_new_minor = which(selected_geno == helena_minor)
+            #select the positions (haplotypes) of selected_geno with the minor for the [j] SNP
+            positions_minor = which(selected_geno == helena_minor) #these positions belongs to the minor allele, but this allele is not the current indicated, but the other base
 
-            selected_geno[positions_new_major] <- ncbi_major
-            selected_geno[positions_new_minor] <- ncbi_minor
+            #select the haplotypes with the major allele of the [j] SNP and indicate the new allele according to NCBI
+            selected_geno[positions_major] <- ncbi_major
+            
+            #select the haplotypes with the minor allele of the [j] SNP and indicate the new allele according to NCBI
+            selected_geno[positions_minor] <- ncbi_minor
 
+            #save the genotype data
             selected_geno_final = selected_geno
         }
 
-        haplo_freqs_no_trim[,selected_snp] <- selected_geno_final
+        #save the results as the column of the [j] snp (selected snp)
+        selected_haplo_block[,selected_snp] <- selected_geno_final
     }
 
-    haplo_freqs_no_trim = haplo_freqs_no_trim[order(haplo_freqs_no_trim$frequency, decreasing=TRUE),]
+    #save the new table for the [i] block in the list of results
+    tables_haplo[[i]] <- selected_haplo_block
 
-    tables_haplo[[i]] <- haplo_freqs_no_trim
-
-    names(tables_haplo)[i] <- selected_block_name
+    #select the name of that table as the haplotype block name
+    names(tables_haplo)[i] <- as.vector(selected_block_name)
 }
 
-    #comprueba que los haplotipos cuadra n con paper y script de haplotipo analysis
-
-myData_ptpn1[which(myData_ptpn1$rs6067472 == 2 & myData_ptpn1$rs10485614 == 2 & myData_ptpn1$rs2143511 == 2 & myData_ptpn1$rs6020608 == 1 & myData_ptpn1$rs968701 == 2),]
-
-#checking with haploview
-
-
+#select each haplotype block and save it as a table
 supple_table_1 = tables_haplo[[1]]
+
+
 
 
 ################################################
@@ -1410,7 +1452,7 @@ print.xtable(xtable(table_5, caption="Table 5", label=NULL, align="ccccccccccccc
 
 
 #convert supple table 1 to a latex table
-print.xtable(xtable(supple_table_1, caption="Supplementary Table 1", label=NULL, align="ccccccc", digits=3, display=c("s", "s", "s", "s", "s", "s", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_5)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+print.xtable(xtable(supple_table_1, caption="Supplementary Table 1", label=NULL, align="ccccccc", digits=3, display=c("s", "s", "s", "s", "s", "s", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(supple_table_1)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
     #argument in the line of the table 1
     #sanitize.text.function:
         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
