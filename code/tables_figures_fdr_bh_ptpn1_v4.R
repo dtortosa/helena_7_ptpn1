@@ -128,7 +128,6 @@ table_1$HWE == summary_snps$HWE
 table_1 = table_1[,c("HWE", "MAF")]
 
 
-
 ### add alleles and MAF per center to table 1
 
 #vector with centers
@@ -147,8 +146,8 @@ colnames(empty_df_alleles) <- c("Major allele", "Minor allele")
 #bind all DFs
 table_1 = cbind.data.frame(empty_df_alleles, table_1, empty_df_centers)
 
-#add the alleles
-for(i in 1:nrow(table_1)){#for each row of table 1
+#add the alleles and the MAF per center
+for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
 
     #select the [i] row
     selected_row = table_1[i,]
@@ -162,10 +161,11 @@ for(i in 1:nrow(table_1)){#for each row of table 1
     #select major and minor allele (they are ordered, major always first)
     ncbi_major = strsplit(as.character(ncbi_name), split="/")[[1]][1]
     ncbi_minor = strsplit(as.character(ncbi_name), split="/")[[1]][2]
+        #IMPORTANT: these two lines assumes that the first allele is the major and the second is the minor. I had to create the "alleles" table in that way. BE SURE.
 
     #save them in the corresponding columns
-    table_1[i,which(colnames(table_1) == "Major allele")] <- ncbi_major
-    table_1[i,which(colnames(table_1) == "Minor allele")] <- ncbi_minor
+    table_1[i, which(colnames(table_1) == "Major allele")] <- ncbi_major
+    table_1[i, which(colnames(table_1) == "Minor allele")] <- ncbi_minor
 
     #add MAF for each center
     for(j in 1:length(vector_centers)){
@@ -181,35 +181,64 @@ for(i in 1:nrow(table_1)){#for each row of table 1
         #subset myData_ptpn1 by center
         subset_center = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$center == '", selected_center, "'),]", sep="")))
         #check
+        print("Check that we select rows of the selected center")
         print(summary(subset_center$center == selected_center))
 
-        #
-        allele_freqs = summary(subset_center[,which(colnames(subset_center) == selected_snp)])$allele.freq
+        #extract allele frequencies of the [i] SNP for the [j] center
+        allele_freqs = summary(subset_center[, which(colnames(subset_center) == selected_snp)])$allele.freq
 
         #remove the cases with NA
         allele_freqs = allele_freqs[which(!is.na(allele_freqs[,2])),]
 
-        allele_freq_minor = allele_freqs[which(allele_freqs[,1] == min(allele_freqs[,1]) ), 2]
+        #select the allele with the lowest frequency (row), and then take its frequency (second column)
+        allele_freq_minor = allele_freqs[which(allele_freqs[,1] == min(allele_freqs[,1])), 2]
 
+        #convert the MAF into frequency up to 1 and round to 2 decimals
         allele_freq_minor = round(allele_freq_minor/100, 2)
 
+        #if we have two minor alleles
         if(length(allele_freq_minor) == 2){
+
+            #and both have the same frequency
             if(allele_freq_minor[1] == allele_freq_minor[2]){
+
+                #there is no problem, save only one
                 allele_freq_minor = unique(allele_freq_minor)
             } else{
+
+                #if not, then we have a problem
                 stop(paste("ERROR: PROBLEM WITH THE MAF IN CENTER: ", selected_center, sep=""))
             }
-
         }
 
+        #select the row of the [i] SNP and the column of the [j] center and add the corresponding MAF
         table_1[which(rownames(table_1) == selected_snp), which(colnames(table_1) == selected_center)] <- allele_freq_minor
     }
 }
 
-##CHEQUEA SI HAY MUCHAS DIFERENCIAS ENTRE CENTROS!! ESTRATIFICACIÓN!
+##CHECK USING SUMMARY IN THE SUBSET OF THE CENTER?
 
-##POR AQUIII!
+#add MAF for each center
+for(i in 1:length(vector_centers)){
 
+    #select the [j] center
+    selected_center = vector_centers[j]
+
+    #print the name of the center
+    print("###############################")
+    print(paste("STARTING CENTER: ", selected_center, sep=""))
+    print("###############################")
+
+    #subset myData_ptpn1 by center
+    subset_center = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$center == '", selected_center, "'),]", sep="")))
+    #check
+    print("Check that we select rows of the selected center")
+    print(summary(subset_center$center == selected_center))
+
+    summary(subset_center)
+
+    ##POR AQUII
+}
 
 
 #reorder the table following the order in the chromosome 
@@ -261,7 +290,7 @@ identical(as.vector(df_check_alleles$alleles_from_ncbi), as.vector(df_check_alle
     #CHECK THIS LINE, IT GIVES FALSE!!!
 
 
-### add the minor alleles frequencies according to 1000 Genomes Project
+### add the MAF according to 1000 Genomes Project
 
 #Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
     #rs6067472: T=0.3648
