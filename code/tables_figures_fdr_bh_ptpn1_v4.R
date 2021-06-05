@@ -116,16 +116,15 @@ MAF = 1-(summary_snps[, which(names(summary_snps) == "major.allele.freq")]/100)
 HWE = summary_snps[, which(names(summary_snps) == "HWE")]
 
 #bind both metrics
-table_1 = cbind.data.frame(MAF, HWE)
-rownames(table_1) <- row.names(summary_snps)
-table_1
+table_1_raw = cbind.data.frame(MAF, HWE)
+rownames(table_1_raw) <- row.names(summary_snps)
 
 #check that the HWE and MAF correspond to the same snps
-table_1$MAF == 1-(summary_snps$major.allele.freq/100)
-table_1$HWE == summary_snps$HWE
+table_1_raw$MAF == 1-(summary_snps$major.allele.freq/100)
+table_1_raw$HWE == summary_snps$HWE
 
 #reorder columns
-table_1 = table_1[,c("HWE", "MAF")]
+table_1_raw = table_1_raw[,c("HWE", "MAF")]
 
 
 ### add alleles and MAF per center to table 1
@@ -144,7 +143,7 @@ empty_df_alleles = data.frame(matrix(NA, 1, 2))
 colnames(empty_df_alleles) <- c("Major allele", "Minor allele")
 
 #bind all DFs
-table_1 = cbind.data.frame(empty_df_alleles, table_1, empty_df_centers)
+table_1 = cbind.data.frame(empty_df_alleles, table_1_raw, empty_df_centers)
 
 #add the alleles and the MAF per center
 for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
@@ -190,7 +189,7 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
         #remove the cases with NA
         allele_freqs = allele_freqs[which(!is.na(allele_freqs[,2])),]
 
-        #select the allele with the lowest frequency (row), and then take its frequency (second column)
+        #select the allele with the lowest frequency (row), and then take its percentage (second column)
         allele_freq_minor = allele_freqs[which(allele_freqs[,1] == min(allele_freqs[,1])), 2]
 
         #convert the MAF into frequency up to 1 and round to 2 decimals
@@ -207,7 +206,7 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
             } else{
 
                 #if not, then we have a problem
-                stop(paste("ERROR: PROBLEM WITH THE MAF IN CENTER: ", selected_center, sep=""))
+                stop(paste("ERROR: PROBLEM WITH THE MAF IN A CENTER: ", selected_center, sep=""))
             }
         }
 
@@ -216,13 +215,11 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
     }
 }
 
-##CHECK USING SUMMARY IN THE SUBSET OF THE CENTER?
-
-#add MAF for each center
+#check calculating the MAF with a alternative way
 for(i in 1:length(vector_centers)){
 
     #select the [j] center
-    selected_center = vector_centers[j]
+    selected_center = vector_centers[i]
 
     #print the name of the center
     print("###############################")
@@ -235,15 +232,46 @@ for(i in 1:length(vector_centers)){
     print("Check that we select rows of the selected center")
     print(summary(subset_center$center == selected_center))
 
-    summary(subset_center)
+    #calculate summary of all SNPs for the subset of the [i] center
+    summary_center = summary(subset_center)
 
-    ##POR AQUII
+    #calculate the new MAF
+    new_MAF_center = 1-(summary_center[, which(names(summary_center) == "major.allele.freq")]/100)
+    #round
+    new_MAF_center = round(new_MAF_center, 2)
+    #set names
+    names(new_MAF_center) <- row.names(summary_center)
+    #convert to DF
+    new_MAF_center = data.frame(new_MAF_center)
+
+    #merge the new MAF and table 1 by rows (SNPs)
+    merged_table = merge(table_1, new_MAF_center, by="row.names")
+
+    #check that the new MAFs is equal to the MAFs in the corresponding center
+    #extract the MAF previously calculated for the [i] center
+    previous_MAF = eval(parse(text=paste("merged_table[,which(colnames(merged_table) == '", selected_center, "')]", sep="")))
+    print(paste("Checking differences in MAF between approaches: ", selected_center, sep=""))
+    print(abs(merged_table$new_MAF_center - previous_MAF) %in% c("0", "0.01"))
+        #the difference has to be zero or 0.01.
+        #It a difference of 0.01 is possible due rounding with different numbers of decimals between approaches
+            #round(0.445, 2) gives 0.44, while round(0.4454, 2) gives 0.45, this is the case of Zaragoza for rs2143511, for example.
 }
-
 
 #reorder the table following the order in the chromosome 
 table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
 row.names(table_1) == ptpn1_snps$snp
+
+
+### check that the alleles names are ok
+#extract the allele names from the table 1 (combined major and minor) along with snp names
+alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
+colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
+
+#merge these alleles names with the original allele names from alleles df
+df_check_alleles = merge(alleles_from_table_1, alleles)
+
+#check that the colums of alleles names are similar
+identical(as.vector(df_check_alleles$alleles_from_ncbi), as.vector(df_check_alleles$ncbi))
 
 
 ### add the gene name to the table. More sense when SNPs of multiple genes are included.
@@ -265,7 +293,6 @@ for(i in 1:length(ptpn1s)){
     #convert to upper case
     row.names(row_to_add) <- toupper(ptpn1_selected)
 
-
     #add the gene name
     if(position_to_add == 1){# if the position is the 1
 
@@ -277,17 +304,6 @@ for(i in 1:length(ptpn1s)){
         table_1 = rbind(table_1[1:(position_to_add-1),], row_to_add, table_1[(position_to_add):nrow(table_1),])        
     }
 }
-
-#extract the allele names from the table 1 (combined major and minor) along with snp names
-alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
-colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
-
-#merge these alleles names with the original allele names from alleles df
-df_check_alleles = merge(alleles_from_table_1, alleles)
-
-#check that the colums of alleles names are similar
-identical(as.vector(df_check_alleles$alleles_from_ncbi), as.vector(df_check_alleles$ncbi))
-    #CHECK THIS LINE, IT GIVES FALSE!!!
 
 
 ### add the MAF according to 1000 Genomes Project
