@@ -210,16 +210,7 @@ for(i in 1:nrow(table_1)){#for each row of table 1
 
 ##POR AQUIII!
 
-#extract the allele names from the table 1 (combined major and minor) along with snp names
-alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
-colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
 
-#merge these alleles names with the original allele names from alleles df
-df_check_alleles = merge(alleles_from_table_1, alleles)
-
-#check that the colums of alleles names are similar
-identical(df_check_alleles$alleles_from_ncbi, df_check_alleles$ncbi)
-    #CHECK THIS LINE, IT GIVES FALSE!!!
 
 #reorder the table following the order in the chromosome 
 table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
@@ -238,31 +229,36 @@ for(i in 1:length(ptpn1s)){
     #select the position of the first snp of the [i] gene
     position_to_add = which(row.names(table_1) == ptpn1_snps[ptpn1_snps$gen==ptpn1_selected,][1,]$snp)
 
+    #create the row to be added
+    row_to_add = data.frame(matrix(NA, 1, ncol(table_1)))
+    colnames(row_to_add) <- colnames(table_1) #add the same names that in the data.frame
+
+    #convert to upper case
+    row.names(row_to_add) <- toupper(ptpn1_selected)
+
+
     #add the gene name
     if(position_to_add == 1){# if the position is the 1
-
-        #add in the position of MAF and HWE two NAs in a row
-        row_to_add = cbind(NA, NA, NA, NA)
-        colnames(row_to_add) <- c("Major allele", "Minor allele", "MAF", "HWE") #add the same names that in the data.frame
-
-        #convert to upper case
-        row.names(row_to_add) <- toupper(ptpn1_selected)
 
         #bind first the gene name
         table_1 = rbind(row_to_add, table_1) 
     } else{ #if the gene name have to be include in the middle of the table
         
-        #add in the position of MAF and HWE two NAs in a row
-        row_to_add = cbind(NA, NA, NA, NA)
-        colnames(row_to_add) <- c("Major allele", "Minor allele", "MAF", "HWE")#add the same names that in the data.frame
-
-        #convert to upper case        
-        row.names(row_to_add) <- toupper(ptpn1_selected)
-
         #add the gene name in the middle of the table, after the prior gene and before the snps of this gene [i]        
         table_1 = rbind(table_1[1:(position_to_add-1),], row_to_add, table_1[(position_to_add):nrow(table_1),])        
     }
 }
+
+#extract the allele names from the table 1 (combined major and minor) along with snp names
+alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
+colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
+
+#merge these alleles names with the original allele names from alleles df
+df_check_alleles = merge(alleles_from_table_1, alleles)
+
+#check that the colums of alleles names are similar
+identical(as.vector(df_check_alleles$alleles_from_ncbi), as.vector(df_check_alleles$ncbi))
+    #CHECK THIS LINE, IT GIVES FALSE!!!
 
 
 ### add the minor alleles frequencies according to 1000 Genomes Project
@@ -1454,7 +1450,7 @@ name_doc_table = "tables_latex_v4.odt"
 system(paste("cd ", path_tex_table, "; rm ", name_tex_table, "; rm ", name_doc_table, sep=""))
 
 #convert table 1 to a latex table
-print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccc", digits=2, display=c("s", "s", "s", "s", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
+print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccccccccccccc", digits=2, display=c("s", "s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
         #arguments xtable
             #caption: caption of the table
             #label: label of the table
