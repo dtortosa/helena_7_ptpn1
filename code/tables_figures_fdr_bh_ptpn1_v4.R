@@ -274,7 +274,7 @@ df_check_alleles = merge(alleles_from_table_1, alleles)
 identical(as.vector(df_check_alleles$alleles_from_ncbi), as.vector(df_check_alleles$ncbi))
 
 
-### add the gene name to the table. More sense when SNPs of multiple genes are included.
+### add the gene name to the table. This makes more sense when SNPs of multiple genes are included.
 #loop for each gene
 ptpn1s = unique(ptpn1_snps$gen)
 #for each gene name
@@ -284,7 +284,7 @@ for(i in 1:length(ptpn1s)){
     ptpn1_selected = ptpn1s[i]
 
     #select the position of the first snp of the [i] gene
-    position_to_add = which(row.names(table_1) == ptpn1_snps[ptpn1_snps$gen==ptpn1_selected,][1,]$snp)
+    position_to_add = which(row.names(table_1) == ptpn1_snps[which(ptpn1_snps$gen==ptpn1_selected),][1,]$snp)
 
     #create the row to be added
     row_to_add = data.frame(matrix(NA, 1, ncol(table_1)))
@@ -297,7 +297,7 @@ for(i in 1:length(ptpn1s)){
     if(position_to_add == 1){# if the position is the 1
 
         #bind first the gene name
-        table_1 = rbind(row_to_add, table_1) 
+        table_1 = rbind(row_to_add, table_1)
     } else{ #if the gene name have to be include in the middle of the table
         
         #add the gene name in the middle of the table, after the prior gene and before the snps of this gene [i]        

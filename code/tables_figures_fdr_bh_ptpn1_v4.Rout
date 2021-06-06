@@ -157,7 +157,7 @@ The following objects are masked from ‘package:base’:
 > ### create a data.frame withe the names of phenotypes in dataset and the real name per the figure
 > pheno_names = cbind.data.frame(
 +     c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP"),
-+     c("Center (%)", "Age (%)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% obesity/overweight", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
++     c("Center (%)", "Age (y)", "Weight (kg)", "Height (cm)", "Triceps skinfold (mm)", "Subescapular skinfold (mm)", "% obesity/overweight", "BMI (kg/m^2)", "Waist circum. (cm)", "Waist/Height ratio", "Hip circum. (cm)", "Waist/Hip ratio", "Body fat (%)", "FMI (kg/m^2)", "Total cholesterol (mg/dL)","LDL-C (mg/dL)","HDL-C (mg/dL)","Total cholesterol/HDL-C","LDL-C/HDL-C","Triglycerides (mg/dL)","Triglycerides/HDL-C","ApoA1 (mg/dL)","ApoB (mg/dL)","ApoB/ApoA1","ApoB/LDL-C","Insulin (micro lU/mL)","HOMA","QUICKI","Leptin (ng/ml)","SBP (mm Hg)","DBP (mm Hg)"))
 > colnames(pheno_names) <- c("var_name", "final_name")
 > 
 > ### binomial phenotypes included in this set of results
@@ -191,6 +191,19 @@ The following objects are masked from ‘package:base’:
 [1] TRUE
 > 
 > 
+> ##check no individual has NA for all phenotypes and that no phenotype has NA for all individuals
+> #select phenotype columns    
+> only_pheno = myData_ptpn1[, which(!colnames(myData_ptpn1) %in% labels(myData_ptpn1))]
+> #which rows (individuals) have NA for all columns (phenotypes)
+> length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 
+[1] TRUE
+> length(which(colSums(is.na(only_pheno)) == nrow(only_pheno))) == 0 
+[1] TRUE
+>     #first test for rows (individuals) with all column entries (phenotypes) as NA
+>     #second test for columns (phenotypes) with all rows entries (individuals) as NA
+>     #it should be zero in both cases
+> 
+> 
 > 
 > 
 > ###################
@@ -214,33 +227,39 @@ rs968701   2/1     50.3              1.000000 0.1
 > HWE = summary_snps[, which(names(summary_snps) == "HWE")]
 > 
 > #bind both metrics
-> table_1 = cbind.data.frame(MAF, HWE)
-> rownames(table_1) <- row.names(summary_snps)
-> table_1
-             MAF      HWE
-rs6067472  0.392 0.605704
-rs10485614 0.071 0.355921
-rs2143511  0.437 0.531653
-rs6020608  0.286 0.598695
-rs968701   0.497 1.000000
+> table_1_raw = cbind.data.frame(MAF, HWE)
+> rownames(table_1_raw) <- row.names(summary_snps)
 > 
 > #check that the HWE and MAF correspond to the same snps
-> table_1$MAF == 1-(summary_snps$major.allele.freq/100)
+> table_1_raw$MAF == 1-(summary_snps$major.allele.freq/100)
 [1] TRUE TRUE TRUE TRUE TRUE
-> table_1$HWE == summary_snps$HWE
+> table_1_raw$HWE == summary_snps$HWE
 [1] TRUE TRUE TRUE TRUE TRUE
 > 
+> #reorder columns
+> table_1_raw = table_1_raw[,c("HWE", "MAF")]
 > 
-> ### add alleles to table 1
 > 
-> #add two columns for Major and minor alleles
-> table_1 = cbind.data.frame(NA, NA, table_1)
+> ### add alleles and MAF per center to table 1
 > 
-> #add the corresponding names (first major, second minor)
-> colnames(table_1)[which(colnames(table_1) == "NA")] <- c("Major allele", "Minor allele")
+> #vector with centers
+> vector_centers = unique(myData_ptpn1$center)
 > 
-> #add the alleles
-> for(i in 1:nrow(table_1)){#for each row of table 1
+> #create an empty data.frame for the MAF of each center
+> empty_df_centers = data.frame(matrix(NA, 1, length(vector_centers)))
+> #set colnames
+> colnames(empty_df_centers) <- vector_centers
+> 
+> #create an empty data.frame for the major and minor alleles
+> empty_df_alleles = data.frame(matrix(NA, 1, 2))
+> #set colnames
+> colnames(empty_df_alleles) <- c("Major allele", "Minor allele")
+> 
+> #bind all DFs
+> table_1 = cbind.data.frame(empty_df_alleles, table_1_raw, empty_df_centers)
+> 
+> #add the alleles and the MAF per center
+> for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
 + 
 +     #select the [i] row
 +     selected_row = table_1[i,]
@@ -254,12 +273,550 @@ rs968701   0.497 1.000000
 +     #select major and minor allele (they are ordered, major always first)
 +     ncbi_major = strsplit(as.character(ncbi_name), split="/")[[1]][1]
 +     ncbi_minor = strsplit(as.character(ncbi_name), split="/")[[1]][2]
++         #IMPORTANT: these two lines assumes that the first allele is the major and the second is the minor. I had to create the "alleles" table in that way. BE SURE.
 + 
 +     #save them in the corresponding columns
-+     table_1[i,which(colnames(table_1) == "Major allele")] <- ncbi_major
-+     table_1[i,which(colnames(table_1) == "Minor allele")] <- ncbi_minor
++     table_1[i, which(colnames(table_1) == "Major allele")] <- ncbi_major
++     table_1[i, which(colnames(table_1) == "Minor allele")] <- ncbi_minor
++ 
++     #add MAF for each center
++     for(j in 1:length(vector_centers)){
++ 
++         #select the [j] center
++         selected_center = vector_centers[j]
++ 
++         #print the name of the center
++         print("###############################")
++         print(paste("STARTING CENTER: ", selected_center, sep=""))
++         print("###############################")
++ 
++         #subset myData_ptpn1 by center
++         subset_center = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$center == '", selected_center, "'),]", sep="")))
++         #check
++         print("Check that we select rows of the selected center")
++         print(summary(subset_center$center == selected_center))
++ 
++         #extract allele frequencies of the [i] SNP for the [j] center
++         allele_freqs = summary(subset_center[, which(colnames(subset_center) == selected_snp)])$allele.freq
++ 
++         #remove the cases with NA
++         allele_freqs = allele_freqs[which(!is.na(allele_freqs[,2])),]
++ 
++         #select the allele with the lowest frequency (row), and then take its percentage (second column)
++         allele_freq_minor = allele_freqs[which(allele_freqs[,1] == min(allele_freqs[,1])), 2]
++ 
++         #convert the MAF into frequency up to 1 and round to 2 decimals
++         allele_freq_minor = round(allele_freq_minor/100, 2)
++ 
++         #if we have two minor alleles
++         if(length(allele_freq_minor) == 2){
++ 
++             #and both have the same frequency
++             if(allele_freq_minor[1] == allele_freq_minor[2]){
++ 
++                 #there is no problem, save only one
++                 allele_freq_minor = unique(allele_freq_minor)
++             } else{
++ 
++                 #if not, then we have a problem
++                 stop(paste("ERROR: PROBLEM WITH THE MAF IN A CENTER: ", selected_center, sep=""))
++             }
++         }
++ 
++         #select the row of the [i] SNP and the column of the [j] center and add the corresponding MAF
++         table_1[which(rownames(table_1) == selected_snp), which(colnames(table_1) == selected_center)] <- allele_freq_minor
++     }
 + }
+[1] "###############################"
+[1] "STARTING CENTER: Athens in Greece"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     104 
+[1] "###############################"
+[1] "STARTING CENTER: Dortmund in Germany"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     116 
+[1] "###############################"
+[1] "STARTING CENTER: Gent in Belgium"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     109 
+[1] "###############################"
+[1] "STARTING CENTER: Heraklion in Crete"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     103 
+[1] "###############################"
+[1] "STARTING CENTER: Lille in France"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      87 
+[1] "###############################"
+[1] "STARTING CENTER: Pecs in Hungary"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     137 
+[1] "###############################"
+[1] "STARTING CENTER: Roma in Italy"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      80 
+[1] "###############################"
+[1] "STARTING CENTER: Stockholm in Sweden"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     100 
+[1] "###############################"
+[1] "STARTING CENTER: Vienna in Austria"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     111 
+[1] "###############################"
+[1] "STARTING CENTER: Zaragoza in Spain"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     110 
+[1] "###############################"
+[1] "STARTING CENTER: Athens in Greece"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     104 
+[1] "###############################"
+[1] "STARTING CENTER: Dortmund in Germany"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     116 
+[1] "###############################"
+[1] "STARTING CENTER: Gent in Belgium"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     109 
+[1] "###############################"
+[1] "STARTING CENTER: Heraklion in Crete"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     103 
+[1] "###############################"
+[1] "STARTING CENTER: Lille in France"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      87 
+[1] "###############################"
+[1] "STARTING CENTER: Pecs in Hungary"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     137 
+[1] "###############################"
+[1] "STARTING CENTER: Roma in Italy"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      80 
+[1] "###############################"
+[1] "STARTING CENTER: Stockholm in Sweden"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     100 
+[1] "###############################"
+[1] "STARTING CENTER: Vienna in Austria"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     111 
+[1] "###############################"
+[1] "STARTING CENTER: Zaragoza in Spain"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     110 
+[1] "###############################"
+[1] "STARTING CENTER: Athens in Greece"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     104 
+[1] "###############################"
+[1] "STARTING CENTER: Dortmund in Germany"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     116 
+[1] "###############################"
+[1] "STARTING CENTER: Gent in Belgium"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     109 
+[1] "###############################"
+[1] "STARTING CENTER: Heraklion in Crete"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     103 
+[1] "###############################"
+[1] "STARTING CENTER: Lille in France"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      87 
+[1] "###############################"
+[1] "STARTING CENTER: Pecs in Hungary"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     137 
+[1] "###############################"
+[1] "STARTING CENTER: Roma in Italy"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      80 
+[1] "###############################"
+[1] "STARTING CENTER: Stockholm in Sweden"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     100 
+[1] "###############################"
+[1] "STARTING CENTER: Vienna in Austria"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     111 
+[1] "###############################"
+[1] "STARTING CENTER: Zaragoza in Spain"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     110 
+[1] "###############################"
+[1] "STARTING CENTER: Athens in Greece"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     104 
+[1] "###############################"
+[1] "STARTING CENTER: Dortmund in Germany"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     116 
+[1] "###############################"
+[1] "STARTING CENTER: Gent in Belgium"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     109 
+[1] "###############################"
+[1] "STARTING CENTER: Heraklion in Crete"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     103 
+[1] "###############################"
+[1] "STARTING CENTER: Lille in France"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      87 
+[1] "###############################"
+[1] "STARTING CENTER: Pecs in Hungary"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     137 
+[1] "###############################"
+[1] "STARTING CENTER: Roma in Italy"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      80 
+[1] "###############################"
+[1] "STARTING CENTER: Stockholm in Sweden"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     100 
+[1] "###############################"
+[1] "STARTING CENTER: Vienna in Austria"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     111 
+[1] "###############################"
+[1] "STARTING CENTER: Zaragoza in Spain"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     110 
+[1] "###############################"
+[1] "STARTING CENTER: Athens in Greece"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     104 
+[1] "###############################"
+[1] "STARTING CENTER: Dortmund in Germany"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     116 
+[1] "###############################"
+[1] "STARTING CENTER: Gent in Belgium"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     109 
+[1] "###############################"
+[1] "STARTING CENTER: Heraklion in Crete"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     103 
+[1] "###############################"
+[1] "STARTING CENTER: Lille in France"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      87 
+[1] "###############################"
+[1] "STARTING CENTER: Pecs in Hungary"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     137 
+[1] "###############################"
+[1] "STARTING CENTER: Roma in Italy"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      80 
+[1] "###############################"
+[1] "STARTING CENTER: Stockholm in Sweden"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     100 
+[1] "###############################"
+[1] "STARTING CENTER: Vienna in Austria"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     111 
+[1] "###############################"
+[1] "STARTING CENTER: Zaragoza in Spain"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     110 
 > 
+> #check calculating the MAF with a alternative way
+> for(i in 1:length(vector_centers)){
++ 
++     #select the [j] center
++     selected_center = vector_centers[i]
++ 
++     #print the name of the center
++     print("###############################")
++     print(paste("STARTING CENTER: ", selected_center, sep=""))
++     print("###############################")
++ 
++     #subset myData_ptpn1 by center
++     subset_center = eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$center == '", selected_center, "'),]", sep="")))
++     #check
++     print("Check that we select rows of the selected center")
++     print(summary(subset_center$center == selected_center))
++ 
++     #calculate summary of all SNPs for the subset of the [i] center
++     summary_center = summary(subset_center)
++ 
++     #calculate the new MAF
++     new_MAF_center = 1-(summary_center[, which(names(summary_center) == "major.allele.freq")]/100)
++     #round
++     new_MAF_center = round(new_MAF_center, 2)
++     #set names
++     names(new_MAF_center) <- row.names(summary_center)
++     #convert to DF
++     new_MAF_center = data.frame(new_MAF_center)
++ 
++     #merge the new MAF and table 1 by rows (SNPs)
++     merged_table = merge(table_1, new_MAF_center, by="row.names")
++ 
++     #check that the new MAFs is equal to the MAFs in the corresponding center
++     #extract the MAF previously calculated for the [i] center
++     previous_MAF = eval(parse(text=paste("merged_table[,which(colnames(merged_table) == '", selected_center, "')]", sep="")))
++     print(paste("Checking differences in MAF between approaches: ", selected_center, sep=""))
++     print(abs(merged_table$new_MAF_center - previous_MAF) %in% c("0", "0.01"))
++         #the difference has to be zero or 0.01.
++         #It a difference of 0.01 is possible due rounding with different numbers of decimals between approaches
++             #round(0.445, 2) gives 0.44, while round(0.4454, 2) gives 0.45, this is the case of Zaragoza for rs2143511, for example.
++ }
+[1] "###############################"
+[1] "STARTING CENTER: Athens in Greece"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     104 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     61.1              1.000000 0          
+rs10485614 1/2     90.9              1.000000 0          
+rs2143511  1/2     56.2              0.427287 0          
+rs6020608  2/1     71.2              0.483135 0          
+rs968701   2/1     52.9              0.120134 0          
+[1] "Checking differences in MAF between approaches: Athens in Greece"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Dortmund in Germany"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     116 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     63.4              0.553393 0          
+rs10485614 1/2     92.2              1.000000 0          
+rs2143511  1/2     53.9              0.454130 0          
+rs6020608  2/1     72.0              0.104085 0          
+rs968701   1/2     51.7              0.852385 0          
+[1] "Checking differences in MAF between approaches: Dortmund in Germany"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Gent in Belgium"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     109 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     60.6              0.315956 0          
+rs10485614 1/2     92.7              1.000000 0          
+rs2143511  1/2     59.2              0.320385 0          
+rs6020608  2/1     70.6              1.000000 0          
+rs968701   2/1     51.8              0.847935 0          
+[1] "Checking differences in MAF between approaches: Gent in Belgium"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Heraklion in Crete"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     103 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     65.0              0.191638 0          
+rs10485614 1/2     90.8              0.596514 0          
+rs2143511  1/2     51.5              0.433671 0          
+rs6020608  2/1     74.8              0.293669 0          
+rs968701   1/2     52.5              0.163441 1          
+[1] "Checking differences in MAF between approaches: Heraklion in Crete"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Lille in France"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      87 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     60.9              0.821845 0          
+rs10485614 1/2     92.5              0.383348 0          
+rs2143511  1/2     59.2              0.047209 0          
+rs6020608  2/1     74.1              0.783955 0          
+rs968701   2/1     50.0              0.197338 0          
+[1] "Checking differences in MAF between approaches: Lille in France"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Pecs in Hungary"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     137 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     54.0              0.228311 0.0        
+rs10485614 1/2     97.1              1.000000 0.0        
+rs2143511  1/2     59.2              0.599317 0.7        
+rs6020608  2/1     63.9              0.267389 0.0        
+rs968701   2/1     52.2              0.733173 0.0        
+[1] "Checking differences in MAF between approaches: Pecs in Hungary"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Roma in Italy"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical      80 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     61.9              0.816959 0          
+rs10485614 1/2     90.6              0.514628 0          
+rs2143511  1/2     58.1              0.249526 0          
+rs6020608  2/1     70.0              0.298173 0          
+rs968701   2/1     50.0              0.501942 0          
+[1] "Checking differences in MAF between approaches: Roma in Italy"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Stockholm in Sweden"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     100 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     57.0              0.544013 0          
+rs10485614 1/2     94.5              1.000000 0          
+rs2143511  1/2     60.5              0.836972 0          
+rs6020608  2/1     69.0              1.000000 0          
+rs968701   2/1     53.0              0.235176 0          
+[1] "Checking differences in MAF between approaches: Stockholm in Sweden"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Vienna in Austria"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     111 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     62.6              1.000000 0          
+rs10485614 1/2     91.9              1.000000 0          
+rs2143511  1/2     50.5              0.706546 0          
+rs6020608  2/1     74.8              0.449042 0          
+rs968701   1/2     54.5              0.565845 0          
+[1] "Checking differences in MAF between approaches: Vienna in Austria"
+[1] TRUE TRUE TRUE TRUE TRUE
+[1] "###############################"
+[1] "STARTING CENTER: Zaragoza in Spain"
+[1] "###############################"
+[1] "Check that we select rows of the selected center"
+   Mode    TRUE 
+logical     110 
+           alleles major.allele.freq HWE      missing (%)
+rs6067472  2/1     63.2              0.683028 0          
+rs10485614 1/2     93.6              0.356600 0          
+rs2143511  1/2     55.5              1.000000 0          
+rs6020608  2/1     75.5              0.207308 0          
+rs968701   2/1     51.4              0.848549 0          
+[1] "Checking differences in MAF between approaches: Zaragoza in Spain"
+[1] TRUE TRUE TRUE TRUE TRUE
+> 
+> #reorder the table following the order in the chromosome 
+> table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
+> row.names(table_1) == ptpn1_snps$snp
+[1] TRUE TRUE TRUE TRUE TRUE
+> 
+> 
+> ### check that the alleles names are ok
 > #extract the allele names from the table 1 (combined major and minor) along with snp names
 > alleles_from_table_1 = cbind.data.frame(row.names(table_1), paste(table_1[,which(colnames(table_1) == "Major allele")], "/", table_1[,which(colnames(table_1) == "Minor allele")], sep=""))
 > colnames(alleles_from_table_1) <- c("snp", "alleles_from_ncbi")
@@ -268,16 +825,11 @@ rs968701   0.497 1.000000
 > df_check_alleles = merge(alleles_from_table_1, alleles)
 > 
 > #check that the colums of alleles names are similar
-> identical(df_check_alleles$alleles_from_ncbi, df_check_alleles$ncbi)
-[1] FALSE
-> 
-> #reorder the table following the order in the chromosome 
-> table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
-> row.names(table_1) == ptpn1_snps$snp
-[1] TRUE TRUE TRUE TRUE TRUE
+> identical(as.vector(df_check_alleles$alleles_from_ncbi), as.vector(df_check_alleles$ncbi))
+[1] TRUE
 > 
 > 
-> ### add the gene name to the table. More sense when SNPs of multiple genes are included.
+> ### add the gene name to the table. This makes more sense when SNPs of multiple genes are included.
 > #loop for each gene
 > ptpn1s = unique(ptpn1_snps$gen)
 > #for each gene name
@@ -287,36 +839,29 @@ rs968701   0.497 1.000000
 +     ptpn1_selected = ptpn1s[i]
 + 
 +     #select the position of the first snp of the [i] gene
-+     position_to_add = which(row.names(table_1) == ptpn1_snps[ptpn1_snps$gen==ptpn1_selected,][1,]$snp)
++     position_to_add = which(row.names(table_1) == ptpn1_snps[which(ptpn1_snps$gen==ptpn1_selected),][1,]$snp)
++ 
++     #create the row to be added
++     row_to_add = data.frame(matrix(NA, 1, ncol(table_1)))
++     colnames(row_to_add) <- colnames(table_1) #add the same names that in the data.frame
++ 
++     #convert to upper case
++     row.names(row_to_add) <- toupper(ptpn1_selected)
 + 
 +     #add the gene name
 +     if(position_to_add == 1){# if the position is the 1
 + 
-+         #add in the position of MAF and HWE two NAs in a row
-+         row_to_add = cbind(NA, NA, NA, NA)
-+         colnames(row_to_add) <- c("Major allele", "Minor allele", "MAF", "HWE") #add the same names that in the data.frame
-+ 
-+         #convert to upper case
-+         row.names(row_to_add) <- toupper(ptpn1_selected)
-+ 
 +         #bind first the gene name
-+         table_1 = rbind(row_to_add, table_1) 
++         table_1 = rbind(row_to_add, table_1)
 +     } else{ #if the gene name have to be include in the middle of the table
 +         
-+         #add in the position of MAF and HWE two NAs in a row
-+         row_to_add = cbind(NA, NA, NA, NA)
-+         colnames(row_to_add) <- c("Major allele", "Minor allele", "MAF", "HWE")#add the same names that in the data.frame
-+ 
-+         #convert to upper case        
-+         row.names(row_to_add) <- toupper(ptpn1_selected)
-+ 
 +         #add the gene name in the middle of the table, after the prior gene and before the snps of this gene [i]        
 +         table_1 = rbind(table_1[1:(position_to_add-1),], row_to_add, table_1[(position_to_add):nrow(table_1),])        
 +     }
 + }
 > 
 > 
-> ### add the minor alleles frequencies according to 1000 Genomes Project
+> ### add the MAF according to 1000 Genomes Project
 > 
 > #Minor allele frequencies obtained according to 1000 KGP obtained from the NCBI
 >     #rs6067472: T=0.3648
@@ -352,12 +897,129 @@ rs968701   0.497 1.000000
 > ####################
 > ##### TABLE 2 ######
 > ####################
-> response_pheno = c("center", "CRF_age", "CRF_weight", "CRF_height", "CRF_trici", "CRF_subscap","obesity","CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")
-> length(response_pheno) == nrow(pheno_names)
+> 
+> #This table 2 calculates the number of individuals in each center and then the proportion of overweight WITHIN each center. In that way, we can compare the prevalence of overweight while considering the differences in sample size between centers. 
+> 
+> #extract the list of centers
+> list_centers = unique(myData_ptpn1$center)
+> 
+> #create the empty table
+> table_2 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
+> names(table_2)[1] <- "Center"
+> names(table_2)[2] <- paste("All sample size", sep="")
+> names(table_2)[3] <- paste("All overweight (%)", sep="")
+> names(table_2)[4] <- paste("Male sample size", sep="")
+> names(table_2)[5] <- paste("Male overweight (%)", sep="")
+> names(table_2)[6] <- paste("Female sample size", sep="")
+> names(table_2)[7] <- paste("Female overweight (%)", sep="")
+> 
+> #for each phenotype
+> for (i in 1:length(list_centers)){
++ 
++     #select the [i] phenotype
++     center_selected = list_centers[i]
++ 
++ 
++     ## data from both sexes
++     #the total number of individuals of both sexes from the [i] center that have data for obesity
++     all_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
++     #the total number of individuals of both sexes from the [i] center that are overweight
++     all_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
++ 
++ 
++     ## data from males
++     #the total number of males from the [i] center that have data for obesity
++     male_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
++     #the total number of males from the [i] center that are overweight
++     male_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
++ 
++ 
++     ## data from females
++     #the total number of females from the [i] center that have data for obesity
++     female_sample_size = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$center == '", center_selected, "' & !is.na(myData_ptpn1$obesity)),]", sep=""))))
++     #the total number of females from the [i] center that are overweight    
++     female_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$center == '", center_selected, "' & myData_ptpn1$obesity == 1),]", sep=""))))
++ 
++ 
++     #bind results in one row
++     results = cbind.data.frame(
++         center_selected,
++         all_sample_size,
++         round((all_overweight / all_sample_size)*100, 2),
++         male_sample_size,
++         round((male_overweight / male_sample_size)*100, 2),
++         female_sample_size,
++         round((female_overweight / female_sample_size)*100, 2))
++ 
++ 
++     #change columns names to match names table 2
++     names(results)[1] <- "Center"
++     names(results)[2] <- paste("All sample size", sep="")
++     names(results)[3] <- paste("All overweight (%)", sep="")
++     names(results)[4] <- paste("Male sample size", sep="")
++     names(results)[5] <- paste("Male overweight (%)", sep="")
++     names(results)[6] <- paste("Female sample size", sep="")
++     names(results)[7] <- paste("Female overweight (%)", sep="")
++ 
++     #add to the table
++     table_2 = rbind(table_2, results)
++ }
+> 
+> #remove the first row
+> table_2 = table_2[-which(rowSums(is.na(table_2)) == ncol(table_2)),]
+> 
+> #remove the rows of obesity phenotype ("% obesity/overweight"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
+> table_2 = table_2[which(!table_2$Center %in% c("Birmingham* in UK", "Modena (Italy)")),]
+> 
+> #see the table
+> table_2
+                Center All sample size All overweight (%) Male sample size
+2     Athens in Greece             104              27.88               45
+3  Dortmund in Germany             116              26.72               67
+4      Gent in Belgium             109               6.42               56
+5   Heraklion in Crete             103              37.86               52
+6      Lille in France              87              18.39               36
+7      Pecs in Hungary             137              18.98               53
+8        Roma in Italy              80              38.75               47
+9  Stockholm in Sweden             100              17.00               50
+10   Vienna in Austria             111              17.12               48
+11   Zaragoza in Spain             110              18.18               51
+   Male overweight (%) Female sample size Female overweight (%)
+2                24.44                 59                 30.51
+3                26.87                 49                 26.53
+4                 0.00                 53                 13.21
+5                46.15                 51                 29.41
+6                19.44                 51                 17.65
+7                16.98                 84                 20.24
+8                42.55                 33                 33.33
+9                22.00                 50                 12.00
+10               22.92                 63                 12.70
+11               27.45                 59                 10.17
+> 
+> 
+> ##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+> 
+> #We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+> 
+> #pheno with slash
+> column_slash = which(grepl("%", colnames(table_2))) #rows with percentage as phenotype name
+> #change names of these phenotypes modifying "%" by "\\%"
+> colnames(table_2)[column_slash] <- gsub("%", "\\%", colnames(table_2)[column_slash], fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> 
+> 
+> 
+> 
+> ####################
+> ##### TABLE 3 ######
+> ####################
+> 
+> #This table 3 calculated the mean +- SD for different phenotypes in each category of sex*weight status. If you want scripts for calculating percentage of discrete factors inside each category, see previous versions of this script.
+> 
+> #select the phenotypes to show in table 3
+> response_pheno_table_3 = c("CRF_age", "CRF_weight", "CRF_height", "CRF_BMI","CRF_waist","waist_height","CRF_hip","waist_hip","CRF_Body_fat_PC","FMI", "TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","HOMA","QUICKI","Leptin_ng_ml","SBP","DBP")
+> length(response_pheno_table_3) == nrow(pheno_names[which(!pheno_names$var_name %in% c("center",  "CRF_trici", "CRF_subscap", "obesity")),])
 [1] TRUE
-> summary(response_pheno == pheno_names$var_name)
-   Mode    TRUE 
-logical      31 
 > 
 > #calculate n for both sexes
 > n_all = nrow(myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c("male", "female")),])
@@ -382,401 +1044,198 @@ logical      31
 >     #WARNING!! THIS TOTAL NUMBER OF INDNVIDUALS DOES OT TAKE INTO ACCOUNT THE EXISTENCE OF NAs IN SPECIFIC PHENOTYPES. This is the number of individuals for which we have data for most of studied SNPs and phenotypes.
 > 
 > #create the empty table
-> table_2 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
-> names(table_2)[1] <- "Phenotype"
-> names(table_2)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-> names(table_2)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-> names(table_2)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-> names(table_2)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-> names(table_2)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-> names(table_2)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
+> table_3 = data.frame(cbind(NA, NA, NA, NA, NA, NA, NA))
+> names(table_3)[1] <- "Phenotype"
+> names(table_3)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
+> names(table_3)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
+> names(table_3)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
+> names(table_3)[5] <- paste("Male overweight (n=", n_male_overweight, ")", sep="")
+> names(table_3)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
+> names(table_3)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
 > 
 > #for each phenotype
-> for (i in 1:length(response_pheno)){
+> for (i in 1:length(response_pheno_table_3)){
 + 
 +     #select the [i] phenotype
-+     pheno_selected = response_pheno[i]
++     pheno_selected = response_pheno_table_3[i]
 + 
 +     #extract the complete name
 +     pheno_table = pheno_names$final_name[which(pheno_names$var_name == pheno_selected)]
 + 
-+     #if the phenotype is CVi_BP or obesity (binomial):
-+     if(pheno_selected %in% c("CVi_BP", "obesity")){
++     #set the number decimals
++     #some phenotypes will have 1 decimal
++     if(pheno_selected %in% c()){
 + 
-+         #extract summary of the variable (sums) across both sexes between overweight and normal weight
-+         all_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
-+         all_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))        
++         #1 decimal
++         number_decimals = 1
++     } else {#if not
 + 
-+         #calculate the percentage with 1 in all separating by overweight
-+         all_mean_all_sumarize_healthy_weight = round((all_sumarize_healthy_weight[2]/(all_sumarize_healthy_weight[1]+all_sumarize_healthy_weight[2]))*100,2)
-+         all_sd_all_sumarize_healthy_weight = NA
-+         all_mean_all_sumarize_overweight = round((all_sumarize_overweight[2]/(all_sumarize_overweight[1]+all_sumarize_overweight[2]))*100,2)
-+         all_sd_all_sumarize_overweight = NA
++         #and the phenotype is
++         if(pheno_selected %in% c()){
 + 
-+         #extract summary of the variable (sums) across both sexes between overweight and normal weight
-+         male_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
-+         male_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))
++             #0 decimals
++             number_decimals = 0
++         } else {#if the phenotype is none of the latter
 + 
-+         #calculate the percentage with 1 in male separating by overweight
-+         male_mean_male_sumarize_healthy_weight = round((male_sumarize_healthy_weight[2]/(male_sumarize_healthy_weight[1]+male_sumarize_healthy_weight[2]))*100,2)
-+         male_sd_male_sumarize_healthy_weight = NA
-+         male_mean_male_sumarize_overweight = round((male_sumarize_overweight[2]/(male_sumarize_overweight[1]+male_sumarize_overweight[2]))*100,2)
-+         male_sd_male_sumarize_overweight = NA
-+ 
-+         #extract summary of the variable (sums) across both sexes between overweight and normal weight
-+         female_sumarize_healthy_weight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))))
-+         female_sumarize_overweight = summary(factor(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))))
-+ 
-+         #calculate the percentage with 1 in female separating by overweight
-+         female_mean_female_sumarize_healthy_weight = round((female_sumarize_healthy_weight[2]/(female_sumarize_healthy_weight[1]+female_sumarize_healthy_weight[2]))*100,2)
-+         female_sd_female_sumarize_healthy_weight = NA
-+         female_mean_female_sumarize_overweight = round((female_sumarize_overweight[2]/(female_sumarize_overweight[1]+female_sumarize_overweight[2]))*100,2)
-+         female_sd_female_sumarize_overweight = NA
-+ 
-+         #bind results in one row
-+         results = cbind.data.frame(
-+             pheno_table,
-+             paste(all_mean_all_sumarize_healthy_weight, sep=""),
-+             paste(all_mean_all_sumarize_overweight, sep=""),
-+             paste(male_mean_male_sumarize_healthy_weight, sep=""),
-+             paste(male_mean_male_sumarize_overweight, sep=""),
-+             paste(female_mean_female_sumarize_healthy_weight, sep=""),
-+             paste(female_mean_female_sumarize_overweight, sep=""))
-+ 
-+         #change columns names to match names table 2
-+         names(results)[1] <- "Phenotype"
-+         names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-+         names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-+         names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-+         names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-+         names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-+         names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
-+ 
-+         #add to the table
-+         table_2 = rbind(table_2, results)  
-+     } else {#if the phenotype is continuous
-+ 
-+         #if phenotype selected is a grouping variable like percentage of individuals in two age classes
-+         if(pheno_selected %in% c("CRF_age", "center")){
-+ 
-+             #extract the grouping variable and check if it is a factor
-+             check_factor = eval(parse(text=paste("myData_ptpn1$", pheno_selected, sep="")))
-+ 
-+             #extrac group levels for the group variable (facotr or continuous)
-+             if(is.factor(check_factor)){
-+ 
-+                 #set the groups
-+                 group_levels = eval(parse(text=paste("levels(myData_ptpn1$", pheno_selected, ")", sep="")))
-+                 
-+                 #add condition 
-+                 condition_levels = paste("=='", group_levels, "'", sep="")
-+             } else {
-+ 
-+                 #set the threshold to divided the continuos variable
-+                 threshold = eval(parse(text=paste("floor(median(myData_ptpn1$", pheno_selected, "))", sep="")))
-+ 
-+                 #set the groups
-+                 condition_levels = as.character(c(paste(">=", threshold, sep=""), paste("<", threshold, sep="")))
-+             }
-+ 
-+             #open empty data.frame
-+             percent_calc = data.frame(selected_level=NA, all_sumarize_healthy_weight=NA, all_sumarize_overweight=NA, male_sumarize_healthy_weight=NA, male_sumarize_overweight=NA, female_sumarize_healthy_weight=NA, female_sumarize_overweight=NA)
-+ 
-+             #for each level
-+             for(l in 1:length(condition_levels)){
-+ 
-+                 #select the [l] level
-+                 selected_level = condition_levels[l]
-+ 
-+                 #for these subsets we don't use "na.omit" because we include the varialbe of interest in the conditions
-+                 #calculate number of individuals of both sexes for the [l] level
-+                 all_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-+                 all_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-+ 
-+                 #calculate number of males for the [l] level
-+                 male_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-+                 male_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))                
-+ 
-+                 #calculate number of females for the [l] level
-+                 female_sumarize_healthy_weight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))
-+                 female_sumarize_overweight = nrow(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1 & myData_ptpn1$", pheno_selected, selected_level, "),]", sep=""))))  
-+ 
-+                 #save
-+                 percent_calc = rbind.data.frame(percent_calc, cbind.data.frame(selected_level, all_sumarize_healthy_weight, all_sumarize_overweight, male_sumarize_healthy_weight, male_sumarize_overweight, female_sumarize_healthy_weight, female_sumarize_overweight))
-+             }
-+        
-+             #remove the first row with NAs
-+             percent_calc = percent_calc[-1,]
-+ 
-+             #remove " ' " and the equal ("==") from the selected levels (was use to set the conditions with "which")
-+             percent_calc$selected_level = gsub("'", "", percent_calc$selected_level, fixed=TRUE)
-+             percent_calc$selected_level = gsub("==", "", percent_calc$selected_level, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-+ 
-+             #set final names of the levels
-+             percent_calc$selected_level = paste(pheno_table, ": ", percent_calc$selected_level, sep="")
-+ 
-+             #copy to save final percentages
-+             final_percent = percent_calc
-+ 
-+             #calculate percentage of each level
-+             for(c in 2:ncol(final_percent)){
-+ 
-+                 #calculat total individuals for the [c] category (sex and overweight)
-+                 total_indv = sum(final_percent[,c])
-+ 
-+                 #calculate and save percentages
-+                 final_percent[,c] = round((final_percent[,c]/total_indv)*100, 2)
-+             }       
-+ 
-+             #change columns names to match names table 2
-+             names(final_percent)[1] <- "Phenotype"
-+             names(final_percent)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-+             names(final_percent)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-+             names(final_percent)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-+             names(final_percent)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-+             names(final_percent)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-+             names(final_percent)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
-+ 
-+             #bind to the table
-+             table_2 = rbind(table_2, final_percent)
-+         }else{
-+ 
-+             #set the number decimals
-+             #some phenotypes will have 1 decimal
-+             if(pheno_selected %in% c()){
-+ 
-+                 #1 decimal
-+                 number_decimals = 1
-+             } else {#if not
-+ 
-+                 #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
-+                 if(pheno_selected %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
-+ 
-+                     #0 decimals
-+                     number_decimals = 0
-+                 } else {#if the phenotype is none of the latter
-+ 
-+                     #2 decimals
-+                     number_decimals = 2
-+                 }
-+             }
-+ 
-+             #calculate the mean and sd across the whole panel in healthy weight
-+             all_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-+             all_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-+ 
-+             #calculate the mean and sd across the whole panel in overweight individuals
-+             all_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-+             all_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-+ 
-+ 
-+             #calculate the mean and sd across male with healthy weight
-+             male_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-+             male_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-+ 
-+             #calculate the mean and sd across the whole panel in overweight individuals
-+             male_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-+             male_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-+ 
-+             #calculate the mean and sd across female with healthy weight
-+             female_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-+             female_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
-+ 
-+             #calculate the mean and sd across the whole panel in overweight individuals
-+             female_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-+             female_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
-+ 
-+             #bind results into one row
-+             results = cbind.data.frame(
-+                 pheno_table,
-+                 paste(all_mean_healthy_weight, "$\\pm$", all_sd_healthy_weight, sep=""),
-+                 paste(all_mean_overweight, "$\\pm$", all_sd_overweight, sep=""),
-+                 paste(male_mean_healthy_weight, "$\\pm$", male_sd_healthy_weight, sep=""),
-+                 paste(male_mean_overweight, "$\\pm$", male_sd_overweight, sep=""),
-+                 paste(female_mean_healthy_weight, "$\\pm$", female_sd_healthy_weight, sep=""),
-+                 paste(female_mean_overweight, "$\\pm$", female_sd_overweight, sep=""))
-+ 
-+             #change columns names to match names table 2
-+             names(results)[1] <- "Phenotype"
-+             names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
-+             names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
-+             names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
-+             names(results)[5] <- paste("Male overweight(n=", n_male_overweight, ")", sep="")
-+             names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
-+             names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
-+ 
-+             #bind to the table
-+             table_2 = rbind(table_2, results)
-+         }            
++             #2 decimals
++             number_decimals = 2
++         }
 +     }
++ 
++     #calculate the mean and sd across the whole panel in healthy weight
++     all_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++     all_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++     #calculate the mean and sd across the whole panel in overweight individuals
++     all_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++     all_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male', 'female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++     #calculate the mean and sd across male with healthy weight
++     male_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++     male_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++     #calculate the mean and sd across the whole panel in overweight individuals
++     male_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++     male_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('male') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++     #calculate the mean and sd across female with healthy weight
++     female_mean_healthy_weight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++     female_sd_healthy_weight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 0),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++     #calculate the mean and sd across the whole panel in overweight individuals
++     female_mean_overweight = round(mean(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++     female_sd_overweight = round(sd(na.omit(eval(parse(text=paste("myData_ptpn1[which(myData_ptpn1$CRF_sex %in% c('female') & myData_ptpn1$obesity == 1),]$", pheno_selected, sep=""))))),number_decimals)
++ 
++     #bind results into one row
++     results = cbind.data.frame(
++         pheno_table,
++         paste(all_mean_healthy_weight, "$\\pm$", all_sd_healthy_weight, sep=""),
++         paste(all_mean_overweight, "$\\pm$", all_sd_overweight, sep=""),
++         paste(male_mean_healthy_weight, "$\\pm$", male_sd_healthy_weight, sep=""),
++         paste(male_mean_overweight, "$\\pm$", male_sd_overweight, sep=""),
++         paste(female_mean_healthy_weight, "$\\pm$", female_sd_healthy_weight, sep=""),
++         paste(female_mean_overweight, "$\\pm$", female_sd_overweight, sep=""))
++ 
++     #change columns names to match names table 2
++     names(results)[1] <- "Phenotype"
++     names(results)[2] <- paste("All non-overweight (n=", n_all_healthy_weight, ")", sep="")
++     names(results)[3] <- paste("All overweight (n=", n_all_overweight, ")", sep="")
++     names(results)[4] <- paste("Male non-overweight (n=", n_male_healthy_weight, ")", sep="")
++     names(results)[5] <- paste("Male overweight (n=", n_male_overweight, ")", sep="")
++     names(results)[6] <- paste("Female non-overweight (n=", n_female_healthy_weight, ")", sep="")
++     names(results)[7] <- paste("Female overweight (n=", n_female_overweight, ")", sep="")
++ 
++     #bind to the table
++     table_3 = rbind(table_3, results)
 + }
 > 
 > #remove the first row
-> table_2 = table_2[-1,]
-> 
-> #remove the rows of obesity phenotype ("% obesity/overweight"; we now have columns separated by overweight) and two centers for which we don't have data: Modena and Birmingham
-> table_2 = table_2[-which(table_2$Phenotype %in% c("Center (%): Birmingham* in UK", "Center (%): Modena (Italy)", "% obesity/overweight")),]
+> table_3 = table_3[-which(rowSums(is.na(table_3)) == ncol(table_3)),]
 > 
 > #see the table
-> table_2
-                          Phenotype All non-overweight (n=822)
-2      Center (%): Athens in Greece                       9.12
-4   Center (%): Dortmund in Germany                      10.34
-5       Center (%): Gent in Belgium                      12.41
-6    Center (%): Heraklion in Crete                       7.79
-7       Center (%): Lille in France                       8.64
-8       Center (%): Pecs in Hungary                       13.5
-9         Center (%): Roma in Italy                       5.96
-10  Center (%): Stockholm in Sweden                       10.1
-11    Center (%): Vienna in Austria                      11.19
-12    Center (%): Zaragoza in Spain                      10.95
-21                    Age (%): >=14                       70.8
-31                     Age (%): <14                       29.2
-14                      Weight (kg)             54.53$\\pm$8.8
-15                      Height (cm)           165.41$\\pm$9.27
-16            Triceps skinfold (mm)            13.38$\\pm$5.37
-17       Subescapular skinfold (mm)            10.62$\\pm$4.07
-19                     BMI (kg/m^2)            19.83$\\pm$2.02
-110              Waist circum. (cm)            69.27$\\pm$5.61
-111              Waist/Height ratio             0.42$\\pm$0.03
-112                Hip circum. (cm)            88.78$\\pm$6.65
-113                 Waist/Hip ratio             0.78$\\pm$0.05
-114                    Body fat (%)            20.41$\\pm$6.98
-115                    FMI (kg/m^2)             4.12$\\pm$1.67
-116       Total cholesterol (mg/dL)          160.26$\\pm$27.36
-117                   LDL-C (mg/dL)                 93$\\pm$25
-118                   HDL-C (mg/dL)                 57$\\pm$11
-119         Total cholesterol/HDL-C              2.9$\\pm$0.61
-120                     LDL-C/HDL-C              1.7$\\pm$0.59
-121           Triglycerides (mg/dL)                 65$\\pm$31
-122             Triglycerides/HDL-C             1.22$\\pm$0.74
-123                   ApoA1 (mg/dL)             1.53$\\pm$0.22
-124                    ApoB (mg/dL)             0.64$\\pm$0.15
-125                      ApoB/ApoA1             0.43$\\pm$0.12
-126                      ApoB/LDL-C             0.27$\\pm$0.03
-127           Insulin (micro lU/mL)                   9$\\pm$6
-128                            HOMA              2.1$\\pm$1.52
-129                          QUICKI             0.35$\\pm$0.03
-130                  Leptin (ng/ml)                 15$\\pm$16
-131                     SBP (mm Hg)                118$\\pm$13
-132                     DBP (mm Hg)                  67$\\pm$9
-    All overweight (n=235) Male non-overweight (n=380) Male overweight(n=125)
-2                    12.34                        8.95                    8.8
-4                    13.19                       12.89                   14.4
-5                     2.98                       14.74                      0
-6                     16.6                        7.37                   19.2
-7                     6.81                        7.63                    5.6
-8                    11.06                       11.58                    7.2
-9                    13.19                        7.11                     16
-10                    7.23                       10.26                    8.8
-11                    8.09                        9.74                    8.8
-12                    8.51                        9.74                   11.2
-21                    63.4                       71.84                     64
-31                    36.6                       28.16                     36
-14        73.38$\\pm$13.24             56.76$\\pm$9.98       77.38$\\pm$14.26
-15        165.62$\\pm$9.61            169.44$\\pm$9.99       169.68$\\pm$9.69
-16          22.93$\\pm$6.7             10.31$\\pm$4.17         21.6$\\pm$7.54
-17         20.72$\\pm$7.21              8.78$\\pm$2.79        19.77$\\pm$7.56
-19         26.61$\\pm$3.29             19.62$\\pm$1.96        26.76$\\pm$3.76
-110        83.55$\\pm$8.56             70.68$\\pm$5.29        85.95$\\pm$8.77
-111          0.5$\\pm$0.05              0.42$\\pm$0.03         0.51$\\pm$0.05
-112       101.47$\\pm$8.29             87.06$\\pm$6.45       100.68$\\pm$8.17
-113         0.83$\\pm$0.07              0.81$\\pm$0.04         0.85$\\pm$0.05
-114         34.57$\\pm$8.9             15.54$\\pm$5.69        34.3$\\pm$11.05
-115         9.35$\\pm$3.25              3.09$\\pm$1.32         9.38$\\pm$3.91
-116       162.4$\\pm$28.82           152.91$\\pm$24.72      157.45$\\pm$29.86
-117            101$\\pm$25                  88$\\pm$23             98$\\pm$27
-118             50$\\pm$10                  55$\\pm$10              49$\\pm$8
-119         3.29$\\pm$0.72              2.87$\\pm$0.64         3.29$\\pm$0.74
-120         2.06$\\pm$0.66              1.69$\\pm$0.62         2.07$\\pm$0.68
-121             82$\\pm$44                  60$\\pm$27             77$\\pm$39
-122         1.72$\\pm$1.17              1.17$\\pm$0.68         1.68$\\pm$1.09
-123         1.43$\\pm$0.22              1.48$\\pm$0.21         1.39$\\pm$0.18
-124          0.7$\\pm$0.16              0.61$\\pm$0.14         0.68$\\pm$0.16
-125          0.5$\\pm$0.14              0.42$\\pm$0.12          0.5$\\pm$0.15
-126         0.27$\\pm$0.03              0.27$\\pm$0.03         0.27$\\pm$0.02
-127             14$\\pm$11                    9$\\pm$6             14$\\pm$13
-128         3.24$\\pm$2.87              2.03$\\pm$1.53         3.39$\\pm$3.45
-129         0.33$\\pm$0.03              0.36$\\pm$0.03         0.33$\\pm$0.03
-130             36$\\pm$31                    5$\\pm$6             23$\\pm$22
-131            126$\\pm$14                 122$\\pm$13            130$\\pm$15
-132              70$\\pm$9                   67$\\pm$9              70$\\pm$9
-    Female non-overweight (n=442) Female overweight (n=110)
-2                            9.28                     16.36
-4                            8.14                     11.82
-5                           10.41                      6.36
-6                            8.14                     13.64
-7                             9.5                      8.18
-8                           15.16                     15.45
-9                            4.98                        10
-10                           9.95                      5.45
-11                          12.44                      7.27
-12                          11.99                      5.45
-21                          69.91                     62.73
-31                          30.09                     37.27
-14                52.62$\\pm$7.11          68.83$\\pm$10.29
-15               161.94$\\pm$6.94          161.02$\\pm$7.16
-16                16.02$\\pm$4.85           24.41$\\pm$5.29
-17                12.19$\\pm$4.33           21.77$\\pm$6.67
-19                20.02$\\pm$2.04           26.45$\\pm$2.65
-110                68.06$\\pm$5.6            80.89$\\pm$7.5
-111                0.42$\\pm$0.03             0.5$\\pm$0.04
-112               90.27$\\pm$6.47          102.35$\\pm$8.37
-113                0.75$\\pm$0.05            0.79$\\pm$0.08
-114               24.19$\\pm$5.36           34.86$\\pm$5.81
-115                4.92$\\pm$1.46            9.32$\\pm$2.35
-116              166.6$\\pm$27.96         168.02$\\pm$26.62
-117                    96$\\pm$26               104$\\pm$23
-118                    58$\\pm$11                52$\\pm$11
-119                2.92$\\pm$0.59             3.3$\\pm$0.69
-120                1.71$\\pm$0.57            2.06$\\pm$0.64
-121                    70$\\pm$33                86$\\pm$50
-122                1.28$\\pm$0.78            1.76$\\pm$1.26
-123                1.57$\\pm$0.22            1.48$\\pm$0.25
-124                0.67$\\pm$0.16            0.73$\\pm$0.16
-125                0.43$\\pm$0.12            0.51$\\pm$0.14
-126                0.27$\\pm$0.03            0.27$\\pm$0.03
-127                     10$\\pm$6                 14$\\pm$8
-128                2.16$\\pm$1.51            3.07$\\pm$1.99
-129                0.35$\\pm$0.03            0.33$\\pm$0.02
-130                    23$\\pm$18                50$\\pm$32
-131                   115$\\pm$11               121$\\pm$12
-132                     68$\\pm$9                 70$\\pm$9
+> table_3
+                   Phenotype All non-overweight (n=822) All overweight (n=235)
+2                    Age (y)             14.75$\\pm$1.2        14.59$\\pm$1.29
+3                Weight (kg)             54.53$\\pm$8.8       73.38$\\pm$13.24
+4                Height (cm)           165.41$\\pm$9.27       165.62$\\pm$9.61
+5               BMI (kg/m^2)            19.83$\\pm$2.02        26.61$\\pm$3.29
+6         Waist circum. (cm)            69.27$\\pm$5.61        83.55$\\pm$8.56
+7         Waist/Height ratio             0.42$\\pm$0.03          0.5$\\pm$0.05
+8           Hip circum. (cm)            88.78$\\pm$6.65       101.47$\\pm$8.29
+9            Waist/Hip ratio             0.78$\\pm$0.05         0.83$\\pm$0.07
+10              Body fat (%)            20.41$\\pm$6.98         34.57$\\pm$8.9
+11              FMI (kg/m^2)             4.12$\\pm$1.67         9.35$\\pm$3.25
+12 Total cholesterol (mg/dL)          160.26$\\pm$27.36       162.4$\\pm$28.82
+13             LDL-C (mg/dL)            92.7$\\pm$24.83      100.72$\\pm$25.07
+14             HDL-C (mg/dL)           56.63$\\pm$10.57        50.46$\\pm$9.59
+15   Total cholesterol/HDL-C              2.9$\\pm$0.61         3.29$\\pm$0.72
+16               LDL-C/HDL-C              1.7$\\pm$0.59         2.06$\\pm$0.66
+17     Triglycerides (mg/dL)           65.41$\\pm$31.04       81.52$\\pm$44.41
+18       Triglycerides/HDL-C             1.22$\\pm$0.74         1.72$\\pm$1.17
+19             ApoA1 (mg/dL)             1.53$\\pm$0.22         1.43$\\pm$0.22
+20              ApoB (mg/dL)             0.64$\\pm$0.15          0.7$\\pm$0.16
+21                ApoB/ApoA1             0.43$\\pm$0.12          0.5$\\pm$0.14
+22                ApoB/LDL-C             0.27$\\pm$0.03         0.27$\\pm$0.03
+23     Insulin (micro lU/mL)             9.26$\\pm$6.15       14.04$\\pm$11.15
+24                      HOMA              2.1$\\pm$1.52         3.24$\\pm$2.87
+25                    QUICKI             0.35$\\pm$0.03         0.33$\\pm$0.03
+26            Leptin (ng/ml)           14.93$\\pm$16.41       36.42$\\pm$30.63
+27               SBP (mm Hg)          118.29$\\pm$12.52      126.08$\\pm$14.16
+28               DBP (mm Hg)            67.38$\\pm$8.62        70.26$\\pm$9.23
+   Male non-overweight (n=380) Male overweight (n=125)
+2              14.78$\\pm$1.26         14.62$\\pm$1.23
+3              56.76$\\pm$9.98        77.38$\\pm$14.26
+4             169.44$\\pm$9.99        169.68$\\pm$9.69
+5              19.62$\\pm$1.96         26.76$\\pm$3.76
+6              70.68$\\pm$5.29         85.95$\\pm$8.77
+7               0.42$\\pm$0.03          0.51$\\pm$0.05
+8              87.06$\\pm$6.45        100.68$\\pm$8.17
+9               0.81$\\pm$0.04          0.85$\\pm$0.05
+10             15.54$\\pm$5.69         34.3$\\pm$11.05
+11              3.09$\\pm$1.32          9.38$\\pm$3.91
+12           152.91$\\pm$24.72       157.45$\\pm$29.86
+13               88.31$\\pm$23        98.25$\\pm$26.68
+14            54.61$\\pm$10.24          48.8$\\pm$8.36
+15              2.87$\\pm$0.64          3.29$\\pm$0.74
+16              1.69$\\pm$0.62          2.07$\\pm$0.68
+17             59.76$\\pm$27.5        77.41$\\pm$39.03
+18              1.17$\\pm$0.68          1.68$\\pm$1.09
+19              1.48$\\pm$0.21          1.39$\\pm$0.18
+20              0.61$\\pm$0.14          0.68$\\pm$0.16
+21              0.42$\\pm$0.12           0.5$\\pm$0.15
+22              0.27$\\pm$0.03          0.27$\\pm$0.02
+23               8.8$\\pm$6.29        14.29$\\pm$13.11
+24              2.03$\\pm$1.53          3.39$\\pm$3.45
+25              0.36$\\pm$0.03          0.33$\\pm$0.03
+26              5.41$\\pm$6.34        22.97$\\pm$22.21
+27            122.14$\\pm$13.1       130.29$\\pm$14.63
+28              66.6$\\pm$8.56         70.31$\\pm$9.39
+   Female non-overweight (n=442) Female overweight (n=110)
+2                14.71$\\pm$1.15           14.56$\\pm$1.37
+3                52.62$\\pm$7.11          68.83$\\pm$10.29
+4               161.94$\\pm$6.94          161.02$\\pm$7.16
+5                20.02$\\pm$2.04           26.45$\\pm$2.65
+6                 68.06$\\pm$5.6            80.89$\\pm$7.5
+7                 0.42$\\pm$0.03             0.5$\\pm$0.04
+8                90.27$\\pm$6.47          102.35$\\pm$8.37
+9                 0.75$\\pm$0.05            0.79$\\pm$0.08
+10               24.19$\\pm$5.36           34.86$\\pm$5.81
+11                4.92$\\pm$1.46            9.32$\\pm$2.35
+12              166.6$\\pm$27.96         168.02$\\pm$26.62
+13              96.48$\\pm$25.73         103.53$\\pm$22.91
+14              58.38$\\pm$10.55          52.35$\\pm$10.55
+15                2.92$\\pm$0.59             3.3$\\pm$0.69
+16                1.71$\\pm$0.57            2.06$\\pm$0.64
+17              70.27$\\pm$33.05           86.19$\\pm$49.6
+18                1.28$\\pm$0.78            1.76$\\pm$1.26
+19                1.57$\\pm$0.22            1.48$\\pm$0.25
+20                0.67$\\pm$0.16            0.73$\\pm$0.16
+21                0.43$\\pm$0.12            0.51$\\pm$0.14
+22                0.27$\\pm$0.03            0.27$\\pm$0.03
+23                9.67$\\pm$6.01           13.75$\\pm$8.29
+24                2.16$\\pm$1.51            3.07$\\pm$1.99
+25                0.35$\\pm$0.03            0.33$\\pm$0.02
+26              22.87$\\pm$17.93          50.12$\\pm$32.02
+27                115$\\pm$11.01         121.37$\\pm$12.04
+28               68.05$\\pm$8.63           70.21$\\pm$9.09
 > 
-> #for the phenotupes with percentahe (%) in the name, we add slash (\\) to avoid problemas i latex (two because 1 is a en expression for R).
+> 
+> ##for the phenotypes with percentage (%) or squared (^2), make some changes to be acceptable for latex.
+> 
+> #We have to add slash (\\) to avoid problems in latex (two because one is an expression for R).
+> 
 > #pheno with slash
-> pheno_slash = which(grepl("%", table_2$Phenotype))
+> pheno_slash = which(grepl("%", table_3$Phenotype)) #rows with percentage as phenotype name
 > #change names of these phenotypes modifying "%" by "\\%"
-> table_2[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_2[pheno_slash,]$Phenotype, fixed=TRUE)#fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
-> table_2$Phenotype
- [1] "Center (\\%): Athens in Greece"    "Center (\\%): Dortmund in Germany"
- [3] "Center (\\%): Gent in Belgium"     "Center (\\%): Heraklion in Crete" 
- [5] "Center (\\%): Lille in France"     "Center (\\%): Pecs in Hungary"    
- [7] "Center (\\%): Roma in Italy"       "Center (\\%): Stockholm in Sweden"
- [9] "Center (\\%): Vienna in Austria"   "Center (\\%): Zaragoza in Spain"  
-[11] "Age (\\%): >=14"                   "Age (\\%): <14"                   
-[13] "Weight (kg)"                       "Height (cm)"                      
-[15] "Triceps skinfold (mm)"             "Subescapular skinfold (mm)"       
-[17] "BMI (kg/m^2)"                      "Waist circum. (cm)"               
-[19] "Waist/Height ratio"                "Hip circum. (cm)"                 
-[21] "Waist/Hip ratio"                   "Body fat (\\%)"                   
-[23] "FMI (kg/m^2)"                      "Total cholesterol (mg/dL)"        
-[25] "LDL-C (mg/dL)"                     "HDL-C (mg/dL)"                    
-[27] "Total cholesterol/HDL-C"           "LDL-C/HDL-C"                      
-[29] "Triglycerides (mg/dL)"             "Triglycerides/HDL-C"              
-[31] "ApoA1 (mg/dL)"                     "ApoB (mg/dL)"                     
-[33] "ApoB/ApoA1"                        "ApoB/LDL-C"                       
-[35] "Insulin (micro lU/mL)"             "HOMA"                             
-[37] "QUICKI"                            "Leptin (ng/ml)"                   
-[39] "SBP (mm Hg)"                       "DBP (mm Hg)"                      
+> table_3[pheno_slash,]$Phenotype <- gsub("%", "\\%", table_3[pheno_slash,]$Phenotype, fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
 > 
-> #check for all phenotypes there is at least one data
-> #select phenotype columns    
-> only_pheno = myData_ptpn1[,which(!colnames(myData_ptpn1)%in%labels(myData_ptpn1))]
-> #which rows (individuals) have NA for all columns (phenotypes)
-> length(which(rowSums(is.na(only_pheno)) == ncol(only_pheno))) == 0 #it should be zero
-[1] TRUE
->     
+> #pheno with ^2
+> pheno_squared = which(grepl("\\^2", table_3$Phenotype)) #rows with squared as phenotype name
+> #change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
+> table_3[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_3[pheno_squared,]$Phenotype, fixed=TRUE)
+>     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+> 
 > 
 > 
 > 
@@ -925,8 +1384,8 @@ logical       1      16
 +     print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
 + 
 +     #set the number decimals
-+     #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
-+     if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
++     #and the phenotype is
++     if(selected_pheno %in% c()){
 + 
 +         #0 decimals
 +         number_decimals = 0
@@ -1322,12 +1781,24 @@ logical       1      16
 > 
 > #This table will show the average values of phenotypes per each genotype*PA level along with the FDR of the additive and codominant model.
 > 
-> 
-> ### check if considering additive/codominant models cover all significant associations ###
-> 
 > #copy the supple data to do some operations
 > crude_interacts = suppl_data_2
 >     #we use the supple dataset file because it has the final phenotypes and columns we need
+> 
+> 
+> ### check that what happens if an crude SNP-phenotype is not significant for one of the models (codominant or additive) ###
+> 
+> #No problem. For the interaction analyses, we considered those phenotypes and SNPs that were previously associated with FDR<0.1, independently of the heritage model. For example, if BMI was associated with rs2143511 under dominant model, we tested the interaction between that SNP and physical activity on BMI across the 5 heritage models. In other words, I the interaction between a SNP and PA on a phenotype is calculated under additive model, it is also calculated under the codominant model.
+> 
+> #Therefore, if a SNP-phenotype association has an FDR lower than 0.1 under additive model, but it is not significant under the codominant model, there is no problem. The script will take the non-significant FDR for the interaction under codominant model from crude_interacts (supple 2), where the results for the interactions under all heritage models are included.
+> 
+> #you can check that there is no problem. Unannotate the next line and you will see how setting as NA the results from codominant model gives NA for all entry of the table for codominant. 
+> #crude_interacts[which(crude_interacts$heritage_model == "codominant"), c("p_value", "fdr", "r2_percentage")] <- NA
+>     #select the p_value, fdr and r2 for all interaction results belonging to the codominant model and set them as NA.
+>     #The results is NA for the p_value, fdr and r2 under codominant model for all snp-phenotype combinations, while the additive model includes all results.
+> 
+> 
+> ### check if considering additive/codominant models cover all significant associations ###
 > 
 > #create a variable with the combination of phenotype and snp of each association
 > crude_interacts$pheno_snp_combination = interaction(crude_interacts$phenotype, crude_interacts$snp, sep="-")
@@ -1336,7 +1807,7 @@ logical       1      16
    Mode    TRUE 
 logical      85 
 > 
-> #select those associations with an FDR<0.1
+> #select those associations with an FDR<0.05
 > interact_fdr_less_005 = crude_interacts[which(crude_interacts$fdr<0.05),]
 > 
 > #from these associations, select those with the additive and codominant model
@@ -1478,8 +1949,8 @@ logical       3      10
 +     print(nrow(eval(parse(text=paste("subset_major_homo[which(subset_major_homo$", selected_snp, " != '", major_homo, "'),]", sep="")))) == 0)
 + 
 +     #set the number decimals
-+     #and the phenotype is LDL, HDL, TG, Insulin, Leptine, SBP, DBP
-+     if(selected_pheno %in% c("LDL", "HDL", "TG", "Insulin", "Leptin_ng_ml", "SBP", "DBP")){
++     #if the phenotype is
++     if(selected_pheno %in% c()){
 + 
 +         #0 decimals
 +         number_decimals = 0
@@ -1576,7 +2047,33 @@ logical       3      10
 +             assign(paste("major_homo_", env_variable_table_5, "_", selected_env_level, sep=""), round((cases_major_homo/total_major_homo)*100, number_decimals))
 +         }
 + 
-+         #REVISA ESTO!! QUE VIENE DEL CODIGO TABLE 4. I have checked the figure of PTPN1 for obesity (rs2143511 - overdominant: pdf with FDR<0.05). I find it very strange to me. I calculated the number of individuals with a genotype and without obesity and then divide by the total number of cases without obesity across the three genotypes. I did this for each genotype within obesity and non-obesity. I have checked that the sample sizes and percentages are correct (see annotated lines below), BUT it is very strange way to present these results. You can se how TT (major homo) frequency decreases a lot in overweight, while the minor homo (CC) increases, suggesting the former is protective. But it is very difficult to see because the percentage of individuals with the TC is the highest, but the significant model is additive... It is better to calculate the percentage of obesity within a genotype, in that way you can see a decrease in the percentage of obesity from the minor homo to the major homo.
++         #I have checked the figure of PTPN1 for obesity (rs2143511 - overdominant: pdf with FDR<0.05). I find it very strange to me. I calculated the number of individuals with a genotype in given PA and obesity level and then divide by the total number of individuals across all genotypes in that obesity and PA level. I have checked the percentage of the figure and it seems to be calculate in this way (see below), BUT it is very strange way to present these results. You can see how TT-CC (homo) frequency is higher in overweight under low PA compared to the hetero (TC). In high PA, the TT-CC is the less frequent genotype between overweight under high levels of PA, suggesting that TT-CC is protective only under high levels of physical activity. But it is very difficult to see in this way. It is better to calculate the percentage of obesity within a genotype and PA level, in that way you can see a decrease in the percentage of obesity across genotypes and PA levels.
++ 
++             #percentages calculated in the initial figure
++ 
++                 #low PA, non-obesity
++                 #homo
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
++                 #hetero
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 0),])
++ 
++                 #low PA, obesity
++                 #homo
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
++                 #hetero
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==0 & myData_ptpn1$obesity == 1),])
++ 
++                 #high PA, non-obesity
++                 #homo
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
++                 #hetero
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 0),])
++ 
++                 #high PA, obesity
++                 #homo
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
++                 #hetero
++                 #nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])/nrow(myData_ptpn1[which(myData_ptpn1$rs2143511 %in% c("1/1", "2/2", "1/2") & myData_ptpn1$PA_factor==1 & myData_ptpn1$obesity == 1),])
 + 
 +             #sample size in each category
 + 
@@ -1967,6 +2464,173 @@ logical       3      10
 > 
 > 
 > 
+> ###################################
+> ##### SUPPLEMENTARY TABLE S1 ######
+> ###################################
+> 
+> #This table shows all the haplotype observed and their frequency in the sample.
+> 
+> #open a empty list to save the table of each haplotype block
+> tables_haplo = list()
+> 
+> #for each haplotype block
+> for(i in 1:length(vector_haplotype_blocks)){ #the list of blocks comes from the script with the main analyses
++ 
++     #select the [i] block name
++     selected_block_name = vector_haplotype_blocks[i]
++ 
++     #print block name
++     print("########################################")
++     print(paste("STARTING WITH: ", selected_block_name, sep=""))
++     print("########################################")
++ 
++     #extract the results of haplo.em for the [i] haplotype block. We consider results with (trim) and without progressive insertion (no trim)
++     selected_block_trim = eval(parse(text=paste("hap_prob_block_insertion$", selected_block_name, sep="")))
++     selected_block_no_trim = eval(parse(text=paste("hap_prob_block_no_trim$", selected_block_name, sep="")))
++         #Progressive insertion: This process removes haplotypes with a low posterior probability (see script of the main analyses for further details).
++         #no trim includes haplotypes with frequency equal to zero
++ 
++     #in each case, bind the haplotypes with the frequencies
++     haplo_freqs_trim = cbind.data.frame(selected_block_trim$haplotype, selected_block_trim$hap.prob)
++     haplo_freqs_no_trim = cbind.data.frame(selected_block_no_trim$haplotype, selected_block_no_trim$hap.prob)
++     
++     #change the name to the column with frequencies
++     colnames(haplo_freqs_trim)[which(colnames(haplo_freqs_trim) == "selected_block_trim$hap.prob")] <- "frequency"
++     colnames(haplo_freqs_no_trim)[which(colnames(haplo_freqs_no_trim) == "selected_block_no_trim$hap.prob")] <- "frequency"
++ 
++     #first check to see whether the same frequencies is present in both approaches
++     #from no trim, select only haplotypes with frequency higher than zero
++     haplo_freqs_no_trim_no_zero = haplo_freqs_no_trim[which(round(haplo_freqs_no_trim$frequency, 5) > 0),]
++         #we filter rounding until 5, because we do not want very loooow frequencies (0.000000000...)
++     #check that the selected haplotypes above zero are included in the trimmed results
++     print(paste("CHECK 1 to test whether frequencies are the same with and without progressive insertion", sep=""))
++     print(round(haplo_freqs_no_trim_no_zero$frequency, 5) %in% round(haplo_freqs_trim$frequency, 5))
++     #check that the haplotypes of the trimmed results are included in the selected haplotypes above zero from no trimmed
++     print(paste("CHECK 2 to test whether frequencies are the same with and without progressive insertion", sep=""))
++     print(round(haplo_freqs_trim$frequency, 5) %in% round(haplo_freqs_no_trim_no_zero$frequency, 5))
++ 
++     #second check using this time the merging function to merge both data.frames (with and without insertion)
++     merge_check = merge(haplo_freqs_trim, haplo_freqs_no_trim, by=colnames(haplo_freqs_trim)[which(!colnames(haplo_freqs_trim) %in% "frequency")])
++         #merge considering all columns except that with frequency, that is, the SNPs
++     #both frequencies are the same
++     print(paste("CHECK 3 to test whether frequencies are the same with and without progressive insertion", sep=""))    
++     print(summary(round(merge_check$frequency.x, 5) / round(merge_check$frequency.y, 5)))
++         
++     #conclusions checks
++     #With and without insertion, we get the same frequencies.
++     #I have compared frequencies form haplo.em, haplo.glm and haploview. They are almost the same for the haplotypes with frequency higher than 0.005, which are the ones analyzed as independent haplotypes. Some differences are normal, specially in the case of haplo.glm because it depends on the number of individuals with data for each genotype.
++     #The rest were included in "geno_block.rare" and I have not use it. In that category you have individuals with different low-frequency haplotypes. For these haplotypes, there are some cases with differences (e.g., 0.0014 instead 0.002).
++     #We have the correct frequencies and we will use the most frequent haplotypes used in haplo.glm. An haplotype of 0.0054 is included in some phenotypes like hip circumference.
++ 
++     #We continue only with no trimmed results.
++     selected_haplo_block = haplo_freqs_no_trim
++     #we reorder rows based on frequency
++     selected_haplo_block = selected_haplo_block[order(selected_haplo_block$frequency, decreasing=TRUE),]
++     #We selected only those haplotype with a frequency higher than 0.005
++     selected_haplo_block = selected_haplo_block[which(selected_haplo_block$frequency > 0.005),]
++     #We round the frequency
++     selected_haplo_block$frequency = round(selected_haplo_block$frequency, 3)
++ 
++     #extract names of the snps in the selected block
++     snps_names = colnames(selected_haplo_block)[which(!colnames(selected_haplo_block) %in% "frequency")]
++ 
++     #for each SNP
++     for(j in 1:length(snps_names)){
++     
++         #select the [j] snp
++         selected_snp = snps_names[j]
++     
++         #extract the alleles of the [j] SNP across all blocks
++         selected_geno = selected_haplo_block[,selected_snp]
++             #you have to select all the alleles across haplotype for a given snp because we need to change the numbers to letters
++ 
++         #from the list of alleles (ncbi vs helena), select those of the [j] SNP
++         selected_allele_names = alleles[which(alleles$snp == selected_snp),]
++ 
++         #extract helena and ncbi names
++         helena_name = as.vector(selected_allele_names$helena)
++         ncbi_name = as.vector(selected_allele_names$ncbi)
++ 
++         #extract the allele names according to helena
++         helena_alleles = strsplit(as.vector(helena_name), split="/")[[1]]
++ 
++         #change numbers to alleles, and we have to use the helena allele names
++         #always A is the first, because number are afabetically ordered in genotype levels in Helena
++         if("A" %in% helena_alleles){
++             selected_geno = gsub("1", "A", selected_geno)
++             selected_geno = gsub("2", helena_alleles[!"A" == helena_alleles], selected_geno)                                  
++         } else { #if not, C first
++             if("C" %in% helena_alleles){ 
++                 selected_geno = gsub("1", "C", selected_geno)
++                 selected_geno = gsub("2", helena_alleles[!"C" == helena_alleles], selected_geno)                                                  
++             } else { #if not G first (T always will be the last)
++                 if("G" %in% helena_alleles){
++                     selected_geno = gsub("1", "G", selected_geno)
++                     selected_geno = gsub("2", helena_alleles[!"G" == helena_alleles], selected_geno)               
++                 }
++             }            
++         }
++ 
++         #if both names are equal
++         if(helena_name == ncbi_name){
++         
++             #there is nothing more to do
++             selected_geno_final = selected_geno    
++         } else {#if they are different, then transform the helena name to the corresponding alleles of ncbi
++     
++             #extract major and minor alleles
++             helena_major = strsplit(helena_name, split="/")[[1]][1]
++             helena_minor = strsplit(helena_name, split="/")[[1]][2]
++                 #IMPORTANT, THIS SCRIPT ASSUME THAT THE FIRST ALLELE IS THE MAJOR AND SECOND IS THE MINOR. This should be the order in "alleles" table.
++ 
++             #extract major and minor alleles
++             ncbi_major = strsplit(ncbi_name, split="/")[[1]][1]
++             ncbi_minor = strsplit(ncbi_name, split="/")[[1]][2]
++                 #IMPORTANT, THIS SCRIPT ASSUME THAT THE FIRST ALLELE IS THE MAJOR AND SECOND IS THE MINOR. This should be the order in "alleles" table.
++ 
++             #select the positions (haplotypes) of selected_geno with the major for the [j] SNP
++             positions_major = which(selected_geno == helena_major) #these positions belongs to the major allele, but this allele is not the current indicated, but the other base
++ 
++             #select the positions (haplotypes) of selected_geno with the minor for the [j] SNP
++             positions_minor = which(selected_geno == helena_minor) #these positions belongs to the minor allele, but this allele is not the current indicated, but the other base
++ 
++             #select the haplotypes with the major allele of the [j] SNP and indicate the new allele according to NCBI
++             selected_geno[positions_major] <- ncbi_major
++             
++             #select the haplotypes with the minor allele of the [j] SNP and indicate the new allele according to NCBI
++             selected_geno[positions_minor] <- ncbi_minor
++ 
++             #save the genotype data
++             selected_geno_final = selected_geno
++         }
++ 
++         #save the results as the column of the [j] snp (selected snp)
++         selected_haplo_block[,selected_snp] <- selected_geno_final
++     }
++ 
++     #save the new table for the [i] block in the list of results
++     tables_haplo[[i]] <- selected_haplo_block
++ 
++     #select the name of that table as the haplotype block name
++     names(tables_haplo)[i] <- as.vector(selected_block_name)
++ }
+[1] "########################################"
+[1] "STARTING WITH: chr_20.block_1"
+[1] "########################################"
+[1] "CHECK 1 to test whether frequencies are the same with and without progressive insertion"
+ [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+[1] "CHECK 2 to test whether frequencies are the same with and without progressive insertion"
+ [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+[1] "CHECK 3 to test whether frequencies are the same with and without progressive insertion"
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      1       1       1       1       1       1 
+> 
+> #select each haplotype block and save it as a table
+> supple_table_1 = tables_haplo[[1]]
+> 
+> 
+> 
+> 
 > ################################################
 > ##### CONVERT TABLES TO LATEX AND COMPILE ######
 > ################################################
@@ -1979,16 +2643,16 @@ Loading required package: xtable
 > path_tex_table = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/"
 > 
 > #name tex table
-> name_tex_table = "tables_latex_v3.tex"
+> name_tex_table = "tables_latex_v4.tex"
 > 
 > #name doc table
-> name_doc_table = "tables_latex_v3.odt"
+> name_doc_table = "tables_latex_v4.odt"
 > 
 > #remove the previous file with tables in latex
 > system(paste("cd ", path_tex_table, "; rm ", name_tex_table, "; rm ", name_doc_table, sep=""))
 > 
 > #convert table 1 to a latex table
-> print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccc", digits=2, display=c("s", "s", "s", "s", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
+> print.xtable(xtable(table_1_1KGP, caption="Table 1", label=NULL, align="llccccccccccccccc", digits=2, display=c("s", "s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_1_1KGP)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date())
 >         #arguments xtable
 >             #caption: caption of the table
 >             #label: label of the table
@@ -2011,13 +2675,20 @@ Loading required package: xtable
 >             #timestamp: timestamp included in case "comment" is TRUE. The default is date().    
 > 
 > #convert table 2 to a latex table
-> print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", digits=2, display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+> print.xtable(xtable(table_2, caption="Table 2", label=NULL, align="llcccccc", digits=c(0,0,0,2,0,2,0,2), display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_2)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+>     #digits: We select the number of digits because we want each column to have a different number of digits. 
+>         #Numeric vector of length equal to one (in which case it will be replicated as necessary) or to the number of columns of the resulting table plus 1 for the column with the row.names. These row names will be then removed setting FALSE the argument "include.rownames" from print.xtable. 
 >     #sanitize.text.function:
 >         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
 >             #in this way we can remove slash, etc...
 >     #Rest of the argument in the line of the table 1
 > 
 > #convert table 3 to a latex table
+> print.xtable(xtable(table_3, caption="Table 3", label=NULL, align="llcccccc", digits=2, display=c("s", "s", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_3)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+>     #sanitize.text.function:
+>         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+>             #in this way we can remove slash, etc...
+>     #Rest of the argument in the line of the table 1
 > 
 > #convert table 4 to a latex table
 > print.xtable(xtable(table_4, caption="Table 4", label=NULL, align="cccccccccccc", digits=3, display=c("s", "s", "s", "f", "f", "f", "f", "f", "f", "f", "f", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
@@ -2033,8 +2704,18 @@ Loading required package: xtable
 >         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
 >             #in this way we can remove slash, etc...
 > 
+> 
+> #convert supple table 1 to a latex table
+> print.xtable(xtable(supple_table_1, caption="Supplementary Table 1", label=NULL, align="ccccccc", digits=3, display=c("s", "s", "s", "s", "s", "s", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(supple_table_1)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+>     #argument in the line of the table 1
+>     #sanitize.text.function:
+>         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
+>             #in this way we can remove slash, etc...
+> 
 > #compile to odt with pandoc
 > system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name_doc_table, sep=""))
+> 
+> #From the ".odt" file, you have to copy each table to excel, using advanced options for pasting ("text"). In that way, you can get the +- and other symbols correctly pasted. Once you have the first version in excel with the column names correctly displayed (squared, etc...), you can just paste the content (phenotype values, frequencies...).
 > 
 > 
 > 
@@ -2101,4 +2782,4 @@ Loading required package: xtable
 > 
 > proc.time()
    user  system elapsed 
-  4.098   0.349   4.545 
+  4.072   0.591   4.640 
