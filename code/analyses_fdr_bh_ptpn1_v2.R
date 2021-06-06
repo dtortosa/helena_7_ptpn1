@@ -2727,6 +2727,15 @@ significant_cor_geno_af[which(snp_model_significant_assoc_af %in% snp_model_sign
 
 
 
+#####################################################################################
+############# TEST FOR THE EXISTENCE OF ONLY ONE CAUSAL VARIANT #####################
+#####################################################################################
+
+#think the analysis (comparison haplo?), phenotypes? (only those significant in haplo? not sure), what is the most important SNP? 11?
+
+
+
+
 ##############################################################################
 ############# Change risk_score names in results to plot #####################
 ##############################################################################
