@@ -2731,24 +2731,11 @@ significant_cor_geno_af[which(snp_model_significant_assoc_af %in% snp_model_sign
 ############# TEST FOR THE EXISTENCE OF ONLY ONE CAUSAL VARIANT #####################
 #####################################################################################
 
-#think the analysis (comparison haplo?), phenotypes? (only those significant in haplo? not sure), what is the most important SNP? 11?
+#We are going to test whether each SNP explains variance of the phenotypes independently of the rest of SNPs. For that, we are going to calculate a full model with the 5 SNPs, and then remove each SNP and calculate a likelihood ratio test between full and nested model. In that way, we can test whether removing a SNP increases the non-explained variance. We are also going to calculate how explicative is each SNP while considering the rest of them, so we will calculate the R2 between the full model and the model without each SNP. Finally, we will show the explicative power of the full model and the haplo.glm respect to a model with only the covariates. 
 
-#Me interesa R2 y solo podemos con asociaciones crudas porque no tenemos N para mirar todas las interacciones a la vez o para mirar interacción entre haplotipo y AF
+#This approach is probably better than the stepwise regression because we want to know how explicate is each SNP respect to the rest of them. In the stepwise regression, the less explicative SNP is removed, checked the model, then the next less explicative SNP, and so on... until the next model is worse. 
 
-#Table con 8 columnas: fenotipo, R2 considerando todos los SNPs, R2 de cada uno de los 5 SNPs por separado, R2 del modelo cin haplotipo. 
-
-#todos los modelos, pero par ahaplo solo aditivo y dom, NA para el resto
-
-#6 figuras correlacionando R2 global con el R2 de cada SNP individual y el haplotipo
-
-#vamos a meter una fila por cada snp/full/haplo model en cada modelo y fenotipo, mostramos p-value de cada snp comparado con el full model y su R2. Mostramos R2 del full respecto del modelo solo con las covariables y el R2 de haplo respecto de solo las covariables.
-
-
-
-#We are going to use R2, the reviewer is asking for extending analyses or interpretation. He/she is not asking for a detailed analyses of the relationships between predictors. I think R2 is easier to interpret than stepwise regression, as we can show R2 (explicative power) of each full model and compare with the simpler ones and the haplotype model.
-    #in a stepwise regression we get a final model after removing predictors, how we compare this across phenotypes and heritage models? maybe counting the number of SNPs in the final model in each case. 
-    #Even though, I think it is better to show the difference in explicative power. The reviewer wants to know if these SNPs are explaining the same variance. If so, the full model should not explain more than each SNP separately, and we should not find a cumulative effect.
-    #if the SNPs are explaining different variance, they should get much more R2 when combined.
+#Using this approach, we can see whether a SNP is explaining variance of the phenotypes independently of the rest. In that case, the removal of that SNP from the full model should increase the non-explained variance (P<0.05) and the R2 of that SNP should be close to the R2 of the full and haplotype models. 
 
 #pheno to model are those with FDR<0.1, because these are the ones used in subsequent analyses
 pheno_to_model_causal_variant = unique(geno_pheno_results_fdr_0.1$selected_pheno)
