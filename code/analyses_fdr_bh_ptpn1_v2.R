@@ -2731,11 +2731,11 @@ significant_cor_geno_af[which(snp_model_significant_assoc_af %in% snp_model_sign
 ############# TEST FOR THE EXISTENCE OF ONLY ONE CAUSAL VARIANT #####################
 #####################################################################################
 
-#We are going to test whether each SNP explains variance of the phenotypes independently of the rest of SNPs. For that, we are going to calculate a full model with the 5 SNPs, and then remove each SNP and calculate a likelihood ratio test between full and nested model. In that way, we can test whether removing a SNP increases the non-explained variance. We are also going to calculate how explicative is each SNP while considering the rest of them, so we will calculate the R2 between the full model and the model without each SNP. Finally, we will show the explicative power of the full model and the haplo.glm respect to a model with only the covariates. 
+#We are going to test whether each SNP explains variance of the phenotypes independently of the rest of SNPs. For that, we are going to calculate a full model with the 5 SNPs, and then remove each SNP and calculate a likelihood ratio test between full and nested model. In that way, we can test whether removing a SNP increases the non-explained variance. We are also going to calculate how explicative is each SNP while considering the rest of them, so we will calculate the R2 comparing the full model and the model without each SNP. Finally, we will show the explicative power of the full model and the haplo.glm respect to a model with only the covariates. In the first case, for each SNP we want the explicative power of a given SNP after controlling from the rest, while in the second case we want to see the explicate power of the whole set of SNPs, so in that case case we can just compare a model with all SNPs and a model with any of them.
 
-#This approach is probably better than the stepwise regression because we want to know how explicate is each SNP respect to the rest of them. In the stepwise regression, the less explicative SNP is removed, checked the model, then the next less explicative SNP, and so on... until the next model is worse. 
+#This approach is probably better than the stepwise regression because we want to know how explicate is each SNP respect to the rest of them. In the stepwise regression, the less explicative SNP is removed, check the model, then the next less explicative SNP, and so on... until the next model is worse. 
 
-#Using this approach, we can see whether a SNP is explaining variance of the phenotypes independently of the rest. In that case, the removal of that SNP from the full model should increase the non-explained variance (P<0.05) and the R2 of that SNP should be close to the R2 of the full and haplotype models. 
+#Using this approach, we can see whether a SNP is explaining variance of the phenotypes independently of the rest. If that is the case, the removal of that SNP from the full model should increase the non-explained variance (P<0.05) and the R2 of that SNP should be close to the R2 of the full and haplotype models. 
 
 #pheno to model are those with FDR<0.1, because these are the ones used in subsequent analyses
 pheno_to_model_causal_variant = unique(geno_pheno_results_fdr_0.1$selected_pheno)
@@ -2744,7 +2744,7 @@ pheno_to_model_causal_variant = unique(geno_pheno_results_fdr_0.1$selected_pheno
 models_causal_variant = c("codominant", "dominant", "recessive", "overdominant", "additive")
 
 #create the seed for the final dataset with results
-causal_variants_results = data.frame(selected_pheno=NA, selected_model=NA, model=NA, p_value=NA, r2=NA)
+causal_variants_results = data.frame(selected_pheno=NA, selected_model=NA, full_haplo_nested=NA, p_value=NA, r2=NA)
 
 #for each pheno
 for(p in 1:length(pheno_to_model_causal_variant)){
@@ -2763,9 +2763,13 @@ for(p in 1:length(pheno_to_model_causal_variant)){
 
     #select control variables: BMI is a control variable only for CVD variables
     if(!selected_pheno %in% c("CVi_BP", "SBP", "DBP", "TG", "TC", "LDL", "HDL", "LDL_HDL", "Apo_A1", "Apo_B", "ApoB_ApoA1", "apoB_LDL", "TG_HDL", "Insulin", "Leptin_ng_ml", "HOMA", "QUICKI",  "TC_HDL",  "risk_score_for_log")){
+        
+        #the control variables do not include BMI, because the phenotype is an adiposity marker
         control_variables = "CRF_sex+CRF_age+center"
     } else{
-        control_variables = "CRF_BMI+CRF_sex+CRF_age+center"         
+
+        #the control variables include BMI, because the phenotype is NOT an adiposity marker
+        control_variables = "CRF_BMI+CRF_sex+CRF_age+center"
     }
 
     #open an empty data.frame to save results using as model the dataframe for saving final results
@@ -2778,100 +2782,145 @@ for(p in 1:length(pheno_to_model_causal_variant)){
         #select the [m] model
         selected_model = models_causal_variant[m]
 
+
+        ##calculate the explicative power of the full model
+
         #select those SNPs that has been analyzed for the [p] phenotype and the [m] model
         snp_to_include = geno_pheno_results[which(geno_pheno_results$selected_pheno == selected_pheno & geno_pheno_results$selected_model == selected_model & !is.na(geno_pheno_results$pvals)),]$snp_to_test
-            #we want SNPs analyzed, with a P-value, independently of its significance. SNPs with no P-value did not match our requeriments of sample size and were discarded in gene_pheno analyses.
-            #selecting these snps, we are now sure that the analyzed snps are not disbalanced (minor homozigotes are at least 10).
+            #we want SNPs analyzed, with a P-value, independently of its significance, because of this we use geno_pheno_results instead of geno_pheno_results_fdr_0.1. SNPs with no P-value did not match our requirements of sample size and were discarded in gene_pheno analyses.
+            #by selecting these snps, we are now sure that the analyzed snps are not disbalanced (minor homozigotes are at least 10).
             #We do not have problems of sample size for adding the 5 SNPs WITHOUT interactions between SNPs
                 #Each SNP has a high genotyping success (at least 0.99), so we have genotyping data for most of individuals.
-                #Sample size is around 1000 thousand, assuming that we need at least 10 individuals per group (zimmermann), we would the following sample size in the most extreme case:
+                    #in the case of PTPN1 we have 1055 with data for the 5 SNPs, see below. 
+                #Sample size is around 1000 individuals, assuming that we need at least 10 individuals per group (zimmermann), we would need the following sample size in the most extreme case:
                     #5 predictors (SNPs) with 3 levels (genotypes): 5*3*10 = 150 individuals
                     #1 predictor (center) with 10 levels (centers): 1*10*10 = 100 individuals
                     #1 predictor (sex) with two levels (sexes): 1*2*10 = 20 individuals
                     #2 continuous variables (age and BMI): 2*1*10 = 20 individuals
                     #TOTAL: 290 individuals. 
-                #we are fine, the problem would be adding interactions between SNPs, because we are breaking down our cohort in several groups (up to 6), increasing the probability to get very small groups, specially for minor homozygotes.
-            #The only problem can be that we are including more than 3-4 predictors, and then it is difficult to asses deviations from normality with residuals, and some predictors can be correlated. This can decrease our power to detect the optimal solution.
+                #we are fine, the problem would be adding interactions between SNPs, because we would be breaking down our cohort in several groups (up to 6), increasing the probability to get very small groups, specially for minor homozygotes.
+            #The only problem can be that we are including more than 3-4 predictors, and then it is difficult to asses deviations from normality with residuals, and some predictors can be correlated. This can decrease our power to detect the optimal solution (Breiman, L. (2001). Statistical modeling: The two cultures. Statistical Science, 16(3), 199–215. https://doi.org/10.1214/ss/1009213726).
 
-        #
+        #bind all snps into one vector separated by "+" for the formula of the model
         selected_snps_with_model = paste(selected_model, "(", snp_to_include, ")", collapse="+", sep="")
 
+        #bind all snps into one vector separated by "&" for creating the subset that will be used in the model
         is_na_snps = paste("!is.na(myData_ptpn1$", snp_to_include, ")", collapse=" & ", sep="")
+            #we need those rows that are not NA for any of the SNPs modeled
 
+        #create the subset of the data using that list of SNPs
         subset_snps_no_na = eval(parse(text=paste("myData_ptpn1[which(", is_na_snps, "),]", sep="")))
+        #check nrow
+        #nrow(subset_snps_no_na) #in the case of PTPN1, the number of individuals without NA for any of the PTPN1 snps is 1055.
 
-
+        #create a model with all the SNPs and covariables
         model_global_1 = glm(paste(transformation, selected_pheno, ") ~ ", selected_snps_with_model, "+", control_variables, sep=""), data=subset_snps_no_na, family=family)
 
+        #create a model with only the covariables, this will be a null model for comparing the full and haplotype models
         model_global_2 = glm(paste(transformation, selected_pheno, ") ~ ", control_variables, sep=""), data=subset_snps_no_na, family=family)
 
-
+        #calculate R2 of the full model using the model with only covariates as null model
         r2_global = r.squaredLR(object=model_global_1, null=model_global_2, null.RE=FALSE)[1]
+            #we are using non-adjusted R2 as in the rest of the rest of analyses
 
-        causal_variants_results_raw = rbind.data.frame(causal_variants_results_raw, cbind.data.frame(selected_pheno, selected_model, model="full", p_value=NA, r2=r2_global))
+        #save the results for the full model
+        causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="full", p_value=NA, r2=r2_global))
+            #NO p-value is calculated. Each of these SNPs has been previously analyzed in detail, and the significance of the whole haplotype block has been analyzed in the haplotype analyses.
 
 
-        #perturb?
-            #maybe we can get less R2 because of multicolinearity
-        
+        ##calculate the explicative power of the haplotype.glm model
+
+        #we will consider the hpalo.glm that includes a predictor with the haplotypes observed in the cohort.
+
+        #if the model is dominant or additive (the only models analyzed for haplotype)       
         if(selected_model %in% c("dominant", "additive")){
+
+            #open a empty vector for saving R2 of each haplotype block
             r2_haplo = NULL
-            for(j in 1:length(vector_haplotype_blocks)){
+
+            #for each haplotype block
+            for(j in 1:length(vector_haplotype_blocks)){ #vector_haplotype_blocks comes from the haplotype analysis
+
+                #select the [j] haplotype block
                 selected_haplo_block = vector_haplotype_blocks[j]
+
+                #select the haplo.glm of the [j] haplotype for [p] phenotype and the [m] model
                 result_haplo_glm = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$regression$", selected_model, sep="")))
+
+                #calculate R2 comparing the haplo.glm with the model including only covariates
                 r2_haplo = append(r2_haplo, r.squaredLR(object=result_haplo_glm, null=model_global_2, null.RE=FALSE)[1])
+                    #we are using non-adjusted R2 as in the rest of the rest of analyses
             }
 
-            #CHECK VERY GOOD WHERE YOU GET THE HAPLO GLM AND IF YOU CAN COMPARE IT WITH MODEL GLOBAL 2 (MODEL WITH ONLY COVARIALBES)
-            
+            #convert to data.frame the R2 haplo data and set the names using vector_haplotype_blocks
             r2_haplo = data.frame(r2_haplo)
             colnames(r2_haplo) <- vector_haplotype_blocks
-
-        } else {
+        } else { #if not, then no haplo analyses were done
 
             #create an empty data.frame for R2 of each haplotype block
-            empty_df_haplos = data.frame(matrix(NA, 1, length(vector_haplotype_blocks)))
+            empty_df_haplos = data.frame(matrix(NA, nrow=1, ncol=length(vector_haplotype_blocks)))
             #set colnames
             colnames(empty_df_haplos) <- vector_haplotype_blocks
 
+            #save this empy data.frame as the results
             r2_haplo = empty_df_haplos
                 #empty_df_haplos comes form before the loop
         }
 
-        causal_variants_results_raw = rbind.data.frame(causal_variants_results_raw, cbind.data.frame(selected_pheno, selected_model, model="haplo", p_value=NA, r2=as.numeric(r2_haplo)))
+        #save the results for the full model
+        causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="haplo", p_value=NA, r2=as.numeric(r2_haplo)))
 
+
+        ##calculate the explicative power of the each SNP comparing with the full model
 
         #for each model               
-        for(k in 1:length(snp_to_include)){
+        for(j in 1:length(snp_to_include)){
     
-            #select the [k] snp
-            selected_snp = snp_to_include[k]
+            #select the [j] snp
+            selected_snp = snp_to_include[j]
 
-
+            #bind all SNPs except the [j] SNP into one vector separated by "+" for the formula of the model
             selected_snps_without_tested = paste(selected_model, "(", snp_to_include[which(selected_snp != snp_to_include)], ")", collapse="+", sep="")
 
+            #create a model with all SNPs except the [j] SNP
             model_global_3 = glm(paste(transformation, selected_pheno, ") ~ ", selected_snps_without_tested, "+", control_variables, sep=""), data=subset_snps_no_na, family=family)
-            
+                #subset_snps_no_na comes from the full model, it is a subset considering only individuals without NA for all the SNPs analyzed. We have to use this subset because we are going to compare this model with a full model considering all SNPs
 
+            #calculate the p-value of the [j] SNPs while considering the rest of the SNPs
             p_value_without_snp = anova(model_global_1, model_global_3, test="Chi")$"Pr(>Chi)"[2]
+                #model_global_1 is the full model with all SNPs
+                #we are testing is removing the [j] SNP significantly increases non-explained variance while the rest of SNPs are still present in the model
 
+            #calculate the R2 of the [j] SNPs while considering the rest of the SNPs
             r2_without_snp = r.squaredLR(object=model_global_1, null=model_global_3, null.RE=FALSE)[1]
+                #the null model has to be the one without the [j] SNP, to check the R2 attributted to the [j] SNP that has been removed. 
 
-
-            causal_variants_results_raw = rbind.data.frame(causal_variants_results_raw, cbind.data.frame(selected_pheno, selected_model, model=selected_snp, p_value=p_value_without_snp, r2=r2_without_snp))
+            #save the results for the full model
+            causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested=selected_snp, p_value=p_value_without_snp, r2=r2_without_snp))
         }        
     }
-
-    causal_variants_results_raw = causal_variants_results_raw[-which(rowSums(is.na(causal_variants_results_raw)) == ncol(causal_variants_results_raw)),]
-
-    causal_variants_results = rbind.data.frame(causal_variants_results, causal_variants_results_raw)
 }
 
+#remove first row with all NAs
 causal_variants_results = causal_variants_results[-which(rowSums(is.na(causal_variants_results)) == ncol(causal_variants_results)),]
 
-#check number of rows combinations
+#check we have the correct number of rows
+nrow(causal_variants_results) == length(which(!is.na(geno_pheno_results[which(geno_pheno_results$selected_pheno %in% pheno_to_model_causal_variant),]$pvals))) + length(pheno_to_model_causal_variant) * 5 * 2
+    #the total number of rows should be equal to the number of associations with P-value (no NA) for the selected phenotypes under FDR<0.1 PLUS the number of phenotypes multiplied by 5 and 2 because for each of this phenotypes and each heritage model (we have 5), we have two more rows (full and haplo)
 
-causal_variants_results[which(causal_variants_results$selected_pheno %in% c("CRF_Body_fat_PC", "FMI") & causal_variants_results$selected_model %in% c("additive", "dominant")),]
+    #CHECK THE COMPARSINON BETWEN HAPLO.GLM AND THE NULL MODEL
+
+        #perturb?
+            #maybe we can get less R2 because of multicolinearity
+        
+        #stepwise code ecolpin
+
+
+    #multiple cases where rs2143511 is the SNP with the lowest p-value, but above 0.1 most of the times. Its R2 is also the highest but far away from the R of the full model. The full model has at least 2 times more of explicative power. 
+        #obesity - codominant, recessive, additive
+        #CRF_hip - 
+
+
 
 #NO PVALUE for full y haplo because these have been already calculated previously. add?
 #r2 of each SNP is different because is the R2 after accounting for the rest of SNPs
