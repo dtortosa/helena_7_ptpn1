@@ -2733,7 +2733,11 @@ significant_cor_geno_af[which(snp_model_significant_assoc_af %in% snp_model_sign
 
 #We are going to test whether each SNP explains variance of the phenotypes independently of the rest of SNPs. For that, we are going to calculate a full model with the 5 SNPs, and then remove each SNP and calculate a likelihood ratio test between full and nested model. In that way, we can test whether removing a SNP increases the non-explained variance. We are also going to calculate how explicative is each SNP while considering the rest of them, so we will calculate the R2 comparing the full model and the model without each SNP. Finally, we will show the explicative power of the full model and the haplo.glm respect to a model with only the covariates. In the first case, for each SNP we want the explicative power of a given SNP after controlling from the rest, while in the second case we want to see the explicate power of the whole set of SNPs, so in that case case we can just compare a model with all SNPs and a model with any of them.
 
-#This approach is probably better than the stepwise regression because we want to know how explicate is each SNP respect to the rest of them. In the stepwise regression, the less explicative SNP is removed, check the model, then the next less explicative SNP, and so on... until the next model is worse. 
+#At the end, we want to know if by maintaining all SNPs but removing one, increases the non-explained variance and decreases the explicative power. If SNPs are very correlated between them, the removal of one SNP form the model should influence too much, because the rest of SNPs explain almost the same variability. For doing this, we need to compare the full model (with all SNPs) with a null model including all except one SNP.
+
+#This approach is probably better than the stepwise regression because we want to know how explicate is each SNP respect to the rest of them. In the stepwise regression, the less explicative SNP is removed, check the model, then the next less explicative SNP, and so on... until the next model is worse.
+    #The selection of the order of removal can be problematic. 
+    #for our specific question we do not need this. We just need to check what happens when all SNPs are present except ONE, to see if that one is explaining variance of the phenotype independently of the rest of SNPs.
 
 #Using this approach, we can see whether a SNP is explaining variance of the phenotypes independently of the rest. If that is the case, the removal of that SNP from the full model should increase the non-explained variance (P<0.05) and the R2 of that SNP should be close to the R2 of the full and haplotype models. 
 
@@ -2823,9 +2827,13 @@ for(p in 1:length(pheno_to_model_causal_variant)){
         r2_global = r.squaredLR(object=model_global_1, null=model_global_2, null.RE=FALSE)[1]
             #we are using non-adjusted R2 as in the rest of the rest of analyses
 
+        #calculate p-value for the removal of all snps. We compare the full model using the model with only covariates as null model
+        p_value_global = anova(model_global_1, model_global_2, test="Chi")$"Pr(>Chi)"[2]
+            #model_global_1 is the full model with all SNPs, model 2 has only covariates
+            #we are testing is removing ALL SNPs significantly increases non-explained variance compare to a model with only covariates
+
         #save the results for the full model
-        causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="full", p_value=NA, r2=r2_global))
-            #NO p-value is calculated. Each of these SNPs has been previously analyzed in detail, and the significance of the whole haplotype block has been analyzed in the haplotype analyses.
+        causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="full", p_value=p_value_global, r2=r2_global))
 
 
         ##calculate the explicative power of the haplotype.glm model
@@ -2837,12 +2845,20 @@ for(p in 1:length(pheno_to_model_causal_variant)){
 
             #open a empty vector for saving R2 of each haplotype block
             r2_haplo = NULL
+            p_haplo = NULL
 
             #for each haplotype block
             for(j in 1:length(vector_haplotype_blocks)){ #vector_haplotype_blocks comes from the haplotype analysis
 
                 #select the [j] haplotype block
                 selected_haplo_block = vector_haplotype_blocks[j]
+
+                #select the haplo.score of the [j] haplotype for [p] phenotype and the [m] model
+                result_haplo_score = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$haplo_score$", selected_model, sep="")))
+
+                #save the p_value
+                p_haplo = append(p_haplo, result_haplo_score$score.global.p.sim)
+                    #we do not calculate the p-value, but use the simulated p-value from the permutation test in haplo.score
 
                 #select the haplo.glm of the [j] haplotype for [p] phenotype and the [m] model
                 result_haplo_glm = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$regression$", selected_model, sep="")))
@@ -2855,20 +2871,25 @@ for(p in 1:length(pheno_to_model_causal_variant)){
             #convert to data.frame the R2 haplo data and set the names using vector_haplotype_blocks
             r2_haplo = data.frame(r2_haplo)
             colnames(r2_haplo) <- vector_haplotype_blocks
+
+            #convert to data.frame the p-value haplo data and set the names using vector_haplotype_blocks
+            p_haplo = data.frame(p_haplo)
+            colnames(p_haplo) <- vector_haplotype_blocks
         } else { #if not, then no haplo analyses were done
 
-            #create an empty data.frame for R2 of each haplotype block
+            #create an empty data.frame for R2 and p-value of each haplotype block
             empty_df_haplos = data.frame(matrix(NA, nrow=1, ncol=length(vector_haplotype_blocks)))
             #set colnames
             colnames(empty_df_haplos) <- vector_haplotype_blocks
 
             #save this empy data.frame as the results
             r2_haplo = empty_df_haplos
+            p_haplo = empty_df_haplos
                 #empty_df_haplos comes form before the loop
         }
 
         #save the results for the full model
-        causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="haplo", p_value=NA, r2=as.numeric(r2_haplo)))
+        causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="haplo", p_value=as.numeric(p_haplo), r2=as.numeric(r2_haplo)))
 
 
         ##calculate the explicative power of the each SNP comparing with the full model
@@ -2904,21 +2925,43 @@ for(p in 1:length(pheno_to_model_causal_variant)){
 #remove first row with all NAs
 causal_variants_results = causal_variants_results[-which(rowSums(is.na(causal_variants_results)) == ncol(causal_variants_results)),]
 
+
+##check rows
 #check we have the correct number of rows
-nrow(causal_variants_results) == length(which(!is.na(geno_pheno_results[which(geno_pheno_results$selected_pheno %in% pheno_to_model_causal_variant),]$pvals))) + length(pheno_to_model_causal_variant) * 5 * 2
-    #the total number of rows should be equal to the number of associations with P-value (no NA) for the selected phenotypes under FDR<0.1 PLUS the number of phenotypes multiplied by 5 and 2 because for each of this phenotypes and each heritage model (we have 5), we have two more rows (full and haplo)
+nrow(causal_variants_results) == length(which(!is.na(geno_pheno_results[which(geno_pheno_results$selected_pheno %in% pheno_to_model_causal_variant),]$pvals))) + length(pheno_to_model_causal_variant) * length(models_causal_variant) * 2
+    #the total number of rows should be equal to the number of associations with P-value (no NA) for the selected phenotypes under FDR<0.1 PLUS the number of phenotypes multiplied by 5 and 2 because for each of these phenotypes and each heritage model (we have 5), we have two more rows (full and haplo)
 
-    #CHECK THE COMPARSINON BETWEN HAPLO.GLM AND THE NULL MODEL
-
-        #perturb?
-            #maybe we can get less R2 because of multicolinearity
-        
-        #stepwise code ecolpin
+#check that the cases with NA for the p_value OR R2 are exactly the number of phenotypes times the number of models that are not additive or dominant. We only should have haplo data for additive and dominant, so for the rest of models we should have NA.
+length(which(is.na(causal_variants_results$p_value) | is.na(causal_variants_results$r2))) == length(pheno_to_model_causal_variant) * length(models_causal_variant[which(! models_causal_variant %in% c("dominant", "additive"))])
 
 
-    #multiple cases where rs2143511 is the SNP with the lowest p-value, but above 0.1 most of the times. Its R2 is also the highest but far away from the R of the full model. The full model has at least 2 times more of explicative power. 
-        #obesity - codominant, recessive, additive
-        #CRF_hip - 
+##P-values of the full and haplotype model
+
+#There are many cases where the P-value of the full model is larger than the P-value of some SNPs, BUT the predictive power of the full model is higher. In addition, the comparison between the full model and the haplotype shows that both models have similar predictive power but the haplo_model shows lower p-values sometimes.
+
+#We know that the SNPs of PTPN1 are in clear linkage disequilibrium between them, so we are including correlated predictors in the model.
+
+#All of this suggests that the full model is losing power due to the correlation between predictors. Predictors can bother to each other. There are some tools to test this, like the package perturb (https://rdrr.io/github/JohnHendrickx/Perturb/), which makes some random perturbations of the data to check if the results are stable or not. High multicolinearity between predictors can lead to higher instability. 
+
+#We are not going to test this because: The correlation could decrease the power of the model, even though, we are finding higher predictive power in the full model compare to individual SNPs, being at least 2 times higher most of the times. Therefore, even we could have limited power, the full model outperform individual SNPs explaining the variance of the phenotypes. We could have problems if the full model was worse, because in that case we could not be sure that the reason is a very relevant (causal) SNP, or the reduce power in the full model due to multicolineality problem.
+
+#We can conclude then, that the SNPs are very correlated and explain a similar portion of the variance of the phenotye. No further analyses will be done. 
+
+#Given that multiple P-values of the full model are higher than the individual SNP, probably because multicolineraity, we are going to remove these p-values along with the p-values of the hpalotype, which has been already showed in results section. We are going to show only p-values for the independent explicative power of each SNP.
+
+#remove the P-values for the full and haplotype models
+causal_variants_results[which(causal_variants_results$full_haplo_nested %in% c("full", "haplo")),]$p_value <- NA
+
+#check that the number of NAs in p_value is correct
+length(which(is.na(causal_variants_results$p_value))) == length(pheno_to_model_causal_variant) * length(models_causal_variant) * 2
+    #for each phenotype and heritage model we should have 2 NAs, one for full and other for haplo.
+
+
+#multiple cases where rs2143511 is the SNP with the lowest p-value, but above 0.1 most of the times. Its R2 is also the highest but far away from the R of the full model. The full model has at least 2 times more of explicative power. 
+    #obesity - codominant, recessive, additive
+    #CRF_hip - 
+
+
 
 
 
@@ -2968,3 +3011,4 @@ if("risk_score_for_log" %in% interact_PA_results_clean$pheno_selected){
 save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis_v2.RData")
 require(SNPassoc)
 require(genetics)
+require(MuMIn)
