@@ -2812,6 +2812,7 @@ for(p in 1:length(pheno_to_model_causal_variant)){
         subset_snps_no_na = eval(parse(text=paste("myData_ptpn1[which(", is_na_snps, "),]", sep="")))
         #check nrow
         #nrow(subset_snps_no_na) #in the case of PTPN1, the number of individuals without NA for any of the PTPN1 snps is 1055.
+            #this subset will be used for both models. We will have the same data in both models, although in the null model, no SNPs are included as predictors in the models and they are not taken into account respect to NAs. Rows with NA for these SNPs will be removed in the dataset used in both models. 
 
         #create a model with all the SNPs and covariables
         model_global_1 = glm(paste(transformation, selected_pheno, ") ~ ", selected_snps_with_model, "+", control_variables, sep=""), data=subset_snps_no_na, family=family)
@@ -2856,29 +2857,25 @@ for(p in 1:length(pheno_to_model_causal_variant)){
                 #select the haplo.glm of the [j] haplotype for [p] phenotype and the [m] model
                 result_haplo_glm = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$regression$", selected_model, sep="")))
 
-
-                fit.gaus <- haplo.glm(y ~ male + geno, family = gaussian, na.action="na.geno.keep", data=my.data, locus.label=label, control = haplo.glm.control(haplo.freq.min=0.02))
-
-                response = paste(transformation, "myData_ptpn1$", selected_pheno, ")", sep="")
-
-                model_global_2 = glm(paste(response, " ~ ", control_variables, sep=""), data=myData_ptpn1, family=family)
-
-                
-                anova.haplo.glm(result_haplo_glm, model_global_2)
-
-                eso = haplo.glm(formula = paste(transformation, selected_pheno, ") ~ geno_block+", control_variables,  sep = ""), family = family, data = myData_ptpn1, na.action = "na.geno.keep", locus.label = snp_to_include, control = haplo.glm.control(haplo.effect = selected_model, haplo.min.count = 10, glm.c = glm.control(maxit = 2000)))
-
-
-                anova.haplo.glm(eso, model_global_2)
+                #create a new null model
+                model_haplo_null = glm(paste(transformation, "myData_ptpn1$", selected_pheno, ") ~ ", control_variables, sep=""), data=myData_ptpn1, family=family)
+                    #in result_haplo_glm you have the response variable as "transformation(myData_ptpn1$phenotype)". You need that exact response in the null model, with that notation, because of this, we have to add myData_ptpn1, although it is already indicated with the "data" argument.
+                    #We have to use "myData_ptpn1" as the dataset, because this is the dataset used in "result_haplo_glm".
 
                 #calculate R2 comparing the haplo.glm with the model including only covariates
-                r2_haplo = r.squaredLR(object=result_haplo_glm, null=model_global_2, null.RE=FALSE)[1]
+                r2_haplo = r.squaredLR(object=result_haplo_glm, null=model_haplo_null, null.RE=FALSE)[1]
                     #we are using non-adjusted R2 as in the rest of the rest of analyses
-                    #both models have the same response and covariables, the only difference is that in the null model there is not block_geno variable. So the difference in deviance is caused by this variable, the haplotype.
 
                 #check R2 haplo
+
+                    #The comparison between the two models is valid. Both models have the same response and covariables, the only difference is that in the null model there is not block_geno variable. So the difference in deviance is caused by this variable, the haplotype. Indeed, this approach is used in the documentation of haplo.glm (https://cran.r-project.org/web/packages/haplo.stats/haplo.stats.pdf). In the help of "anova.haplo.glm", they compare a full haplo.glm model ("haplo.glm(y ~ male + geno...)") with a simple glm without the geno block and the same covariables ("glm(y~male, family=gaussian, data=my.data)").
+
+                    #You can check how the comparison between the models works with anova.haplo.glm. This function does not work if there is different sample size or response variables.             
+                        #anova.haplo.glm(result_haplo_glm, model_haplo_null)
+                            #The difference in freedom degrees is the number of haplotype levels in the haplotype block less 1. This makes sense because the only difference between the two models is the haplotype block. 
+
                     #calculate also using your approach an adjusting, because the mumin R2 seems to be more similar my R2 adjusted (remember that in Mumin we are using un-adjusted because this package uses a different adjustment)
-                    #print(paste("d2 mine: ", Dsquared_mod(model=result_haplo_glm, null_model = model_global_2, adjust=TRUE, n_levels_predictor_test=8, predictor_is_factor=TRUE), " d2 mumin: ", r2_haplo, sep=""))
+                    #print(paste("d2 mine: ", Dsquared_mod(model=result_haplo_glm, null_model = model_haplo_null, adjust=TRUE, n_levels_predictor_test=8, predictor_is_factor=TRUE), " d2 mumin: ", r2_haplo, sep=""))
                         #unannotate this line in order to compare d2 mine and mumin. In general, they are similar, suggesting that mumin is not doing something strange in the R2 calculation. This is congruent with what we found comparing mumin and d2 mine for crude associations.
                         #8 levels because the haplo of PTPN1 has 8 levels (check the haplo.glm object)
 
@@ -2936,10 +2933,10 @@ causal_variants_results = causal_variants_results[-which(rowSums(is.na(causal_va
 ##check rows
 #check we have the correct number of rows
 nrow(causal_variants_results) == length(which(!is.na(geno_pheno_results[which(geno_pheno_results$selected_pheno %in% pheno_to_model_causal_variant),]$pvals))) + length(pheno_to_model_causal_variant) * length(models_causal_variant) * (1 + length(vector_haplotype_blocks))
-    #the total number of rows should be equal to the number of associations with P-value (no NA) for the selected phenotypes under FDR<0.1 PLUS the number of phenotypes multiplied by the number of heritage models (5) and 2 because for each of these phenotypes and each heritage model, we have one more row for full and one more for each haplotype
+    #the total number of rows should be equal to the number of associations with P-value (no NA) for the selected phenotypes under FDR<0.1 (included in pheno_to_model_causal_variant) PLUS the number of phenotypes (pheno_to_model_causal_variant) multiplied by the number of heritage models (5) and by 2 because for each of these phenotypes and each heritage model, we have one more row for full and one more for each haplotype.
 
-#check that the cases with NA for the p_value OR R2 are exactly the number of phenotypes times the number of models that are not additive or dominant. We only should have haplo data for additive and dominant, so for the rest of models we should have NA.
-length(which(is.na(causal_variants_results$p_value) | is.na(causal_variants_results$r2))) == length(pheno_to_model_causal_variant) * length(models_causal_variant[which(! models_causal_variant %in% c("dominant", "additive"))])
+#check that the cases with NA for the p_value OR R2 are exactly the number of phenotypes times the number of haplo blocks and the number of models that are not additive or dominant. We only should have haplo data for additive and dominant, so for the rest of models we should have NA.
+length(which(is.na(causal_variants_results$p_value) | is.na(causal_variants_results$r2))) == length(pheno_to_model_causal_variant) * length(models_causal_variant[which(! models_causal_variant %in% c("dominant", "additive"))]) * length(vector_haplotype_blocks)
 
 
 ##P-values of the full and haplotype model
