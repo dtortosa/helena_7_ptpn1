@@ -2951,8 +2951,6 @@ length(which(is.na(causal_variants_results$p_value))) == length(pheno_to_model_c
 
 ##results interpretation
 
-#
-
 #In multiple cases, the SNP with the lowest p-value is rs2143511 or rs6067472, but above 0.1 most of the cases (P<0.1 in 22 of 217 cases). Importantly, their R2 tend to be the highest, but only between the rest of SNPs, being much lower compared to the R2 of the full model. The full model has at least 2 times more of explicative power. 
 causal_variants_results
 nrow(causal_variants_results[which(causal_variants_results$p_val<0.1),])
@@ -2963,6 +2961,35 @@ causal_variants_results[which(causal_variants_results$full_haplo_nested %in% c("
 
 #These results suggest that each SNP does not explain much phenotypic variability independently. When we remove each SNP individually from the full model, there is not an important reduction of explicative power (P>0.1 in most cases). In addition, the R2 of each SNP separately is much lower compared to the full and haplotype models. All of this supports our results about the existence of an haplotype of PTPN1 that is associated with adiposity in our cohort. 
 
+
+## save the results as supple data 3
+
+#set the folder to save
+folder_to_save_supple_data_3 = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
+system(paste("mkdir -p ", folder_to_save_supple_data_3, sep=""))
+    #p: no error if existing, make parent directories as needed
+
+#convert R2 from 0-1 to percentage
+causal_variants_results$r2 = (causal_variants_results$r2*100)/1
+    #For example: If over 1, we have 0.5, over 100 we would have X. X being (100*0.5)/1=50 -> 50% 
+
+#change columns names
+colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_pheno")] <- "phenotype"
+colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_model")] <- "heritage_model"
+colnames(causal_variants_results)[which(colnames(causal_variants_results) == "full_haplo_nested")] <- "set_gen_predictors"
+colnames(causal_variants_results)[which(colnames(causal_variants_results) == "p_value")] <- "p_value"
+colnames(causal_variants_results)[which(colnames(causal_variants_results) == "r2")] <- "r2_percentage"
+
+#set the names of the files for saving
+suppl_data_3_file_name = "suplementary_data_3_v1.csv"
+suppl_data_3_file_name_zip = "suplementary_data_3_v1.zip"
+
+#save the table
+write.table(causal_variants_results, paste(folder_to_save_supple_data_3, "/", suppl_data_3_file_name, sep=""), col.names=TRUE, row.names=FALSE, sep=",")
+
+#compress the text file and remove it after compression
+system(paste("cd ", folder_to_save_supple_data_3, "; rm ", suppl_data_3_file_name_zip, "; zip ", suppl_data_3_file_name_zip, " ", suppl_data_3_file_name, " ; rm ", suppl_data_3_file_name, sep=""))
+    #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows.
 
 
 
