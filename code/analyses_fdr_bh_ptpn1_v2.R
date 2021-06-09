@@ -2949,22 +2949,19 @@ length(which(is.na(causal_variants_results$p_value))) == length(pheno_to_model_c
     #for each phenotype and heritage model we should have 2 NAs, one for full and other for each haplo.
 
 
+##results interpretation
 
+#
 
+#In multiple cases, the SNP with the lowest p-value is rs2143511 or rs6067472, but above 0.1 most of the cases (P<0.1 in 22 of 217 cases). Importantly, their R2 tend to be the highest, but only between the rest of SNPs, being much lower compared to the R2 of the full model. The full model has at least 2 times more of explicative power. 
+causal_variants_results
+nrow(causal_variants_results[which(causal_variants_results$p_val<0.1),])
+nrow(causal_variants_results[which(causal_variants_results$p_val<0.05),])
 
-#multiple cases where rs2143511 is the SNP with the lowest p-value, but above 0.1 most of the times. Its R2 is also the highest but far away from the R of the full model. The full model has at least 2 times more of explicative power. 
-    #obesity - codominant, recessive, additive
-    #CRF_hip - 
+#In general, the predictive power of the full model is similar to the power of the haplo glm
+causal_variants_results[which(causal_variants_results$full_haplo_nested %in% c("full", "haplo_chr_20.block_1") & causal_variants_results$selected_model %in% c("additive", "dominant")),]
 
-
-#el 11 a veces es significativo, pero tenendo un R2 muy bajo en comparación con el full model
-
-#estos resultados sugieren que cada SNP no explica mucha variabilidad de forma independiente de los fenotipos, porque al eliminar uno a uno del full model, no hay una reducción significativa del poder explicativo (deviance?). Ademas, los R2 de cada SNP por separado, son muy bastantes más bajos que los del full and haplotype model. Todo esto apoya nuestros resutlados sobre la existencia de un haplotipo de este gen que se asocia con adiposidad en nuestra cohorte. 
-
-#Al hablar del último SNP en la discu o tal vez en los resultados de haplotipos, se podría mencionar que de forma individual e indepndiente cada SNP parece aportar poco, y ya explicas en detalle como lo has mirado en el cuarto supple data. 
-
-#podrías meter todos los supples de data en un unico zip, realmente son excels que pesan poco. 
-
+#These results suggest that each SNP does not explain much phenotypic variability independently. When we remove each SNP individually from the full model, there is not an important reduction of explicative power (P>0.1 in most cases). In addition, the R2 of each SNP separately is much lower compared to the full and haplotype models. All of this supports our results about the existence of an haplotype of PTPN1 that is associated with adiposity in our cohort. 
 
 
 
