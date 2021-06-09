@@ -2856,6 +2856,21 @@ for(p in 1:length(pheno_to_model_causal_variant)){
                 #select the haplo.glm of the [j] haplotype for [p] phenotype and the [m] model
                 result_haplo_glm = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$regression$", selected_model, sep="")))
 
+
+                fit.gaus <- haplo.glm(y ~ male + geno, family = gaussian, na.action="na.geno.keep", data=my.data, locus.label=label, control = haplo.glm.control(haplo.freq.min=0.02))
+
+                response = paste(transformation, "myData_ptpn1$", selected_pheno, ")", sep="")
+
+                model_global_2 = glm(paste(response, " ~ ", control_variables, sep=""), data=myData_ptpn1, family=family)
+
+                
+                anova.haplo.glm(result_haplo_glm, model_global_2)
+
+                eso = haplo.glm(formula = paste(transformation, selected_pheno, ") ~ geno_block+", control_variables,  sep = ""), family = family, data = myData_ptpn1, na.action = "na.geno.keep", locus.label = snp_to_include, control = haplo.glm.control(haplo.effect = selected_model, haplo.min.count = 10, glm.c = glm.control(maxit = 2000)))
+
+
+                anova.haplo.glm(eso, model_global_2)
+
                 #calculate R2 comparing the haplo.glm with the model including only covariates
                 r2_haplo = r.squaredLR(object=result_haplo_glm, null=model_global_2, null.RE=FALSE)[1]
                     #we are using non-adjusted R2 as in the rest of the rest of analyses
