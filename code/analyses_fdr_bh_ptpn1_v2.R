@@ -378,6 +378,7 @@ colnames(ptpn1_position)[4] <- "pos" #this data frame can be used for create set
 ptpn1_position = ptpn1_position[order(ptpn1_position$pos),] #order snps by position in chr
 #check
 ptpn1_position$pos == ptpn1_position[order(ptpn1_position$pos),]$pos
+    #positions are GRCh38. HELENA was genotypes probably using previous versions (GRCh37?), but this should not be a problem, because we are targeting a specific rs number, a specific position of the genome. The coordinates could change between versions, but within each version the relative positions should be the same. If for example, there is a change and more distance appears between two SNPs, ok if this is caused by an error on a previous version it is not a problem. It is good to know there is more distance between two SNPs, but we are targeting the exact same region thanks to the rs number. Indeed, the same SNP can have different coordinates in dfiferent versions (https://www.ncbi.nlm.nih.gov/snp/?term=rs968701), but it is the same rs number!!
 
 #save it
 write.table(ptpn1_position, "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/ptpn1_snps_ordered.csv", sep=",", col.names = TRUE, row.names = FALSE)
