@@ -133,12 +133,12 @@ table_1_raw = table_1_raw[,c("HWE", "MAF")]
 vector_centers = unique(myData_ptpn1$center)
 
 #create an empty data.frame for the MAF of each center
-empty_df_centers = data.frame(matrix(NA, 1, length(vector_centers)))
+empty_df_centers = data.frame(matrix(NA, nrow(table_1_raw), length(vector_centers)))
 #set colnames
 colnames(empty_df_centers) <- vector_centers
 
 #create an empty data.frame for the major and minor alleles
-empty_df_alleles = data.frame(matrix(NA, 1, 2))
+empty_df_alleles = data.frame(matrix(NA, nrow(table_1_raw), 2))
 #set colnames
 colnames(empty_df_alleles) <- c("Major allele", "Minor allele")
 
@@ -199,18 +199,21 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
         #remove the cases with NA
         allele_freqs = allele_freqs[which(!is.na(allele_freqs[,2])),]
 
-
+        #extract the allele names (numbers)
         alleles_helena_numeric = row.names(allele_freqs)
+
+        #copy the allele numbers into a new object
         alleles_helena = alleles_helena_numeric
 
-        #always A is the first, because number are afabetically ordered in genotype levels in Helena
+        #change the numbers to alleles following the notation of helena
+        #always A is the first, because number are afabetically ordered in Helena
         if("A" %in% list_allels_helena){
             alleles_helena = gsub("1", "A", alleles_helena)
-            alleles_helena = gsub("2", list_allels_helena[!"A" == list_allels_helena], alleles_helena)                                  
+            alleles_helena = gsub("2", list_allels_helena[!"A" == list_allels_helena], alleles_helena)
         } else { #if not, C first
             if("C" %in% list_allels_helena){ 
                 alleles_helena = gsub("1", "C", alleles_helena)
-                alleles_helena = gsub("2", list_allels_helena[!"C" == list_allels_helena], alleles_helena)                                                  
+                alleles_helena = gsub("2", list_allels_helena[!"C" == list_allels_helena], alleles_helena)
             } else { #if not G first (T always will be the last)
                 if("G" %in% list_allels_helena){
                     alleles_helena = gsub("1", "G", alleles_helena)
@@ -219,47 +222,42 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
             }            
         }
         
-
+        #if the helena and ncbi name are not the same
         if(helena_name != ncbi_name){
 
+            #copy the allele helena names in a new object
             alleles_helena_final = alleles_helena
 
+            #convert the minor allele according to helena notation into "X"
             alleles_helena_final = gsub(helena_minor, "X", alleles_helena_final)
+                #in this way, we avoid problems in palindromic SNPs. For example, if the SNP is T/A according to HELENA notation, but in ncbi is the inverse (major is minor (A/T)), then you will have problems. If you change A to T, then you have T/T, when you ask for changing T to A, the result will be A/A. In contrast, if you change the minor according to helena (A) to X (T/X), then you can change the major according to helena (T) to A, leaving A/X. Now, you can change X to T, so you have A/T. In this way, you have change from T/A to A/T. 
+
+            #change the helena major to the correct major allele, which is indicated by ncbi.
             alleles_helena_final = gsub(helena_major, ncbi_major, alleles_helena_final)
+
+            #change now the X, which was the helena minor, to the true minor allele according to ncbi
             alleles_helena_final = gsub("X", ncbi_minor, alleles_helena_final)
-        } else {
+        } else { #if not, and hence the alleles are exactly the same
+
+            #nothing to do
             alleles_helena_final = alleles_helena
         }
 
-        conversion_allele_table = cbind.data.frame(allele=c("minor", "major"), alleles_helena_numeric, alleles_helena, alleles_helena_final)
+        #save in one dataframe the different versions of alleles names
+        conversion_allele_table = cbind.data.frame(alleles_helena_numeric, alleles_helena, alleles_helena_final)
+            #here the order does not mean major or minor, that was considered when the major and minor alleles according to ncbi and helena were obtained at the start of the loop. There, we used for that "alleles" object, where the first allele is the minor and the second is the major in each case.
 
-
-
+        #select the row of allele_freqs whose name is "1", its new name will be extracted from "conversion_allele_table", selecting the final allele name of the allele "1"
         row.names(allele_freqs)[which(row.names(allele_freqs) == "1")] <- as.vector(conversion_allele_table[which(conversion_allele_table$alleles_helena_numeric == "1"),]$alleles_helena_final)
+
+        #select the row of allele_freqs whose name is "2", its new name will be extracted from "conversion_allele_table", selecting the final allele name of the allele "2"
         row.names(allele_freqs)[which(row.names(allele_freqs) == "2")] <- as.vector(conversion_allele_table[which(conversion_allele_table$alleles_helena_numeric == "2"),]$alleles_helena_final)
 
-
-
-        #select the allele with the lowest frequency (row), and then take its percentage (second column)
+        #select the frequency (second column) of the minor allele
         allele_freq_minor = allele_freqs[which(row.names(allele_freqs) == ncbi_minor), 2]
 
         #convert the MAF into frequency up to 1 and round to 2 decimals
         allele_freq_minor = round(allele_freq_minor/100, 2)
-
-        #if we have two minor alleles
-        if(length(allele_freq_minor) == 2){
-
-            #and both have the same frequency
-            if(allele_freq_minor[1] == allele_freq_minor[2]){
-
-                #there is no problem, save only one
-                allele_freq_minor = unique(allele_freq_minor)
-            } else{
-
-                #if not, then we have a problem
-                stop(paste("ERROR: PROBLEM WITH THE MAF IN A CENTER: ", selected_center, sep=""))
-            }
-        }
 
         #select the row of the [i] SNP and the column of the [j] center and add the corresponding MAF
         table_1[which(rownames(table_1) == selected_snp), which(colnames(table_1) == selected_center)] <- allele_freq_minor
@@ -267,6 +265,7 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
 }
 
 #check calculating the MAF with a alternative way
+#this way automatically selects the allele with lower frequency in each subset by center, so if the minor/major allele changes a ina subset, the result should be different respect to table 1
 for(i in 1:length(vector_centers)){
 
     #select the [j] center
@@ -307,6 +306,15 @@ for(i in 1:length(vector_centers)){
         #It a difference of 0.01 is possible due rounding with different numbers of decimals between approaches
             #round(0.445, 2) gives 0.44, while round(0.4454, 2) gives 0.45, this is the case of Zaragoza for rs2143511, for example.
 }
+
+#results of the check
+    #for PTPN1, Dortmund, Heraklion and Vienna show differences in the MAF for the rs968701.
+    #This SNP has a frequency very similar between alleles (almost 0.5), so it is possible that in one of the subsets by center, the minor becomes major. 
+    #Indeed, I have compared the new version of table 1 with the previous version. In that version, the minor in each center was selected by frequency, independently if the minor across the whole cohort was similar to the minor in the subset. 
+        #The frequency of Dortmund for the MAF of rs968701 in the previous version is 0.48, while in the new version is 0.52. 
+        #The frequency of Heraklion for the MAF of rs968701 in the previous version is 0.48, while in the new version is 0.52. 
+        #The frequency of Vienna for the MAF of rs968701 in the previous version is 0.45, while in the new version is 0.55.
+    #It seems that the calculations are ok, just the minor allele for rs968701 has become the major in these three subsets. Because of this, in the new version we have these cases with the minor having a frequency higher than 0.5.
 
 #reorder the table following the order in the chromosome 
 table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
