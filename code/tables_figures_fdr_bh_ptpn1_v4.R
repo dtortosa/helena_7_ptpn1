@@ -154,12 +154,22 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
     #select the snp of the [i] row
     selected_snp = row.names(selected_row)
 
-    #extract the ncbi snps from [i] row
+    #extract the helena and ncbi snps from [i] row
+    helena_name = alleles[which(alleles$snp == selected_snp),]$helena
     ncbi_name = alleles[which(alleles$snp == selected_snp),]$ncbi
-    
-    #select major and minor allele (they are ordered, major always first)
-    ncbi_major = strsplit(as.character(ncbi_name), split="/")[[1]][1]
-    ncbi_minor = strsplit(as.character(ncbi_name), split="/")[[1]][2]
+
+    #list alleles from helena and ncbi
+    list_allels_helena = strsplit(as.vector(helena_name), split="/")[[1]]
+    list_allels_ncbi = strsplit(as.vector(ncbi_name), split="/")[[1]]
+
+    #select major and minor allele (they are ordered, major always first) for helena
+    helena_major = list_allels_helena[1]
+    helena_minor = list_allels_helena[2]
+        #IMPORTANT: these two lines assumes that the first allele is the major and the second is the minor. I had to create the "alleles" table in that way. BE SURE.
+
+    #select major and minor allele (they are ordered, major always first) for helena
+    ncbi_major = list_allels_ncbi[1]
+    ncbi_minor = list_allels_ncbi[2]
         #IMPORTANT: these two lines assumes that the first allele is the major and the second is the minor. I had to create the "alleles" table in that way. BE SURE.
 
     #save them in the corresponding columns
@@ -189,8 +199,49 @@ for(i in 1:nrow(table_1)){ #for each row (SNP) of table 1
         #remove the cases with NA
         allele_freqs = allele_freqs[which(!is.na(allele_freqs[,2])),]
 
+
+        alleles_helena_numeric = row.names(allele_freqs)
+        alleles_helena = alleles_helena_numeric
+
+        #always A is the first, because number are afabetically ordered in genotype levels in Helena
+        if("A" %in% list_allels_helena){
+            alleles_helena = gsub("1", "A", alleles_helena)
+            alleles_helena = gsub("2", list_allels_helena[!"A" == list_allels_helena], alleles_helena)                                  
+        } else { #if not, C first
+            if("C" %in% list_allels_helena){ 
+                alleles_helena = gsub("1", "C", alleles_helena)
+                alleles_helena = gsub("2", list_allels_helena[!"C" == list_allels_helena], alleles_helena)                                                  
+            } else { #if not G first (T always will be the last)
+                if("G" %in% list_allels_helena){
+                    alleles_helena = gsub("1", "G", alleles_helena)
+                    alleles_helena = gsub("2", list_allels_helena[!"G" == list_allels_helena], alleles_helena)               
+                }
+            }            
+        }
+        
+
+        if(helena_name != ncbi_name){
+
+            alleles_helena_final = alleles_helena
+
+            alleles_helena_final = gsub(helena_minor, "X", alleles_helena_final)
+            alleles_helena_final = gsub(helena_major, ncbi_major, alleles_helena_final)
+            alleles_helena_final = gsub("X", ncbi_minor, alleles_helena_final)
+        } else {
+            alleles_helena_final = alleles_helena
+        }
+
+        conversion_allele_table = cbind.data.frame(allele=c("minor", "major"), alleles_helena_numeric, alleles_helena, alleles_helena_final)
+
+
+
+        row.names(allele_freqs)[which(row.names(allele_freqs) == "1")] <- as.vector(conversion_allele_table[which(conversion_allele_table$alleles_helena_numeric == "1"),]$alleles_helena_final)
+        row.names(allele_freqs)[which(row.names(allele_freqs) == "2")] <- as.vector(conversion_allele_table[which(conversion_allele_table$alleles_helena_numeric == "2"),]$alleles_helena_final)
+
+
+
         #select the allele with the lowest frequency (row), and then take its percentage (second column)
-        allele_freq_minor = allele_freqs[which(allele_freqs[,1] == min(allele_freqs[,1])), 2]
+        allele_freq_minor = allele_freqs[which(row.names(allele_freqs) == ncbi_minor), 2]
 
         #convert the MAF into frequency up to 1 and round to 2 decimals
         allele_freq_minor = round(allele_freq_minor/100, 2)
