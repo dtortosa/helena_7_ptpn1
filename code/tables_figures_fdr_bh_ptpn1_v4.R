@@ -1377,8 +1377,17 @@ table_5[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_5[
 
 
 
+############################################
+##### SUPPLEMENTARY TABLES S1, S2, S3 ######
+############################################
+
+#These tables are exactly the same than Tables 1, 2 and 3, but for the subset with PA data. We are going to copy the scripts of these tables into a script only for sampling bias analyses, and create them using the subset with PA data.
+
+
+
+
 ###################################
-##### SUPPLEMENTARY TABLE S1 ######
+##### SUPPLEMENTARY TABLE S4 ######
 ###################################
 
 #This table shows all the haplotype observed and their frequency in the sample.
@@ -1529,10 +1538,8 @@ for(i in 1:length(vector_haplotype_blocks)){ #the list of blocks comes from the 
 }
 
 #select each haplotype block and save it as a table
-supple_table_1 = tables_haplo[[1]]
+supple_table_4 = tables_haplo[[1]]
 
-
-#FALTAN LAS TRES NUEVAS TABLAS SUPPLE!!
 
 
 
@@ -1610,7 +1617,7 @@ print.xtable(xtable(table_5, caption="Table 5", label=NULL, align="ccccccccccccc
 
 
 #convert supple table 1 to a latex table
-print.xtable(xtable(supple_table_1, caption="Supplementary Table 1", label=NULL, align="ccccccc", digits=3, display=c("s", "s", "s", "s", "s", "s", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(supple_table_1)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
+print.xtable(xtable(supple_table_4, caption="Supplementary Table 4", label=NULL, align="ccccccc", digits=3, display=c("s", "s", "s", "s", "s", "s", "f")), type="latex", file=paste(path_tex_table, name_tex_table, sep=""), append=TRUE, floating=TRUE, table.placement="ht", caption.placement="top", caption.width=NULL, latex.environments="center", hline.after=c(-1,0,nrow(supple_table_4)), NA.string="", include.rownames=FALSE, comment=TRUE, timestamp=date(), sanitize.text.function=function(x) {x})
     #argument in the line of the table 1
     #sanitize.text.function:
         #All non-numeric entries (except row and column names) are sanitized in an attempt to remove characters which have special meaning for the output format. If sanitize.text.function is not NULL, it should be a function taking a character vector and returning one, and will be used for the sanitization instead of the default internal function. Default value is NULL.
