@@ -1648,15 +1648,13 @@ system(paste("cd ", path_tex_table, "; pandoc -s ", name_tex_table, " -o ", name
 ######## SUPLE LEPTIN - OBESITY CORRELATION ########
 ####################################################
 
-if(FALSE){
-
 #open the pdf
-pdf(paste("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/figures/figures_suple_pvals/figure_S", sequence_pheno[length(sequence_pheno)]+1, ".pdf", sep=""), height = 6, width = 12)
+pdf("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/figures/final_figures_v1/figure_S2.pdf", height = 6, width = 12)
 par(mfrow=c(1,2),  mar=c(6.5, 4, 2, 2) +0.1)
 
 ##plot body fat percentage vs. leptin
 #make the plot
-plot(myData_ptpn1$CRF_Body_fat_PC, myData_ptpn1$Leptin_ng_ml, type="p", xlab="Body fat %", ylab="Leptin (ng/ml)", cex.lab=1.5)
+plot(myData_ptpn1$CRF_Body_fat_PC, myData_ptpn1$Leptin_ng_ml, type="p", xlab="Body fat (%)", ylab="Leptin (ng/ml)", cex.lab=1.5)
 
 #make the correlation
 tests_pc = cor.test(myData_ptpn1$CRF_Body_fat_PC, myData_ptpn1$Leptin_ng_ml, test="spearman")
@@ -1672,7 +1670,9 @@ text(x=17, y=130, labels = tests_pc_rho, cex=1.3)
 
 ##plot FMI vs. leptin
 #make the plot
-plot(myData_ptpn1$FMI, myData_ptpn1$Leptin_ng_ml, type="p", xlab="Fat mass index (kg/m^2)", ylab="Leptin (ng/ml)", cex.lab=1.5)
+plot(myData_ptpn1$FMI, myData_ptpn1$Leptin_ng_ml, type="p", xlab=expression(paste("Fat mass index (kg/m"^"2",")", sep="")), ylab="Leptin (ng/ml)", cex.lab=1.5)
+    #for superscript
+        #https://stackoverflow.com/questions/10628547/use-superscripts-in-r-axis-labels
 
 #make the correlation
 tests_fmi = cor.test(myData_ptpn1$FMI, myData_ptpn1$Leptin_ng_ml, test="spearman")
@@ -1686,8 +1686,7 @@ tests_fmi_rho = bquote(italic(rho) == .(format(tests_fmi$estimate, digits = 3)))
 text(x=17, y=130, labels = tests_fmi_rho, cex=1.3)
 
 #add the title plot
-mtext(paste("Online supplementary figure S", sequence_pheno[length(sequence_pheno)]+1, sep=""), side=1, font=2, cex=2, adj=0.015, padj=1.5, outer=TRUE, line=-3)
+#mtext("Online supplementary figure S2", side=1, font=2, cex=2, adj=0.015, padj=1.5, outer=TRUE, line=-3)
 
 #close the pdf
 dev.off()
-}

@@ -70,7 +70,10 @@ Loading required package: parallel
 Registered S3 method overwritten by 'SNPassoc':
   method            from       
   summary.haplo.glm haplo.stats
+> require(MuMIn) #for calculating R2
+Loading required package: MuMIn
 >     #Not all the packages are listed!
+> 
 > 
 > 
 > 
@@ -17619,6 +17622,7 @@ logical       5
 > #check
 > ptpn1_position$pos == ptpn1_position[order(ptpn1_position$pos),]$pos
 [1] TRUE TRUE TRUE TRUE TRUE
+>     #positions are GRCh38. HELENA was genotypes probably using previous versions (GRCh37?), but this should not be a problem, because we are targeting a specific rs number, a specific position of the genome. The coordinates could change between versions, but within each version the relative positions should be the same. If for example, there is a change and more distance appears between two SNPs, ok if this is caused by an error on a previous version it is not a problem. It is good to know there is more distance between two SNPs, but we are targeting the exact same region thanks to the rs number. Indeed, the same SNP can have different coordinates in dfiferent versions (https://www.ncbi.nlm.nih.gov/snp/?term=rs968701), but it is the same rs number!!
 > 
 > #save it
 > write.table(ptpn1_position, "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/tables/ptpn1_snps_ordered.csv", sep=",", col.names = TRUE, row.names = FALSE)
@@ -20099,7 +20103,6 @@ null device
 +     return(d2)
 + } #D2 function of Nick. If you have problem with this you can use modEvA ("http://modeva.r-forge.r-project.org/") or MuMIn ("https://cran.r-project.org/web/packages/MuMIn/index.html"). 
 > require(MuMIn) #for calculating the R2 from a likelihood ratio test. This will be compared with Dsquared_mod
-Loading required package: MuMIn
 > 
 > #pheno to model
 > pheno_to_model = c("obesity","CRF_waist","CRF_hip","waist_height","waist_hip","CRF_BMI","CRF_Body_fat_PC","FMI","TC","LDL","HDL","TC_HDL","LDL_HDL","TG","TG_HDL","Apo_A1","Apo_B","ApoB_ApoA1","apoB_LDL","Insulin","Leptin_ng_ml","HOMA","QUICKI","SBP","DBP","risk_score_for_log")
@@ -20695,8 +20698,7 @@ Warning message:
 In rm(markers_pos) : object 'markers_pos' not found
 > 
 > ##open haploview
-> system("cd /Users/diegosalazar/My\\ Drive/science/software/haploview; java -jar Haploview.jar", wait = FALSE) ## https://www.broadinstitute.org/haploview/haploview. If you want the plot with rs number, you have to include the ".infofile" in haploview. 
-sh: 1: cd: can't cd to /Users/diegosalazar/My Drive/science/software/haploview
+> system("cd /media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/software/haploview; java -jar Haploview.jar", wait = FALSE) ## https://www.broadinstitute.org/haploview/haploview. If you want the plot with rs number, you have to include the ".infofile" in haploview. 
 > 
 > #COMPARAR REGLA DE LOS CUATRO GAMETOS Y CONFIDENCE INTERVAL Y TENER EN CUENTA SNPS CON LOW MAF. 
 > 
@@ -20708,8 +20710,7 @@ sh: 1: cd: can't cd to /Users/diegosalazar/My Drive/science/software/haploview
 > 
 > #EN LA PESTAÑA HAPLOTYPES SE VEN LAS FRECUENCIAS DE LOS AHPLOTIPOS Y LA RECOMBINACIÓN ENTRE BLOQUES.
 > 
-Error: Unable to access jarfile Haploview.jar> 
-#los colores indicate support for linkage. Se basan en LOD y D' values: 1) LOD score (logarithm (base 10) of odds), developed by Newton Morton,[9] is a statistical test often used for linkage analysis in human, animal, and plant populations. The LOD score compares the likelihood of obtaining the test data if the two loci are indeed linked, to the likelihood of observing the same data purely by chance. Positive LOD scores favour the presence of linkage, whereas negative LOD scores indicate that linkage is less likely; 2) D': Suppose that among the gametes that are formed in a sexually reproducing population, allele A occurs with frequency p_{A}} p_{A} at one locus (i.e. p_{A}} p_{A} is the proportion of gametes with A at that locus), while at a different locus allele B occurs with frequency p_{B}} p_{B}. Similarly, let p_{AB}} p_{AB} be the frequency with which both A and B occur together in the same gamete (i.e. p_{AB}} p_{AB} is the frequency of the AB haplotype). The association between the alleles A and B can be regarded as completely random—which is known in statistics as independence—when the occurrence of one does not affect the occurrence of the other, in which case the probability that both A and B occur together is given by the product p_{A}p_{B}} p_{A}p_{B} of the probabilities. There is said to be a linkage disequilibrium between the two alleles whenever {p_{AB}} p_{AB} differs from p_{A}p_{B}} p_{A}p_{B} for any reaso: D=Pab - Pa*Pb. Then D'=D/D_max
+> #los colores indicate support for linkage. Se basan en LOD y D' values: 1) LOD score (logarithm (base 10) of odds), developed by Newton Morton,[9] is a statistical test often used for linkage analysis in human, animal, and plant populations. The LOD score compares the likelihood of obtaining the test data if the two loci are indeed linked, to the likelihood of observing the same data purely by chance. Positive LOD scores favour the presence of linkage, whereas negative LOD scores indicate that linkage is less likely; 2) D': Suppose that among the gametes that are formed in a sexually reproducing population, allele A occurs with frequency p_{A}} p_{A} at one locus (i.e. p_{A}} p_{A} is the proportion of gametes with A at that locus), while at a different locus allele B occurs with frequency p_{B}} p_{B}. Similarly, let p_{AB}} p_{AB} be the frequency with which both A and B occur together in the same gamete (i.e. p_{AB}} p_{AB} is the frequency of the AB haplotype). The association between the alleles A and B can be regarded as completely random—which is known in statistics as independence—when the occurrence of one does not affect the occurrence of the other, in which case the probability that both A and B occur together is given by the product p_{A}p_{B}} p_{A}p_{B} of the probabilities. There is said to be a linkage disequilibrium between the two alleles whenever {p_{AB}} p_{AB} differs from p_{A}p_{B}} p_{A}p_{B} for any reaso: D=Pab - Pa*Pb. Then D'=D/D_max
 > 
 >     #white: LOD<2 and D'<1
 >     #bright red: LOD>=2 and D'=1
@@ -21331,14 +21332,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.61968284, df = 7, p-val = 0.15609006
+global-stat = 10.61967664, df = 7, p-val = 0.15609036
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.1552 
-Max-Stat sim. p-val =  0.10355 
+Global sim. p-val =  0.1575 
+Max-Stat sim. p-val =  0.10015 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -21346,21 +21347,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27885699 -1.86961944
+[1,] 1         1          1         1         2        0.278857   -1.86961852
 [2,] 2         1          1         2         1        0.06554718 -1.29832321
-[3,] 2         2          1         2         2        0.06837867 -0.8348415 
+[3,] 2         2          1         2         2        0.06837867 -0.83484153
 [4,] 1         1          1         2         2        0.10681173 -0.11414479
-[5,] 2         1          1         2         2        0.03786103 0.81785171 
+[5,] 2         1          1         2         2        0.03786103 0.81785174 
 [6,] 2         1          2         1         2        0.00510085 1.19432144 
-[7,] 2         1          2         2         1        0.42371928 2.41201783 
+[7,] 2         1          2         2         1        0.42371927 2.41201693 
      p-val      sim p-val
-[1,] 0.06153668 0.06415  
-[2,] 0.19417629 0.1913   
-[3,] 0.40380695 0.40845  
-[4,] 0.90912302 0.90715  
-[5,] 0.41344187 0.4171   
-[6,] 0.23235226 0.2347   
-[7,] 0.01586451 0.01535  
+[1,] 0.06153681 0.05985  
+[2,] 0.1941763  0.1944   
+[3,] 0.40380694 0.40955  
+[4,] 0.90912302 0.9054   
+[5,] 0.41344185 0.4148   
+[6,] 0.23235226 0.2356   
+[7,] 0.01586454 0.0141   
 
 [1] " "
 [1] "#######################"
@@ -21374,14 +21375,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.61967015, df = 7, p-val = 0.15609067
+global-stat = 10.61972169, df = 7, p-val = 0.15608818
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.15475 
-Max-Stat sim. p-val =  0.10745 
+Global sim. p-val =  0.1552 
+Max-Stat sim. p-val =  0.10065 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -21389,21 +21390,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27885701 -1.86961756
-[2,] 2         1          1         2         1        0.06554718 -1.2983232 
-[3,] 2         2          1         2         2        0.06837867 -0.83484155
-[4,] 1         1          1         2         2        0.10681173 -0.1141448 
-[5,] 2         1          1         2         2        0.03786103 0.81785177 
+[1,] 1         1          1         1         2        0.27885691 -1.86962522
+[2,] 2         1          1         2         1        0.06554718 -1.29832323
+[3,] 2         2          1         2         2        0.06837867 -0.83484136
+[4,] 1         1          1         2         2        0.10681173 -0.11414476
+[5,] 2         1          1         2         2        0.03786103 0.81785153 
 [6,] 2         1          2         1         2        0.00510085 1.19432144 
-[7,] 2         1          2         2         1        0.42371926 2.41201599 
+[7,] 2         1          2         2         1        0.42371936 2.41202347 
      p-val      sim p-val
-[1,] 0.06153695 0.06025  
-[2,] 0.1941763  0.19235  
-[3,] 0.40380693 0.40735  
-[4,] 0.90912301 0.9095   
-[5,] 0.41344184 0.41295  
-[6,] 0.23235226 0.2349   
-[7,] 0.01586459 0.0165   
+[1,] 0.06153588 0.06095  
+[2,] 0.19417629 0.1978   
+[3,] 0.40380703 0.41055  
+[4,] 0.90912304 0.9053   
+[5,] 0.41344197 0.41615  
+[6,] 0.23235226 0.23245  
+[7,] 0.01586426 0.0142   
 
 [1] " "
 [1] "#######################"
@@ -21417,14 +21418,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.61967399, df = 7, p-val = 0.15609049
+global-stat = 10.6197061, df = 7, p-val = 0.15608894
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.1543 
-Max-Stat sim. p-val =  0.0983 
+Global sim. p-val =  0.1594 
+Max-Stat sim. p-val =  0.10755 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -21432,21 +21433,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.278857   -1.86961813
-[2,] 2         1          1         2         1        0.06554718 -1.2983232 
-[3,] 2         2          1         2         2        0.06837867 -0.83484154
-[4,] 1         1          1         2         2        0.10681173 -0.11414479
-[5,] 2         1          1         2         2        0.03786103 0.81785175 
+[1,] 1         1          1         1         2        0.27885694 -1.8696229 
+[2,] 2         1          1         2         1        0.06554718 -1.29832322
+[3,] 2         2          1         2         2        0.06837867 -0.83484142
+[4,] 1         1          1         2         2        0.10681173 -0.11414477
+[5,] 2         1          1         2         2        0.03786103 0.8178516  
 [6,] 2         1          2         1         2        0.00510085 1.19432144 
-[7,] 2         1          2         2         1        0.42371926 2.41201655 
+[7,] 2         1          2         2         1        0.42371933 2.41202121 
      p-val      sim p-val
-[1,] 0.06153687 0.0609   
-[2,] 0.1941763  0.19355  
-[3,] 0.40380694 0.403    
-[4,] 0.90912301 0.9112   
-[5,] 0.41344185 0.41035  
-[6,] 0.23235226 0.23265  
-[7,] 0.01586456 0.0157   
+[1,] 0.0615362  0.0629   
+[2,] 0.19417629 0.19085  
+[3,] 0.403807   0.41075  
+[4,] 0.90912303 0.912    
+[5,] 0.41344193 0.41905  
+[6,] 0.23235226 0.22965  
+[7,] 0.01586436 0.01625  
 
 [1] " "
 [1] "#######################"
@@ -21460,36 +21461,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.5343051, df = 7, p-val = 0.02972877
+global-stat = 15.53434025, df = 7, p-val = 0.02972839
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.03125 
-Max-Stat sim. p-val =  0.04940247 
-Number of Simulations, Global:  20000 , Max-Stat: 19999
+Global sim. p-val =  0.03045 
+Max-Stat sim. p-val =  0.05035504 
+Number of Simulations, Global:  20000 , Max-Stat: 19998
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 2         1          1         2         1        0.06501397 -2.33056006
-[2,] 1         1          1         1         2        0.28028615 -2.10146927
-[3,] 1         1          1         2         2        0.10685477 0.32331327 
+[1,] 2         1          1         2         1        0.06501397 -2.33056007
+[2,] 1         1          1         1         2        0.28028612 -2.10147307
+[3,] 1         1          1         2         2        0.10685477 0.32331328 
 [4,] 2         1          2         1         2        0.00537874 0.43303877 
-[5,] 2         2          1         2         2        0.06838773 0.79656258 
-[6,] 2         1          1         2         2        0.03724324 1.05748362 
-[7,] 2         1          2         2         1        0.42404639 2.69477318 
+[5,] 2         2          1         2         2        0.06838773 0.7965627  
+[6,] 2         1          1         2         2        0.03724324 1.05748345 
+[7,] 2         1          2         2         1        0.42404642 2.69477782 
      p-val      sim p-val 
-[1,] 0.01977657 0.01850093
-[2,] 0.03559979 0.0359018 
-[3,] 0.746458   0.74698735
-[4,] 0.66498661 0.66113306
-[5,] 0.42570512 0.42377119
-[6,] 0.29029093 0.2880644 
-[7,] 0.00704366 0.00615031
+[1,] 0.01977657 0.01850185
+[2,] 0.03559946 0.03510351
+[3,] 0.746458   0.7409741 
+[4,] 0.66498661 0.66136614
+[5,] 0.42570505 0.43049305
+[6,] 0.290291   0.28937894
+[7,] 0.00704356 0.00725073
 
 [1] " "
 [1] "#######################"
@@ -21503,15 +21504,15 @@ Number of Simulations, Global:  20000 , Max-Stat: 19999
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.53431727, df = 7, p-val = 0.02972864
+global-stat = 15.53428866, df = 7, p-val = 0.02972894
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0308 
-Max-Stat sim. p-val =  0.05075254 
-Number of Simulations, Global:  20000 , Max-Stat: 19999
+Global sim. p-val =  0.033 
+Max-Stat sim. p-val =  0.05195 
+Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
@@ -21519,20 +21520,20 @@ Number of Simulations, Global:  20000 , Max-Stat: 19999
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
 [1,] 2         1          1         2         1        0.06501397 -2.33056006
-[2,] 1         1          1         1         2        0.28028614 -2.10147058
-[3,] 1         1          1         2         2        0.10685477 0.32331328 
+[2,] 1         1          1         1         2        0.28028617 -2.10146749
+[3,] 1         1          1         2         2        0.10685477 0.32331327 
 [4,] 2         1          2         1         2        0.00537874 0.43303877 
-[5,] 2         2          1         2         2        0.06838773 0.79656262 
-[6,] 2         1          1         2         2        0.03724324 1.05748356 
-[7,] 2         1          2         2         1        0.4240464  2.69477479 
-     p-val      sim p-val 
-[1,] 0.01977657 0.019951  
-[2,] 0.03559968 0.0359518 
-[3,] 0.746458   0.74843742
-[4,] 0.66498661 0.66668333
-[5,] 0.42570509 0.42717136
-[6,] 0.29029095 0.28676434
-[7,] 0.00704362 0.00685034
+[5,] 2         2          1         2         2        0.06838773 0.79656253 
+[6,] 2         1          1         2         2        0.03724324 1.05748369 
+[7,] 2         1          2         2         1        0.42404637 2.69477101 
+     p-val      sim p-val
+[1,] 0.01977657 0.0189   
+[2,] 0.03559995 0.03725  
+[3,] 0.746458   0.7451   
+[4,] 0.66498661 0.66795  
+[5,] 0.42570515 0.42315  
+[6,] 0.29029089 0.295    
+[7,] 0.0070437  0.0067   
 
 [1] " "
 [1] "#######################"
@@ -21546,14 +21547,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 19999
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.53433042, df = 7, p-val = 0.0297285
+global-stat = 15.53430294, df = 7, p-val = 0.02972879
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0325 
-Max-Stat sim. p-val =  0.0518 
+Global sim. p-val =  0.0329 
+Max-Stat sim. p-val =  0.0534 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -21561,21 +21562,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 2         1          1         2         1        0.06501397 -2.33056007
-[2,] 1         1          1         1         2        0.28028613 -2.10147201
-[3,] 1         1          1         2         2        0.10685477 0.32331328 
+[1,] 2         1          1         2         1        0.06501397 -2.33056006
+[2,] 1         1          1         1         2        0.28028616 -2.10146903
+[3,] 1         1          1         2         2        0.10685477 0.32331327 
 [4,] 2         1          2         1         2        0.00537874 0.43303877 
-[5,] 2         2          1         2         2        0.06838773 0.79656267 
-[6,] 2         1          1         2         2        0.03724324 1.0574835  
-[7,] 2         1          2         2         1        0.42404641 2.69477652 
+[5,] 2         2          1         2         2        0.06838773 0.79656258 
+[6,] 2         1          1         2         2        0.03724324 1.05748363 
+[7,] 2         1          2         2         1        0.42404638 2.6947729  
      p-val      sim p-val
-[1,] 0.01977657 0.0188   
-[2,] 0.03559955 0.03505  
-[3,] 0.746458   0.7495   
-[4,] 0.66498661 0.66015  
-[5,] 0.42570507 0.42555  
-[6,] 0.29029098 0.2832   
-[7,] 0.00704359 0.0073   
+[1,] 0.01977657 0.0205   
+[2,] 0.03559981 0.03655  
+[3,] 0.746458   0.7498   
+[4,] 0.66498661 0.66135  
+[5,] 0.42570512 0.4282   
+[6,] 0.29029092 0.2892   
+[7,] 0.00704366 0.00745  
 
 [1] " "
 [1] "#######################"
@@ -21589,36 +21590,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.76509946, df = 7, p-val = 0.02735126
+global-stat = 15.76508593, df = 7, p-val = 0.0273514
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0319 
-Max-Stat sim. p-val =  0.06980349 
-Number of Simulations, Global:  20000 , Max-Stat: 19999
+Global sim. p-val =  0.03035 
+Max-Stat sim. p-val =  0.0701 
+Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.28028615 -2.58124528
+[1,] 1         1          1         1         2        0.28028618 -2.58124307
 [2,] 2         1          1         2         1        0.06501397 -2.52184992
 [3,] 1         1          1         2         2        0.10685477 0.25053291 
 [4,] 2         1          2         1         2        0.00537874 0.43303877 
-[5,] 2         2          1         2         2        0.06838773 0.72365533 
-[6,] 2         1          1         2         2        0.03724324 1.06592952 
-[7,] 2         1          2         2         1        0.42404639 2.51968304 
-     p-val      sim p-val 
-[1,] 0.00984446 0.00970049
-[2,] 0.01167395 0.01185059
-[3,] 0.80217526 0.80044002
-[4,] 0.66498661 0.67163358
-[5,] 0.46927736 0.46577329
-[6,] 0.2864555  0.28131407
-[7,] 0.01174606 0.01065053
+[5,] 2         2          1         2         2        0.06838773 0.72365524 
+[6,] 2         1          1         2         2        0.03724324 1.06592964 
+[7,] 2         1          2         2         1        0.42404636 2.51968093 
+     p-val      sim p-val
+[1,] 0.00984452 0.011    
+[2,] 0.01167395 0.0118   
+[3,] 0.80217526 0.8024   
+[4,] 0.66498661 0.66555  
+[5,] 0.46927742 0.46775  
+[6,] 0.28645545 0.2819   
+[7,] 0.01174613 0.0115   
 
 [1] " "
 [1] "#######################"
@@ -21632,36 +21633,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 19999
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.76509664, df = 7, p-val = 0.02735129
+global-stat = 15.76509233, df = 7, p-val = 0.02735134
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0303 
-Max-Stat sim. p-val =  0.06796019 
-Number of Simulations, Global:  20000 , Max-Stat: 19997
+Global sim. p-val =  0.03055 
+Max-Stat sim. p-val =  0.06836709 
+Number of Simulations, Global:  20000 , Max-Stat: 19995
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.28028615 -2.58124482
+[1,] 1         1          1         1         2        0.28028616 -2.58124412
 [2,] 2         1          1         2         1        0.06501397 -2.52184992
 [3,] 1         1          1         2         2        0.10685477 0.25053291 
 [4,] 2         1          2         1         2        0.00537874 0.43303877 
-[5,] 2         2          1         2         2        0.06838773 0.72365531 
-[6,] 2         1          1         2         2        0.03724324 1.06592954 
-[7,] 2         1          2         2         1        0.42404639 2.5196826  
+[5,] 2         2          1         2         2        0.06838773 0.72365528 
+[6,] 2         1          1         2         2        0.03724324 1.06592958 
+[7,] 2         1          2         2         1        0.42404638 2.51968193 
      p-val      sim p-val 
-[1,] 0.00984447 0.00925139
-[2,] 0.01167395 0.01175176
-[3,] 0.80217526 0.80027004
-[4,] 0.66498661 0.66374956
-[5,] 0.46927737 0.47207081
-[6,] 0.28645549 0.28369255
-[7,] 0.01174607 0.01080162
+[1,] 0.00984449 0.00930233
+[2,] 0.01167395 0.01110278
+[3,] 0.80217526 0.79894974
+[4,] 0.66498661 0.66506627
+[5,] 0.46927739 0.46786697
+[6,] 0.28645548 0.28422106
+[7,] 0.01174609 0.01070268
 
 [1] " "
 [1] "#######################"
@@ -21675,40 +21676,126 @@ Number of Simulations, Global:  20000 , Max-Stat: 19997
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.76509001, df = 7, p-val = 0.02735136
+global-stat = 15.76509666, df = 7, p-val = 0.02735129
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.03015 
-Max-Stat sim. p-val =  0.06690335 
-Number of Simulations, Global:  20000 , Max-Stat: 19999
+Global sim. p-val =  0.0302 
+Max-Stat sim. p-val =  0.06730673 
+Number of Simulations, Global:  20000 , Max-Stat: 19998
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.28028617 -2.58124374
+[1,] 1         1          1         1         2        0.28028615 -2.58124483
 [2,] 2         1          1         2         1        0.06501397 -2.52184992
 [3,] 1         1          1         2         2        0.10685477 0.25053291 
 [4,] 2         1          2         1         2        0.00537874 0.43303877 
-[5,] 2         2          1         2         2        0.06838773 0.72365527 
-[6,] 2         1          1         2         2        0.03724324 1.0659296  
-[7,] 2         1          2         2         1        0.42404637 2.51968157 
+[5,] 2         2          1         2         2        0.06838773 0.72365531 
+[6,] 2         1          1         2         2        0.03724324 1.06592954 
+[7,] 2         1          2         2         1        0.42404639 2.51968261 
      p-val      sim p-val 
-[1,] 0.0098445  0.00960048
-[2,] 0.01167395 0.01165058
-[3,] 0.80217526 0.80109005
-[4,] 0.66498661 0.66233312
-[5,] 0.4692774  0.47147357
-[6,] 0.28645547 0.28771439
-[7,] 0.0117461  0.01245062
+[1,] 0.00984447 0.00955096
+[2,] 0.01167395 0.01110111
+[3,] 0.80217526 0.80538054
+[4,] 0.66498661 0.6649665 
+[5,] 0.46927737 0.46914691
+[6,] 0.28645549 0.28782878
+[7,] 0.01174607 0.01225123
 
 [1] " "
 [1] "#######################"
 [1] "CHR_20.BLOCK_1-CRF_BMI-DOMINANT-REPETION1"
+[1] "#######################"
+[1] " "
+-------------------------------------------------------------------------------- 
+                        Haplotype Effect Model: dominant                         
+-------------------------------------------------------------------------------- 
+-------------------------------------------------------------------------------- 
+                            Global Score Statistics                              
+-------------------------------------------------------------------------------- 
+
+global-stat = 12.98863565, df = 7, p-val = 0.07238577
+
+-------------------------------------------------------------------------------- 
+                       Global Simulation p-value Results                         
+-------------------------------------------------------------------------------- 
+
+Global sim. p-val =  0.07575 
+Max-Stat sim. p-val =  0.09025 
+Number of Simulations, Global:  20000 , Max-Stat: 20000
+
+-------------------------------------------------------------------------------- 
+                           Haplotype-specific Scores                             
+-------------------------------------------------------------------------------- 
+
+     rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
+[1,] 2         1          1         2         1        0.06554718 -2.29806897
+[2,] 1         1          1         1         2        0.27885701 -1.96155112
+[3,] 1         1          1         2         2        0.10681173 -0.13187253
+[4,] 2         2          1         2         2        0.06837867 -0.06264662
+[5,] 2         1          2         1         2        0.00510085 0.70708188 
+[6,] 2         1          1         2         2        0.03786103 0.89583635 
+[7,] 2         1          2         2         1        0.42371926 2.4777921  
+     p-val      sim p-val
+[1,] 0.02155786 0.0216   
+[2,] 0.04981477 0.049    
+[3,] 0.89508511 0.89825  
+[4,] 0.95004791 0.94875  
+[5,] 0.4795156  0.4794   
+[6,] 0.37034017 0.3753   
+[7,] 0.01321981 0.01385  
+
+[1] " "
+[1] "#######################"
+[1] "CHR_20.BLOCK_1-CRF_BMI-DOMINANT-REPETION2"
+[1] "#######################"
+[1] " "
+-------------------------------------------------------------------------------- 
+                        Haplotype Effect Model: dominant                         
+-------------------------------------------------------------------------------- 
+-------------------------------------------------------------------------------- 
+                            Global Score Statistics                              
+-------------------------------------------------------------------------------- 
+
+global-stat = 12.9886344, df = 7, p-val = 0.0723858
+
+-------------------------------------------------------------------------------- 
+                       Global Simulation p-value Results                         
+-------------------------------------------------------------------------------- 
+
+Global sim. p-val =  0.074 
+Max-Stat sim. p-val =  0.09015 
+Number of Simulations, Global:  20000 , Max-Stat: 20000
+
+-------------------------------------------------------------------------------- 
+                           Haplotype-specific Scores                             
+-------------------------------------------------------------------------------- 
+
+     rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
+[1,] 2         1          1         2         1        0.06554718 -2.29806897
+[2,] 1         1          1         1         2        0.27885701 -1.96155095
+[3,] 1         1          1         2         2        0.10681173 -0.13187253
+[4,] 2         2          1         2         2        0.06837867 -0.06264663
+[5,] 2         1          2         1         2        0.00510085 0.70708188 
+[6,] 2         1          1         2         2        0.03786103 0.89583636 
+[7,] 2         1          2         2         1        0.42371926 2.47779189 
+     p-val      sim p-val
+[1,] 0.02155786 0.02125  
+[2,] 0.04981479 0.04985  
+[3,] 0.89508511 0.8931   
+[4,] 0.9500479  0.94995  
+[5,] 0.47951559 0.4743   
+[6,] 0.37034017 0.3656   
+[7,] 0.01321982 0.01245  
+
+[1] " "
+[1] "#######################"
+[1] "CHR_20.BLOCK_1-CRF_BMI-DOMINANT-REPETION3"
 [1] "#######################"
 [1] " "
 -------------------------------------------------------------------------------- 
@@ -21724,9 +21811,9 @@ global-stat = 12.98867993, df = 7, p-val = 0.07238468
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.07695 
-Max-Stat sim. p-val =  0.0927 
-Number of Simulations, Global:  20000 , Max-Stat: 20000
+Global sim. p-val =  0.07785 
+Max-Stat sim. p-val =  0.09210461 
+Number of Simulations, Global:  20000 , Max-Stat: 19999
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
@@ -21740,100 +21827,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 [5,] 2         1          2         1         2        0.00510085 0.70708181 
 [6,] 2         1          1         2         2        0.03786103 0.895836   
 [7,] 2         1          2         2         1        0.42371936 2.47779957 
-     p-val      sim p-val
-[1,] 0.02155786 0.0222   
-[2,] 0.04981407 0.05035  
-[3,] 0.89508512 0.8897   
-[4,] 0.95004813 0.95195  
-[5,] 0.47951564 0.48135  
-[6,] 0.37034036 0.36645  
-[7,] 0.01321954 0.0128   
-
-[1] " "
-[1] "#######################"
-[1] "CHR_20.BLOCK_1-CRF_BMI-DOMINANT-REPETION2"
-[1] "#######################"
-[1] " "
--------------------------------------------------------------------------------- 
-                        Haplotype Effect Model: dominant                         
--------------------------------------------------------------------------------- 
--------------------------------------------------------------------------------- 
-                            Global Score Statistics                              
--------------------------------------------------------------------------------- 
-
-global-stat = 12.98864461, df = 7, p-val = 0.07238555
-
--------------------------------------------------------------------------------- 
-                       Global Simulation p-value Results                         
--------------------------------------------------------------------------------- 
-
-Global sim. p-val =  0.07765 
-Max-Stat sim. p-val =  0.0897 
-Number of Simulations, Global:  20000 , Max-Stat: 20000
-
--------------------------------------------------------------------------------- 
-                           Haplotype-specific Scores                             
--------------------------------------------------------------------------------- 
-
-     rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 2         1          1         2         1        0.06554718 -2.29806898
-[2,] 1         1          1         1         2        0.27885699 -1.96155232
-[3,] 1         1          1         2         2        0.10681173 -0.13187253
-[4,] 2         2          1         2         2        0.06837867 -0.06264656
-[5,] 2         1          2         1         2        0.00510085 0.70708186 
-[6,] 2         1          1         2         2        0.03786103 0.89583628 
-[7,] 2         1          2         2         1        0.42371928 2.47779361 
-     p-val      sim p-val
-[1,] 0.02155786 0.0242   
-[2,] 0.04981463 0.0507   
-[3,] 0.89508511 0.89085  
-[4,] 0.95004795 0.9475   
-[5,] 0.47951561 0.4761   
-[6,] 0.37034021 0.37565  
-[7,] 0.01321976 0.01335  
-
-[1] " "
-[1] "#######################"
-[1] "CHR_20.BLOCK_1-CRF_BMI-DOMINANT-REPETION3"
-[1] "#######################"
-[1] " "
--------------------------------------------------------------------------------- 
-                        Haplotype Effect Model: dominant                         
--------------------------------------------------------------------------------- 
--------------------------------------------------------------------------------- 
-                            Global Score Statistics                              
--------------------------------------------------------------------------------- 
-
-global-stat = 12.98864056, df = 7, p-val = 0.07238565
-
--------------------------------------------------------------------------------- 
-                       Global Simulation p-value Results                         
--------------------------------------------------------------------------------- 
-
-Global sim. p-val =  0.0734 
-Max-Stat sim. p-val =  0.08735874 
-Number of Simulations, Global:  20000 , Max-Stat: 19998
-
--------------------------------------------------------------------------------- 
-                           Haplotype-specific Scores                             
--------------------------------------------------------------------------------- 
-
-     rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 2         1          1         2         1        0.06554718 -2.29806898
-[2,] 1         1          1         1         2        0.278857   -1.96155178
-[3,] 1         1          1         2         2        0.10681173 -0.13187253
-[4,] 2         2          1         2         2        0.06837867 -0.06264659
-[5,] 2         1          2         1         2        0.00510085 0.70708187 
-[6,] 2         1          1         2         2        0.03786103 0.89583631 
-[7,] 2         1          2         2         1        0.42371927 2.47779293 
      p-val      sim p-val 
-[1,] 0.02155786 0.02030203
-[2,] 0.04981469 0.0509551 
-[3,] 0.89508511 0.89133913
-[4,] 0.95004793 0.95034503
-[5,] 0.4795156  0.4810481 
-[6,] 0.37034019 0.3690369 
-[7,] 0.01321978 0.0120012 
+[1,] 0.02155786 0.02155108
+[2,] 0.04981407 0.05030252
+[3,] 0.89508512 0.89484474
+[4,] 0.95004813 0.94869743
+[5,] 0.47951564 0.48257413
+[6,] 0.37034036 0.3679684 
+[7,] 0.01321954 0.01240062
 
 [1] " "
 [1] "#######################"
@@ -21847,36 +21848,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 19998
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 13.39729286, df = 7, p-val = 0.06300008
+global-stat = 13.39730455, df = 7, p-val = 0.06299983
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0663 
-Max-Stat sim. p-val =  0.040052 
-Number of Simulations, Global:  20000 , Max-Stat: 19999
+Global sim. p-val =  0.06515 
+Max-Stat sim. p-val =  0.0418 
+Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27885697 -2.3363598 
-[2,] 2         1          1         2         1        0.06554718 -2.05788239
-[3,] 2         2          1         2         2        0.06837867 -0.2536363 
+[1,] 1         1          1         1         2        0.27885692 -2.33636189
+[2,] 2         1          1         2         1        0.06554718 -2.05788241
+[3,] 2         2          1         2         2        0.06837867 -0.25363617
 [4,] 1         1          1         2         2        0.10681173 -0.06321264
-[5,] 2         1          2         1         2        0.00510085 0.70708185 
-[6,] 2         1          1         2         2        0.03786103 0.8396429  
-[7,] 2         1          2         2         1        0.4237193  2.76164654 
-     p-val      sim p-val 
-[1,] 0.0194725  0.0179509 
-[2,] 0.03960142 0.04185209
-[3,] 0.79977655 0.79883994
-[4,] 0.94959718 0.95019751
-[5,] 0.47951561 0.47857393
-[6,] 0.40110864 0.39746987
-[7,] 0.00575107 0.00525026
+[5,] 2         1          2         1         2        0.00510085 0.70708182 
+[6,] 2         1          1         2         2        0.03786103 0.83964274 
+[7,] 2         1          2         2         1        0.42371935 2.76164875 
+     p-val      sim p-val
+[1,] 0.01947239 0.0203   
+[2,] 0.03960142 0.03865  
+[3,] 0.79977665 0.80045  
+[4,] 0.94959718 0.95065  
+[5,] 0.47951563 0.482    
+[6,] 0.40110873 0.40075  
+[7,] 0.00575103 0.0052   
 
 [1] " "
 [1] "#######################"
@@ -21890,14 +21891,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 19999
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 13.39728661, df = 7, p-val = 0.06300021
+global-stat = 13.39728609, df = 7, p-val = 0.06300023
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.06585 
-Max-Stat sim. p-val =  0.0389 
+Global sim. p-val =  0.0655 
+Max-Stat sim. p-val =  0.03895 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -21905,21 +21906,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.278857   -2.33635868
+[1,] 1         1          1         1         2        0.278857   -2.33635859
 [2,] 2         1          1         2         1        0.06554718 -2.05788239
-[3,] 2         2          1         2         2        0.06837867 -0.25363636
+[3,] 2         2          1         2         2        0.06837867 -0.25363637
 [4,] 1         1          1         2         2        0.10681173 -0.06321264
 [5,] 2         1          2         1         2        0.00510085 0.70708187 
-[6,] 2         1          1         2         2        0.03786103 0.83964298 
-[7,] 2         1          2         2         1        0.42371927 2.76164535 
+[6,] 2         1          1         2         2        0.03786103 0.83964299 
+[7,] 2         1          2         2         1        0.42371927 2.76164525 
      p-val      sim p-val
-[1,] 0.01947256 0.0191   
-[2,] 0.03960142 0.0375   
-[3,] 0.7997765  0.7977   
-[4,] 0.94959718 0.9496   
-[5,] 0.4795156  0.4769   
-[6,] 0.40110859 0.3996   
-[7,] 0.00575109 0.0045   
+[1,] 0.01947256 0.01835  
+[2,] 0.03960142 0.038    
+[3,] 0.7997765  0.79965  
+[4,] 0.94959718 0.94925  
+[5,] 0.4795156  0.48185  
+[6,] 0.40110859 0.4013   
+[7,] 0.00575109 0.00435  
 
 [1] " "
 [1] "#######################"
@@ -21933,36 +21934,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 13.39729202, df = 7, p-val = 0.0630001
+global-stat = 13.39728684, df = 7, p-val = 0.06300021
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.06685 
-Max-Stat sim. p-val =  0.0428 
-Number of Simulations, Global:  20000 , Max-Stat: 20000
+Global sim. p-val =  0.0697 
+Max-Stat sim. p-val =  0.04250213 
+Number of Simulations, Global:  20000 , Max-Stat: 19999
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27885697 -2.33635965
+[1,] 1         1          1         1         2        0.27885699 -2.33635872
 [2,] 2         1          1         2         1        0.06554718 -2.05788239
-[3,] 2         2          1         2         2        0.06837867 -0.25363631
+[3,] 2         2          1         2         2        0.06837867 -0.25363636
 [4,] 1         1          1         2         2        0.10681173 -0.06321264
-[5,] 2         1          2         1         2        0.00510085 0.70708185 
-[6,] 2         1          1         2         2        0.03786103 0.83964291 
-[7,] 2         1          2         2         1        0.4237193  2.76164638 
-     p-val      sim p-val
-[1,] 0.01947251 0.01875  
-[2,] 0.03960142 0.04215  
-[3,] 0.79977655 0.79745  
-[4,] 0.94959718 0.95095  
-[5,] 0.47951561 0.481    
-[6,] 0.40110863 0.40205  
-[7,] 0.00575107 0.00625  
+[5,] 2         1          2         1         2        0.00510085 0.70708187 
+[6,] 2         1          1         2         2        0.03786103 0.83964298 
+[7,] 2         1          2         2         1        0.42371927 2.7616454  
+     p-val      sim p-val 
+[1,] 0.01947255 0.01975099
+[2,] 0.03960142 0.03965198
+[3,] 0.7997765  0.79828991
+[4,] 0.94959718 0.94839742
+[5,] 0.4795156  0.48277414
+[6,] 0.40110859 0.40242012
+[7,] 0.00575109 0.0059503 
 
 [1] " "
 [1] "#######################"
@@ -21982,8 +21983,8 @@ global-stat = 16.05586929, df = 6, p-val = 0.01345722
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0135 
-Max-Stat sim. p-val =  0.01555 
+Global sim. p-val =  0.0128 
+Max-Stat sim. p-val =  0.01585 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -21998,12 +21999,12 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 [5,] 2         1          1         2         2        0.03741509 1.12875823 
 [6,] 2         1          2         2         1        0.42564885 2.98199998 
      p-val      sim p-val
-[1,] 0.01646495 0.01565  
-[2,] 0.03611138 0.03495  
-[3,] 0.56412499 0.5577   
-[4,] 0.39417637 0.40045  
-[5,] 0.25899984 0.2578   
-[6,] 0.00286372 0.003    
+[1,] 0.01646495 0.01605  
+[2,] 0.03611138 0.03755  
+[3,] 0.56412499 0.5669   
+[4,] 0.39417637 0.393    
+[5,] 0.25899984 0.25755  
+[6,] 0.00286372 0.00305  
 
 [1] " "
 [1] "#######################"
@@ -22023,8 +22024,8 @@ global-stat = 16.05586929, df = 6, p-val = 0.01345722
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0137 
-Max-Stat sim. p-val =  0.01685 
+Global sim. p-val =  0.01325 
+Max-Stat sim. p-val =  0.01635 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22039,12 +22040,12 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 [5,] 2         1          1         2         2        0.03741509 1.12875823 
 [6,] 2         1          2         2         1        0.42564885 2.98199998 
      p-val      sim p-val
-[1,] 0.01646495 0.0154   
-[2,] 0.03611138 0.0369   
-[3,] 0.56412499 0.56655  
-[4,] 0.39417637 0.3892   
-[5,] 0.25899984 0.25755  
-[6,] 0.00286372 0.00295  
+[1,] 0.01646495 0.0175   
+[2,] 0.03611138 0.03615  
+[3,] 0.56412499 0.56805  
+[4,] 0.39417637 0.39885  
+[5,] 0.25899984 0.25725  
+[6,] 0.00286372 0.00285  
 
 [1] " "
 [1] "#######################"
@@ -22058,14 +22059,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 16.05585104, df = 6, p-val = 0.01345731
+global-stat = 16.05586545, df = 6, p-val = 0.01345724
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.01315 
-Max-Stat sim. p-val =  0.01715 
+Global sim. p-val =  0.0133 
+Max-Stat sim. p-val =  0.01705 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22073,19 +22074,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934862 -2.39844093
+[1,] 1         1          1         1         2        0.2793486  -2.39844237
 [2,] 2         1          1         2         1        0.06608124 -2.09567105
-[3,] 1         1          1         2         2        0.1061753  -0.57672537
-[4,] 2         2          1         2         2        0.06707703 0.85206788 
-[5,] 2         1          1         2         2        0.03741509 1.12875833 
-[6,] 2         1          2         2         1        0.42564883 2.98199764 
+[3,] 1         1          1         2         2        0.1061753  -0.57672538
+[4,] 2         2          1         2         2        0.06707703 0.85206795 
+[5,] 2         1          1         2         2        0.03741509 1.12875825 
+[6,] 2         1          2         2         1        0.42564885 2.98199949 
      p-val      sim p-val
-[1,] 0.01646503 0.01645  
-[2,] 0.03611138 0.03345  
-[3,] 0.56412499 0.5642   
-[4,] 0.39417642 0.39315  
-[5,] 0.25899979 0.26     
-[6,] 0.00286374 0.00295  
+[1,] 0.01646497 0.01655  
+[2,] 0.03611138 0.03765  
+[3,] 0.56412499 0.56235  
+[4,] 0.39417638 0.4027   
+[5,] 0.25899983 0.26585  
+[6,] 0.00286372 0.0026   
 
 [1] " "
 [1] "#######################"
@@ -22099,14 +22100,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.96385124, df = 6, p-val = 0.01394931
+global-stat = 15.96385922, df = 6, p-val = 0.01394927
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.01405 
-Max-Stat sim. p-val =  0.0308 
+Global sim. p-val =  0.0137 
+Max-Stat sim. p-val =  0.02895 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22114,19 +22115,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934862 -2.76584428
-[2,] 2         1          1         2         1        0.06608124 -1.98896855
-[3,] 1         1          1         2         2        0.1061753  -0.48506376
-[4,] 2         1          1         2         2        0.03741509 0.72456711 
-[5,] 2         2          1         2         2        0.06707703 0.78706531 
-[6,] 2         1          2         2         1        0.42564882 2.79103863 
+[1,] 1         1          1         1         2        0.27934859 -2.76584589
+[2,] 2         1          1         2         1        0.06608124 -1.98896856
+[3,] 1         1          1         2         2        0.1061753  -0.48506377
+[4,] 2         1          1         2         2        0.03741509 0.72456699 
+[5,] 2         2          1         2         2        0.06707703 0.7870654  
+[6,] 2         1          2         2         1        0.42564885 2.79104022 
      p-val      sim p-val
-[1,] 0.00567756 0.006    
-[2,] 0.04670467 0.04565  
-[3,] 0.62763112 0.63365  
-[4,] 0.46871765 0.47145  
-[5,] 0.43124364 0.4338   
-[6,] 0.00525392 0.0053   
+[1,] 0.00567754 0.006    
+[2,] 0.04670467 0.04575  
+[3,] 0.62763111 0.62505  
+[4,] 0.46871772 0.47025  
+[5,] 0.43124358 0.4394   
+[6,] 0.00525389 0.0047   
 
 [1] " "
 [1] "#######################"
@@ -22140,14 +22141,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.96385309, df = 6, p-val = 0.0139493
+global-stat = 15.96385001, df = 6, p-val = 0.01394932
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.01335 
-Max-Stat sim. p-val =  0.0293 
+Global sim. p-val =  0.0134 
+Max-Stat sim. p-val =  0.02885 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22155,19 +22156,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934861 -2.76584465
+[1,] 1         1          1         1         2        0.27934863 -2.76584403
 [2,] 2         1          1         2         1        0.06608124 -1.98896855
 [3,] 1         1          1         2         2        0.1061753  -0.48506376
-[4,] 2         1          1         2         2        0.03741509 0.72456708 
-[5,] 2         2          1         2         2        0.06707703 0.78706533 
-[6,] 2         1          2         2         1        0.42564883 2.791039   
+[4,] 2         1          1         2         2        0.03741509 0.72456712 
+[5,] 2         2          1         2         2        0.06707703 0.78706529 
+[6,] 2         1          2         2         1        0.42564882 2.79103838 
      p-val      sim p-val
-[1,] 0.00567756 0.0055   
-[2,] 0.04670467 0.04805  
-[3,] 0.62763111 0.6311   
-[4,] 0.46871766 0.46745  
-[5,] 0.43124362 0.42925  
-[6,] 0.00525391 0.0051   
+[1,] 0.00567757 0.00575  
+[2,] 0.04670467 0.04555  
+[3,] 0.62763112 0.63     
+[4,] 0.46871763 0.4685   
+[5,] 0.43124364 0.42945  
+[6,] 0.00525392 0.00495  
 
 [1] " "
 [1] "#######################"
@@ -22181,14 +22182,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.96385625, df = 6, p-val = 0.01394929
+global-stat = 15.96385922, df = 6, p-val = 0.01394927
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.01555 
-Max-Stat sim. p-val =  0.0303 
+Global sim. p-val =  0.013 
+Max-Stat sim. p-val =  0.0297 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22196,19 +22197,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.2793486  -2.76584529
-[2,] 2         1          1         2         1        0.06608124 -1.98896855
+[1,] 1         1          1         1         2        0.27934859 -2.76584589
+[2,] 2         1          1         2         1        0.06608124 -1.98896856
 [3,] 1         1          1         2         2        0.1061753  -0.48506377
-[4,] 2         1          1         2         2        0.03741509 0.72456703 
-[5,] 2         2          1         2         2        0.06707703 0.78706536 
-[6,] 2         1          2         2         1        0.42564884 2.79103963 
+[4,] 2         1          1         2         2        0.03741509 0.72456699 
+[5,] 2         2          1         2         2        0.06707703 0.7870654  
+[6,] 2         1          2         2         1        0.42564885 2.79104022 
      p-val      sim p-val
-[1,] 0.00567755 0.0061   
-[2,] 0.04670467 0.04715  
-[3,] 0.62763111 0.6287   
-[4,] 0.46871769 0.47385  
-[5,] 0.4312436  0.4275   
-[6,] 0.0052539  0.00535  
+[1,] 0.00567754 0.00625  
+[2,] 0.04670467 0.0452   
+[3,] 0.62763111 0.6299   
+[4,] 0.46871772 0.47355  
+[5,] 0.43124358 0.431    
+[6,] 0.00525389 0.00575  
 
 [1] " "
 [1] "#######################"
@@ -22222,14 +22223,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.71540247, df = 6, p-val = 0.01536583
+global-stat = 15.71539879, df = 6, p-val = 0.01536585
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0148 
-Max-Stat sim. p-val =  0.0186 
+Global sim. p-val =  0.01465 
+Max-Stat sim. p-val =  0.01885 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22237,19 +22238,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934862 -2.39393619
-[2,] 2         1          1         2         1        0.06608124 -2.13600932
+[1,] 1         1          1         1         2        0.27934862 -2.39393581
+[2,] 2         1          1         2         1        0.06608124 -2.13600931
 [3,] 1         1          1         2         2        0.1061753  -0.5039297 
-[4,] 2         2          1         2         2        0.06707703 0.4950183  
-[5,] 2         1          1         2         2        0.03741509 1.18478848 
-[6,] 2         1          2         2         1        0.42564883 2.9675112  
+[4,] 2         2          1         2         2        0.06707703 0.49501828 
+[5,] 2         1          1         2         2        0.03741509 1.1847885  
+[6,] 2         1          2         2         1        0.42564882 2.96751071 
      p-val      sim p-val
-[1,] 0.01666865 0.0166   
-[2,] 0.03267865 0.03315  
-[3,] 0.61431078 0.6082   
-[4,] 0.6205872  0.62485  
-[5,] 0.23610109 0.238    
-[6,] 0.00300221 0.00365  
+[1,] 0.01666867 0.0175   
+[2,] 0.03267865 0.0347   
+[3,] 0.61431078 0.6084   
+[4,] 0.62058721 0.62155  
+[5,] 0.23610108 0.23825  
+[6,] 0.00300222 0.0033   
 
 [1] " "
 [1] "#######################"
@@ -22263,14 +22264,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.71542204, df = 6, p-val = 0.01536572
+global-stat = 15.71539948, df = 6, p-val = 0.01536585
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.01375 
-Max-Stat sim. p-val =  0.01825 
+Global sim. p-val =  0.0148 
+Max-Stat sim. p-val =  0.01915 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22278,19 +22279,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934859 -2.39393822
-[2,] 2         1          1         2         1        0.06608124 -2.13600932
+[1,] 1         1          1         1         2        0.27934862 -2.39393588
+[2,] 2         1          1         2         1        0.06608124 -2.13600931
 [3,] 1         1          1         2         2        0.1061753  -0.5039297 
-[4,] 2         2          1         2         2        0.06707703 0.4950184  
-[5,] 2         1          1         2         2        0.03741509 1.18478835 
-[6,] 2         1          2         2         1        0.42564885 2.96751379 
+[4,] 2         2          1         2         2        0.06707703 0.49501829 
+[5,] 2         1          1         2         2        0.03741509 1.1847885  
+[6,] 2         1          2         2         1        0.42564882 2.9675108  
      p-val      sim p-val
-[1,] 0.01666856 0.01665  
-[2,] 0.03267865 0.03455  
-[3,] 0.61431078 0.6155   
-[4,] 0.62058714 0.6182   
-[5,] 0.23610114 0.2376   
-[6,] 0.00300219 0.00305  
+[1,] 0.01666866 0.0175   
+[2,] 0.03267865 0.03285  
+[3,] 0.61431078 0.6117   
+[4,] 0.62058721 0.6217   
+[5,] 0.23610108 0.23515  
+[6,] 0.00300222 0.00295  
 
 [1] " "
 [1] "#######################"
@@ -22304,14 +22305,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.71542204, df = 6, p-val = 0.01536572
+global-stat = 15.71541076, df = 6, p-val = 0.01536578
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.014 
-Max-Stat sim. p-val =  0.01965 
+Global sim. p-val =  0.01555 
+Max-Stat sim. p-val =  0.0175 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22319,19 +22320,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934859 -2.39393822
+[1,] 1         1          1         1         2        0.27934861 -2.39393705
 [2,] 2         1          1         2         1        0.06608124 -2.13600932
 [3,] 1         1          1         2         2        0.1061753  -0.5039297 
-[4,] 2         2          1         2         2        0.06707703 0.4950184  
-[5,] 2         1          1         2         2        0.03741509 1.18478835 
-[6,] 2         1          2         2         1        0.42564885 2.96751379 
+[4,] 2         2          1         2         2        0.06707703 0.49501834 
+[5,] 2         1          1         2         2        0.03741509 1.18478842 
+[6,] 2         1          2         2         1        0.42564884 2.9675123  
      p-val      sim p-val
-[1,] 0.01666856 0.01635  
-[2,] 0.03267865 0.03415  
-[3,] 0.61431078 0.6102   
-[4,] 0.62058714 0.62105  
-[5,] 0.23610114 0.23425  
-[6,] 0.00300219 0.0032   
+[1,] 0.01666861 0.0151   
+[2,] 0.03267865 0.03225  
+[3,] 0.61431078 0.6179   
+[4,] 0.62058717 0.622    
+[5,] 0.23610111 0.2311   
+[6,] 0.0030022  0.0027   
 
 [1] " "
 [1] "#######################"
@@ -22345,14 +22346,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.82343115, df = 6, p-val = 0.01473372
+global-stat = 15.82344247, df = 6, p-val = 0.01473366
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0142 
-Max-Stat sim. p-val =  0.01975 
+Global sim. p-val =  0.01475 
+Max-Stat sim. p-val =  0.02195 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22360,19 +22361,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934863 -2.76349507
-[2,] 2         1          1         2         1        0.06608124 -1.98636184
+[1,] 1         1          1         1         2        0.27934859 -2.76349727
+[2,] 2         1          1         2         1        0.06608124 -1.98636185
 [3,] 1         1          1         2         2        0.1061753  -0.41043602
-[4,] 2         2          1         2         2        0.06707703 0.39112125 
-[5,] 2         1          1         2         2        0.03741509 0.86588765 
-[6,] 2         1          2         2         1        0.42564881 2.90958922 
+[4,] 2         2          1         2         2        0.06707703 0.39112138 
+[5,] 2         1          1         2         2        0.03741509 0.86588747 
+[6,] 2         1          2         2         1        0.42564885 2.90959144 
      p-val      sim p-val
-[1,] 0.0057186  0.00555  
-[2,] 0.04699316 0.0469   
-[3,] 0.68148613 0.67765  
-[4,] 0.69570762 0.6951   
-[5,] 0.38655178 0.3894   
-[6,] 0.00361904 0.0035   
+[1,] 0.00571856 0.0057   
+[2,] 0.04699316 0.04855  
+[3,] 0.68148613 0.6811   
+[4,] 0.69570752 0.6919   
+[5,] 0.38655188 0.3869   
+[6,] 0.00361902 0.00345  
 
 [1] " "
 [1] "#######################"
@@ -22386,14 +22387,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.82343251, df = 6, p-val = 0.01473372
+global-stat = 15.82344247, df = 6, p-val = 0.01473366
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0145 
-Max-Stat sim. p-val =  0.0217 
+Global sim. p-val =  0.0135 
+Max-Stat sim. p-val =  0.0223 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22401,19 +22402,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27934863 -2.76349533
-[2,] 2         1          1         2         1        0.06608124 -1.98636184
+[1,] 1         1          1         1         2        0.27934859 -2.76349727
+[2,] 2         1          1         2         1        0.06608124 -1.98636185
 [3,] 1         1          1         2         2        0.1061753  -0.41043602
-[4,] 2         2          1         2         2        0.06707703 0.39112126 
-[5,] 2         1          1         2         2        0.03741509 0.86588762 
-[6,] 2         1          2         2         1        0.42564882 2.90958948 
+[4,] 2         2          1         2         2        0.06707703 0.39112138 
+[5,] 2         1          1         2         2        0.03741509 0.86588747 
+[6,] 2         1          2         2         1        0.42564885 2.90959144 
      p-val      sim p-val
-[1,] 0.00571859 0.0063   
-[2,] 0.04699316 0.0467   
-[3,] 0.68148613 0.6789   
-[4,] 0.6957076  0.6968   
-[5,] 0.38655179 0.38215  
-[6,] 0.00361904 0.0037   
+[1,] 0.00571856 0.0058   
+[2,] 0.04699316 0.0507   
+[3,] 0.68148613 0.68205  
+[4,] 0.69570752 0.6966   
+[5,] 0.38655188 0.38565  
+[6,] 0.00361902 0.00335  
 
 [1] " "
 [1] "#######################"
@@ -22427,14 +22428,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 15.8234407, df = 6, p-val = 0.01473367
+global-stat = 15.82343657, df = 6, p-val = 0.01473369
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.0132 
-Max-Stat sim. p-val =  0.01925 
+Global sim. p-val =  0.01475 
+Max-Stat sim. p-val =  0.02105 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22442,19 +22443,19 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.2793486  -2.76349693
+[1,] 1         1          1         1         2        0.27934861 -2.76349612
 [2,] 2         1          1         2         1        0.06608124 -1.98636185
 [3,] 1         1          1         2         2        0.1061753  -0.41043602
-[4,] 2         2          1         2         2        0.06707703 0.39112136 
-[5,] 2         1          1         2         2        0.03741509 0.8658875  
-[6,] 2         1          2         2         1        0.42564884 2.90959109 
+[4,] 2         2          1         2         2        0.06707703 0.39112131 
+[5,] 2         1          1         2         2        0.03741509 0.86588756 
+[6,] 2         1          2         2         1        0.42564883 2.90959028 
      p-val      sim p-val
-[1,] 0.00571856 0.00455  
-[2,] 0.04699316 0.0468   
-[3,] 0.68148613 0.68065  
-[4,] 0.69570753 0.6919   
-[5,] 0.38655186 0.3894   
-[6,] 0.00361902 0.00365  
+[1,] 0.00571858 0.0055   
+[2,] 0.04699316 0.0452   
+[3,] 0.68148613 0.6787   
+[4,] 0.69570757 0.69925  
+[5,] 0.38655183 0.38795  
+[6,] 0.00361903 0.00405  
 
 [1] " "
 [1] "#######################"
@@ -22468,14 +22469,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 9.81586681, df = 7, p-val = 0.19925049
+global-stat = 9.81586704, df = 7, p-val = 0.19925048
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.2077 
-Max-Stat sim. p-val =  0.0752 
+Global sim. p-val =  0.2023 
+Max-Stat sim. p-val =  0.07135 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22483,21 +22484,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27654045 -1.35290408
-[2,] 2         1          2         2         1        0.42172131 -0.08980486
+[1,] 1         1          1         1         2        0.27654045 -1.35290417
+[2,] 2         1          2         2         1        0.42172131 -0.08980477
 [3,] 2         1          2         1         2        0.0057001  -0.05732623
 [4,] 2         1          1         2         2        0.03965634 0.07384924 
 [5,] 1         1          1         2         2        0.10882724 0.77477119 
 [6,] 2         1          1         2         1        0.06631037 0.77790949 
 [7,] 2         2          1         2         2        0.06944613 2.56477797 
      p-val      sim p-val
-[1,] 0.17608628 0.1732   
-[2,] 0.92844229 0.9286   
-[3,] 0.95428533 0.9554   
-[4,] 0.94113034 0.93985  
-[5,] 0.43847487 0.4415   
-[6,] 0.43662237 0.44075  
-[7,] 0.01032418 0.01025  
+[1,] 0.17608625 0.17635  
+[2,] 0.92844236 0.9282   
+[3,] 0.95428533 0.95365  
+[4,] 0.94113034 0.93775  
+[5,] 0.43847487 0.44005  
+[6,] 0.43662237 0.4365   
+[7,] 0.01032418 0.0114   
 
 [1] " "
 [1] "#######################"
@@ -22511,36 +22512,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 9.8158685, df = 7, p-val = 0.19925039
+global-stat = 9.81586887, df = 7, p-val = 0.19925037
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.20045 
-Max-Stat sim. p-val =  0.06940347 
-Number of Simulations, Global:  20000 , Max-Stat: 19999
+Global sim. p-val =  0.201 
+Max-Stat sim. p-val =  0.07035 
+Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27654045 -1.35290476
-[2,] 2         1          2         2         1        0.42172132 -0.08980421
+[1,] 1         1          1         1         2        0.27654044 -1.35290491
+[2,] 2         1          2         2         1        0.42172132 -0.08980406
 [3,] 2         1          2         1         2        0.0057001  -0.05732623
 [4,] 2         1          1         2         2        0.03965634 0.07384924 
 [5,] 1         1          1         2         2        0.10882724 0.77477119 
 [6,] 2         1          1         2         1        0.06631037 0.77790949 
 [7,] 2         2          1         2         2        0.06944613 2.56477796 
-     p-val      sim p-val 
-[1,] 0.17608606 0.17455873
-[2,] 0.92844281 0.9279464 
-[3,] 0.95428532 0.95184759
-[4,] 0.94113034 0.94269713
-[5,] 0.43847487 0.43572179
-[6,] 0.43662237 0.44442222
-[7,] 0.01032418 0.00985049
+     p-val      sim p-val
+[1,] 0.17608601 0.17515  
+[2,] 0.92844292 0.93055  
+[3,] 0.95428532 0.95595  
+[4,] 0.94113034 0.939    
+[5,] 0.43847487 0.444    
+[6,] 0.43662237 0.43195  
+[7,] 0.01032418 0.0091   
 
 [1] " "
 [1] "#######################"
@@ -22554,36 +22555,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 19999
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 9.81586821, df = 7, p-val = 0.19925041
+global-stat = 9.81585766, df = 7, p-val = 0.19925103
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.20315 
-Max-Stat sim. p-val =  0.0732 
-Number of Simulations, Global:  20000 , Max-Stat: 20000
+Global sim. p-val =  0.19975 
+Max-Stat sim. p-val =  0.07070354 
+Number of Simulations, Global:  20000 , Max-Stat: 19999
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27654045 -1.35290464
-[2,] 2         1          2         2         1        0.42172132 -0.08980432
-[3,] 2         1          2         1         2        0.0057001  -0.05732623
+[1,] 1         1          1         1         2        0.2765405  -1.35290042
+[2,] 2         1          2         2         1        0.42172127 -0.0898084 
+[3,] 2         1          2         1         2        0.0057001  -0.05732621
 [4,] 2         1          1         2         2        0.03965634 0.07384924 
 [5,] 1         1          1         2         2        0.10882724 0.77477119 
-[6,] 2         1          1         2         1        0.06631037 0.77790949 
-[7,] 2         2          1         2         2        0.06944613 2.56477796 
-     p-val      sim p-val
-[1,] 0.1760861  0.17775  
-[2,] 0.92844271 0.9312   
-[3,] 0.95428532 0.95275  
-[4,] 0.94113034 0.94105  
-[5,] 0.43847487 0.4393   
-[6,] 0.43662237 0.4423   
-[7,] 0.01032418 0.01035  
+[6,] 2         1          1         2         1        0.06631037 0.7779095  
+[7,] 2         2          1         2         2        0.06944613 2.56477801 
+     p-val      sim p-val 
+[1,] 0.17608745 0.16735837
+[2,] 0.92843947 0.92579629
+[3,] 0.95428534 0.95459773
+[4,] 0.94113035 0.94179709
+[5,] 0.43847487 0.43502175
+[6,] 0.43662237 0.43682184
+[7,] 0.01032418 0.01085054
 
 [1] " "
 [1] "#######################"
@@ -22597,14 +22598,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.81167159, df = 7, p-val = 0.14704739
+global-stat = 10.81167177, df = 7, p-val = 0.14704738
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.1495 
-Max-Stat sim. p-val =  0.04315 
+Global sim. p-val =  0.15075 
+Max-Stat sim. p-val =  0.04235 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22612,21 +22613,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.2765405  -1.60886304
-[2,] 2         1          2         2         1        0.42172126 -0.80563986
+[1,] 1         1          1         1         2        0.2765405  -1.60886318
+[2,] 2         1          2         2         1        0.42172127 -0.80563975
 [3,] 2         1          1         2         2        0.03965634 -0.26002572
 [4,] 2         1          2         1         2        0.0057001  -0.05732621
 [5,] 2         1          1         2         1        0.06631037 0.82207962 
 [6,] 1         1          1         2         2        0.10882724 0.9026361  
 [7,] 2         2          1         2         2        0.06944613 2.75636777 
      p-val      sim p-val
-[1,] 0.10764629 0.10635  
-[2,] 0.42045053 0.4205   
-[3,] 0.79484393 0.79425  
-[4,] 0.95428535 0.95635  
-[5,] 0.41103158 0.4083   
-[6,] 0.36671906 0.3696   
-[7,] 0.00584472 0.0056   
+[1,] 0.10764626 0.10405  
+[2,] 0.4204506  0.416    
+[3,] 0.79484393 0.794    
+[4,] 0.95428534 0.9551   
+[5,] 0.41103158 0.4075   
+[6,] 0.36671906 0.3664   
+[7,] 0.00584472 0.00565  
 
 [1] " "
 [1] "#######################"
@@ -22640,14 +22641,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.81167259, df = 7, p-val = 0.14704734
+global-stat = 10.8116764, df = 7, p-val = 0.14704717
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.1497 
-Max-Stat sim. p-val =  0.04165 
+Global sim. p-val =  0.1495 
+Max-Stat sim. p-val =  0.0402 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22655,21 +22656,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27654049 -1.60886381
-[2,] 2         1          2         2         1        0.42172128 -0.80563925
-[3,] 2         1          1         2         2        0.03965634 -0.26002572
-[4,] 2         1          2         1         2        0.0057001  -0.05732621
-[5,] 2         1          1         2         1        0.06631037 0.82207962 
+[1,] 1         1          1         1         2        0.27654044 -1.60886672
+[2,] 2         1          2         2         1        0.42172132 -0.80563691
+[3,] 2         1          1         2         2        0.03965634 -0.26002571
+[4,] 2         1          2         1         2        0.0057001  -0.05732623
+[5,] 2         1          1         2         1        0.06631037 0.82207961 
 [6,] 1         1          1         2         2        0.10882724 0.9026361  
-[7,] 2         2          1         2         2        0.06944613 2.75636776 
+[7,] 2         2          1         2         2        0.06944613 2.75636772 
      p-val      sim p-val
-[1,] 0.10764612 0.1075   
-[2,] 0.42045089 0.4229   
-[3,] 0.79484393 0.7947   
-[4,] 0.95428534 0.95475  
-[5,] 0.41103158 0.41475  
-[6,] 0.36671906 0.3609   
-[7,] 0.00584472 0.00645  
+[1,] 0.10764549 0.10595  
+[2,] 0.42045224 0.4236   
+[3,] 0.79484394 0.7948   
+[4,] 0.95428532 0.95405  
+[5,] 0.41103159 0.40895  
+[6,] 0.36671906 0.3743   
+[7,] 0.00584472 0.0058   
 
 [1] " "
 [1] "#######################"
@@ -22683,36 +22684,36 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.81167379, df = 7, p-val = 0.14704729
+global-stat = 10.8116764, df = 7, p-val = 0.14704717
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.15165 
-Max-Stat sim. p-val =  0.04145 
-Number of Simulations, Global:  20000 , Max-Stat: 20000
+Global sim. p-val =  0.15425 
+Max-Stat sim. p-val =  0.03955198 
+Number of Simulations, Global:  20000 , Max-Stat: 19999
 
 -------------------------------------------------------------------------------- 
                            Haplotype-specific Scores                             
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27654047 -1.60886473
-[2,] 2         1          2         2         1        0.42172129 -0.80563851
-[3,] 2         1          1         2         2        0.03965634 -0.26002572
-[4,] 2         1          2         1         2        0.0057001  -0.05732622
-[5,] 2         1          1         2         1        0.06631037 0.82207962 
+[1,] 1         1          1         1         2        0.27654044 -1.60886672
+[2,] 2         1          2         2         1        0.42172132 -0.80563691
+[3,] 2         1          1         2         2        0.03965634 -0.26002571
+[4,] 2         1          2         1         2        0.0057001  -0.05732623
+[5,] 2         1          1         2         1        0.06631037 0.82207961 
 [6,] 1         1          1         2         2        0.10882724 0.9026361  
-[7,] 2         2          1         2         2        0.06944613 2.75636775 
-     p-val      sim p-val
-[1,] 0.10764592 0.10805  
-[2,] 0.42045131 0.4247   
-[3,] 0.79484394 0.7951   
-[4,] 0.95428533 0.95525  
-[5,] 0.41103159 0.413    
-[6,] 0.36671906 0.3676   
-[7,] 0.00584472 0.0053   
+[7,] 2         2          1         2         2        0.06944613 2.75636772 
+     p-val      sim p-val 
+[1,] 0.10764549 0.10625531
+[2,] 0.42045224 0.4280714 
+[3,] 0.79484394 0.79083954
+[4,] 0.95428532 0.95554778
+[5,] 0.41103159 0.41327066
+[6,] 0.36671906 0.3640182 
+[7,] 0.00584472 0.0059003 
 
 [1] " "
 [1] "#######################"
@@ -22726,14 +22727,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 9.683311, df = 7, p-val = 0.20724142
+global-stat = 9.68330459, df = 7, p-val = 0.20724182
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.20565 
-Max-Stat sim. p-val =  0.2014 
+Global sim. p-val =  0.20965 
+Max-Stat sim. p-val =  0.19915 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22741,21 +22742,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.2797859  -1.80576052
-[2,] 1         1          1         2         2        0.10656189 -1.06541547
-[3,] 2         1          2         1         2        0.00517443 -0.04646154
-[4,] 2         1          2         2         1        0.42396086 0.46057327 
-[5,] 2         2          1         2         2        0.06798877 0.53915853 
-[6,] 2         1          1         2         2        0.03697274 1.12853794 
+[1,] 1         1          1         1         2        0.27978593 -1.80575885
+[2,] 1         1          1         2         2        0.10656189 -1.06541546
+[3,] 2         1          2         1         2        0.00517442 -0.04646152
+[4,] 2         1          2         2         1        0.42396083 0.4605715  
+[5,] 2         2          1         2         2        0.06798877 0.5391585  
+[6,] 2         1          1         2         2        0.03697274 1.128538   
 [7,] 2         1          1         2         1        0.06613155 2.1446992  
      p-val      sim p-val
-[1,] 0.07095575 0.0706   
-[2,] 0.28668796 0.2854   
-[3,] 0.96294238 0.9618   
-[4,] 0.64510479 0.6491   
-[5,] 0.58977747 0.5955   
-[6,] 0.2590928  0.26495  
-[7,] 0.0319769  0.03105  
+[1,] 0.07095602 0.0711   
+[2,] 0.28668796 0.2867   
+[3,] 0.96294241 0.96325  
+[4,] 0.64510606 0.6444   
+[5,] 0.58977749 0.5893   
+[6,] 0.25909278 0.2547   
+[7,] 0.0319769  0.0315   
 
 [1] " "
 [1] "#######################"
@@ -22769,14 +22770,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 9.68332041, df = 7, p-val = 0.20724085
+global-stat = 9.68331083, df = 7, p-val = 0.20724143
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.20425 
-Max-Stat sim. p-val =  0.19655 
+Global sim. p-val =  0.20945 
+Max-Stat sim. p-val =  0.1994 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22784,21 +22785,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27978585 -1.80576298
-[2,] 1         1          1         2         2        0.10656189 -1.06541548
-[3,] 2         1          2         1         2        0.00517443 -0.04646158
-[4,] 2         1          2         2         1        0.42396091 0.46057587 
-[5,] 2         2          1         2         2        0.06798877 0.53915858 
-[6,] 2         1          1         2         2        0.03697274 1.12853784 
-[7,] 2         1          1         2         1        0.06613155 2.14469921 
+[1,] 1         1          1         1         2        0.2797859  -1.80576048
+[2,] 1         1          1         2         2        0.10656189 -1.06541547
+[3,] 2         1          2         1         2        0.00517443 -0.04646154
+[4,] 2         1          2         2         1        0.42396086 0.46057323 
+[5,] 2         2          1         2         2        0.06798877 0.53915853 
+[6,] 2         1          1         2         2        0.03697274 1.12853794 
+[7,] 2         1          1         2         1        0.06613155 2.1446992  
      p-val      sim p-val
-[1,] 0.07095537 0.069    
-[2,] 0.28668796 0.28695  
-[3,] 0.96294235 0.96185  
-[4,] 0.64510292 0.6468   
-[5,] 0.58977743 0.58535  
-[6,] 0.25909284 0.25665  
-[7,] 0.0319769  0.03085  
+[1,] 0.07095576 0.07175  
+[2,] 0.28668796 0.2845   
+[3,] 0.96294238 0.96395  
+[4,] 0.64510482 0.6486   
+[5,] 0.58977747 0.59365  
+[6,] 0.2590928  0.25975  
+[7,] 0.0319769  0.03185  
 
 [1] " "
 [1] "#######################"
@@ -22812,14 +22813,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 9.68332008, df = 7, p-val = 0.20724087
+global-stat = 9.68330473, df = 7, p-val = 0.20724181
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.2106 
-Max-Stat sim. p-val =  0.1992 
+Global sim. p-val =  0.2116 
+Max-Stat sim. p-val =  0.20205 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22827,21 +22828,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27978586 -1.80576289
-[2,] 1         1          1         2         2        0.10656189 -1.06541548
-[3,] 2         1          2         1         2        0.00517443 -0.04646158
-[4,] 2         1          2         2         1        0.42396091 0.46057578 
-[5,] 2         2          1         2         2        0.06798877 0.53915858 
-[6,] 2         1          1         2         2        0.03697274 1.12853785 
-[7,] 2         1          1         2         1        0.06613155 2.14469921 
+[1,] 1         1          1         1         2        0.27978593 -1.80575888
+[2,] 1         1          1         2         2        0.10656189 -1.06541546
+[3,] 2         1          2         1         2        0.00517442 -0.04646152
+[4,] 2         1          2         2         1        0.42396083 0.46057154 
+[5,] 2         2          1         2         2        0.06798877 0.5391585  
+[6,] 2         1          1         2         2        0.03697274 1.128538   
+[7,] 2         1          1         2         1        0.06613155 2.1446992  
      p-val      sim p-val
-[1,] 0.07095538 0.07085  
-[2,] 0.28668796 0.29205  
-[3,] 0.96294235 0.9641   
-[4,] 0.64510299 0.64905  
-[5,] 0.58977744 0.5902   
-[6,] 0.25909284 0.2536   
-[7,] 0.0319769  0.0314   
+[1,] 0.07095601 0.06975  
+[2,] 0.28668796 0.28565  
+[3,] 0.96294241 0.9629   
+[4,] 0.64510603 0.6463   
+[5,] 0.58977749 0.58935  
+[6,] 0.25909278 0.25755  
+[7,] 0.0319769  0.0348   
 
 [1] " "
 [1] "#######################"
@@ -22855,14 +22856,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.03522027, df = 7, p-val = 0.18658634
+global-stat = 10.03521462, df = 7, p-val = 0.18658666
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.18805 
-Max-Stat sim. p-val =  0.14325 
+Global sim. p-val =  0.19155 
+Max-Stat sim. p-val =  0.1434 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22870,21 +22871,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27978591 -1.59627351
+[1,] 1         1          1         1         2        0.27978594 -1.59627217
 [2,] 1         1          1         2         2        0.10656189 -1.19380884
-[3,] 2         1          2         1         2        0.00517442 -0.04646154
-[4,] 2         2          1         2         2        0.06798877 0.31463114 
-[5,] 2         1          2         2         1        0.42396086 0.60635741 
-[6,] 2         1          1         2         2        0.03697274 1.10350502 
+[3,] 2         1          2         1         2        0.00517442 -0.04646151
+[4,] 2         2          1         2         2        0.06798877 0.3146311  
+[5,] 2         1          2         2         1        0.42396082 0.60635616 
+[6,] 2         1          1         2         2        0.03697274 1.10350509 
 [7,] 2         1          1         2         1        0.06613155 2.28117122 
      p-val      sim p-val
-[1,] 0.11042774 0.1103   
+[1,] 0.11042804 0.11255  
 [2,] 0.23255275 0.23675  
-[3,] 0.96294239 0.96285  
-[4,] 0.75304174 0.7518   
-[5,] 0.54427744 0.54195  
-[6,] 0.26980791 0.27505  
-[7,] 0.02253832 0.0224   
+[3,] 0.96294241 0.9645   
+[4,] 0.75304176 0.7538   
+[5,] 0.54427827 0.54685  
+[6,] 0.26980788 0.269    
+[7,] 0.02253832 0.02335  
 
 [1] " "
 [1] "#######################"
@@ -22898,14 +22899,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.03521709, df = 7, p-val = 0.18658652
+global-stat = 10.03521831, df = 7, p-val = 0.18658645
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.18475 
-Max-Stat sim. p-val =  0.14145 
+Global sim. p-val =  0.18985 
+Max-Stat sim. p-val =  0.14115 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22913,21 +22914,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27978592 -1.59627276
+[1,] 1         1          1         1         2        0.27978592 -1.59627305
 [2,] 1         1          1         2         2        0.10656189 -1.19380884
-[3,] 2         1          2         1         2        0.00517442 -0.04646152
+[3,] 2         1          2         1         2        0.00517442 -0.04646153
 [4,] 2         2          1         2         2        0.06798877 0.31463112 
-[5,] 2         1          2         2         1        0.42396084 0.60635671 
-[6,] 2         1          1         2         2        0.03697274 1.10350506 
+[5,] 2         1          2         2         1        0.42396084 0.60635698 
+[6,] 2         1          1         2         2        0.03697274 1.10350504 
 [7,] 2         1          1         2         1        0.06613155 2.28117122 
      p-val      sim p-val
-[1,] 0.11042791 0.10905  
-[2,] 0.23255275 0.23155  
-[3,] 0.9629424  0.96225  
-[4,] 0.75304175 0.75025  
-[5,] 0.54427791 0.5432   
-[6,] 0.2698079  0.27425  
-[7,] 0.02253832 0.0233   
+[1,] 0.11042785 0.1068   
+[2,] 0.23255275 0.23345  
+[3,] 0.9629424  0.96105  
+[4,] 0.75304175 0.756    
+[5,] 0.54427773 0.5403   
+[6,] 0.2698079  0.2703   
+[7,] 0.02253832 0.0218   
 
 [1] " "
 [1] "#######################"
@@ -22941,14 +22942,14 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
                             Global Score Statistics                              
 -------------------------------------------------------------------------------- 
 
-global-stat = 10.03522891, df = 7, p-val = 0.18658585
+global-stat = 10.03521404, df = 7, p-val = 0.18658669
 
 -------------------------------------------------------------------------------- 
                        Global Simulation p-value Results                         
 -------------------------------------------------------------------------------- 
 
-Global sim. p-val =  0.19075 
-Max-Stat sim. p-val =  0.14285 
+Global sim. p-val =  0.186 
+Max-Stat sim. p-val =  0.14015 
 Number of Simulations, Global:  20000 , Max-Stat: 20000
 
 -------------------------------------------------------------------------------- 
@@ -22956,21 +22957,21 @@ Number of Simulations, Global:  20000 , Max-Stat: 20000
 -------------------------------------------------------------------------------- 
 
      rs6067472 rs10485614 rs2143511 rs6020608 rs968701 Hap-Freq   Hap-Score  
-[1,] 1         1          1         1         2        0.27978586 -1.59627555
-[2,] 1         1          1         2         2        0.10656189 -1.19380885
-[3,] 2         1          2         1         2        0.00517443 -0.04646158
-[4,] 2         2          1         2         2        0.06798877 0.31463119 
-[5,] 2         1          2         2         1        0.42396091 0.60635932 
-[6,] 2         1          1         2         2        0.03697274 1.10350493 
+[1,] 1         1          1         1         2        0.27978594 -1.59627204
+[2,] 1         1          1         2         2        0.10656189 -1.19380884
+[3,] 2         1          2         1         2        0.00517442 -0.04646151
+[4,] 2         2          1         2         2        0.06798877 0.3146311  
+[5,] 2         1          2         2         1        0.42396082 0.60635603 
+[6,] 2         1          1         2         2        0.03697274 1.10350509 
 [7,] 2         1          1         2         1        0.06613155 2.28117122 
      p-val      sim p-val
-[1,] 0.11042729 0.10635  
-[2,] 0.23255275 0.23205  
-[3,] 0.96294235 0.96365  
-[4,] 0.75304169 0.7524   
-[5,] 0.54427617 0.54725  
-[6,] 0.26980795 0.26555  
-[7,] 0.02253832 0.02215  
+[1,] 0.11042807 0.11015  
+[2,] 0.23255275 0.22955  
+[3,] 0.96294241 0.96475  
+[4,] 0.75304177 0.75125  
+[5,] 0.54427836 0.5445   
+[6,] 0.26980788 0.2692   
+[7,] 0.02253832 0.0215   
 
 >   
 > #set names of the final list
@@ -25155,6 +25156,757 @@ null device
 > 
 > 
 > 
+> #####################################################################################
+> ############# TEST FOR THE EXISTENCE OF ONLY ONE CAUSAL VARIANT #####################
+> #####################################################################################
+> 
+> #We are going to test whether each SNP explains variance of the phenotypes independently of the rest of SNPs. For that, we are going to calculate a full model with the 5 SNPs, and then remove each SNP and calculate a likelihood ratio test between full and nested model. In that way, we can test whether removing a SNP increases the non-explained variance. We are also going to calculate how explicative is each SNP while considering the rest of them, so we will calculate the R2 comparing the full model and the model without each SNP. Finally, we will show the explicative power of the full model and the haplo.glm respect to a model with only the covariates. In the first case, for each SNP we want the explicative power of a given SNP after controlling from the rest, while in the second case we want to see the explicate power of the whole set of SNPs, so in that case case we can just compare a model with all SNPs and a model with any of them.
+> 
+> #At the end, we want to know if by maintaining all SNPs but removing one, increases the non-explained variance and decreases the explicative power. If SNPs are very correlated between them, the removal of one SNP form the model should influence too much, because the rest of SNPs explain almost the same variability. For doing this, we need to compare the full model (with all SNPs) with a null model including all except one SNP.
+> 
+> #This approach is probably better than the stepwise regression because we want to know how explicate is each SNP respect to the rest of them. In the stepwise regression, the less explicative SNP is removed, check the model, then the next less explicative SNP, and so on... until the next model is worse.
+>     #The selection of the order of removal can be problematic. 
+>     #for our specific question we do not need this. We just need to check what happens when all SNPs are present except ONE, to see if that one is explaining variance of the phenotype independently of the rest of SNPs.
+> 
+> #Using this approach, we can see whether a SNP is explaining variance of the phenotypes independently of the rest. If that is the case, the removal of that SNP from the full model should increase the non-explained variance (P<0.05) and the R2 of that SNP should be close to the R2 of the full and haplotype models. 
+> 
+> #pheno to model are those with FDR<0.1, because these are the ones used in subsequent analyses
+> pheno_to_model_causal_variant = unique(geno_pheno_results_fdr_0.1$selected_pheno)
+> 
+> #models to test
+> models_causal_variant = c("codominant", "dominant", "recessive", "overdominant", "additive")
+> 
+> #create the seed for the final dataset with results
+> causal_variants_results = data.frame(selected_pheno=NA, selected_model=NA, full_haplo_nested=NA, p_value=NA, r2=NA)
+> 
+> #for each pheno
+> for(p in 1:length(pheno_to_model_causal_variant)){
++ 
++     #select the [p] phenotype
++     selected_pheno = pheno_to_model_causal_variant[p]
++ 
++     #select the family and transformation
++     if(!selected_pheno %in% c("obesity", "CVi_BP")){
++         family="gaussian"
++         transformation="log("
++     } else{
++         family="binomial"
++         transformation="("
++     }
++ 
++     #select control variables: BMI is a control variable only for CVD variables
++     if(!selected_pheno %in% c("CVi_BP", "SBP", "DBP", "TG", "TC", "LDL", "HDL", "LDL_HDL", "Apo_A1", "Apo_B", "ApoB_ApoA1", "apoB_LDL", "TG_HDL", "Insulin", "Leptin_ng_ml", "HOMA", "QUICKI",  "TC_HDL",  "risk_score_for_log")){
++         
++         #the control variables do not include BMI, because the phenotype is an adiposity marker
++         control_variables = "CRF_sex+CRF_age+center"
++     } else{
++ 
++         #the control variables include BMI, because the phenotype is NOT an adiposity marker
++         control_variables = "CRF_BMI+CRF_sex+CRF_age+center"
++     }
++ 
++     #for each model
++     for(m in 1:length(models_causal_variant)){
++ 
++         #select the [m] model
++         selected_model = models_causal_variant[m]
++ 
++ 
++         ##calculate the explicative power of the full model
++ 
++         #select those SNPs that has been analyzed for the [p] phenotype and the [m] model
++         snp_to_include = geno_pheno_results[which(geno_pheno_results$selected_pheno == selected_pheno & geno_pheno_results$selected_model == selected_model & !is.na(geno_pheno_results$pvals)),]$snp_to_test
++             #we want SNPs analyzed, with a P-value, independently of its significance, because of this we use geno_pheno_results instead of geno_pheno_results_fdr_0.1. SNPs with no P-value did not match our requirements of sample size and were discarded in gene_pheno analyses.
++             #by selecting these snps, we are now sure that the analyzed snps are not disbalanced (minor homozigotes are at least 10).
++             #We do not have problems of sample size for adding the 5 SNPs WITHOUT interactions between SNPs
++                 #Each SNP has a high genotyping success (at least 0.99), so we have genotyping data for most of individuals.
++                     #in the case of PTPN1 we have 1055 with data for the 5 SNPs, see below. 
++                 #Sample size is around 1000 individuals, assuming that we need at least 10 individuals per group (zimmermann), we would need the following sample size in the most extreme case:
++                     #5 predictors (SNPs) with 3 levels (genotypes): 5*3*10 = 150 individuals
++                     #1 predictor (center) with 10 levels (centers): 1*10*10 = 100 individuals
++                     #1 predictor (sex) with two levels (sexes): 1*2*10 = 20 individuals
++                     #2 continuous variables (age and BMI): 2*1*10 = 20 individuals
++                     #TOTAL: 290 individuals. 
++                 #we are fine, the problem would be adding interactions between SNPs, because we would be breaking down our cohort in several groups (up to 6), increasing the probability to get very small groups, specially for minor homozygotes.
++             #The only problem can be that we are including more than 3-4 predictors, and then it is difficult to asses deviations from normality with residuals, and some predictors can be correlated. This can decrease our power to detect the optimal solution (Breiman, L. (2001). Statistical modeling: The two cultures. Statistical Science, 16(3), 199–215. https://doi.org/10.1214/ss/1009213726).
++ 
++         #bind all snps into one vector separated by "+" for the formula of the model
++         selected_snps_with_model = paste(selected_model, "(", snp_to_include, ")", collapse="+", sep="")
++ 
++         #bind all snps into one vector separated by "&" for creating the subset that will be used in the model
++         is_na_snps = paste("!is.na(myData_ptpn1$", snp_to_include, ")", collapse=" & ", sep="")
++             #we need those rows that are not NA for any of the SNPs modeled
++ 
++         #create the subset of the data using that list of SNPs
++         subset_snps_no_na = eval(parse(text=paste("myData_ptpn1[which(", is_na_snps, "),]", sep="")))
++         #check nrow
++         #nrow(subset_snps_no_na) #in the case of PTPN1, the number of individuals without NA for any of the PTPN1 snps is 1055.
++             #this subset will be used for both models. We will have the same data in both models, although in the null model, no SNPs are included as predictors in the models and they are not taken into account respect to NAs. Rows with NA for these SNPs will be removed in the dataset used in both models. 
++ 
++         #create a model with all the SNPs and covariables
++         model_global_1 = glm(paste(transformation, selected_pheno, ") ~ ", selected_snps_with_model, "+", control_variables, sep=""), data=subset_snps_no_na, family=family)
++ 
++         #create a model with only the covariables, this will be a null model for comparing the full and haplotype models
++         model_global_2 = glm(paste(transformation, selected_pheno, ") ~ ", control_variables, sep=""), data=subset_snps_no_na, family=family)
++ 
++         #calculate R2 of the full model using the model with only covariates as null model
++         r2_global = r.squaredLR(object=model_global_1, null=model_global_2, null.RE=FALSE)[1]
++             #we are using non-adjusted R2 as in the rest of the rest of analyses
++ 
++         #calculate p-value for the removal of all snps. We compare the full model using the model with only covariates as null model
++         p_value_global = anova(model_global_1, model_global_2, test="Chi")$"Pr(>Chi)"[2]
++             #model_global_1 is the full model with all SNPs, model 2 has only covariates
++             #we are testing is removing ALL SNPs significantly increases non-explained variance compare to a model with only covariates.
++             #the difference en freedom degrees between the models is the sum of the number of genotype levels less 1. For example, if the full model has 4 SNPs under recessive model that are not present in the null model, you have (2-1)+(2-1)+(2-1)+(2-1)=4 freedom degrees. If the SNPs are analyzed under codominant model, then the difference in freedom degrees would be (3-1)+(3-1)+(3-1)+(3-1)=8. In the case of additive, each SNP is considered a numeric variable (number of copies of one of the alleles), so each SNP adds 1 degree of freedom. If you have 4 SNPs, the difference between the full and the simpler model is 1+1+1+1=4.
++ 
++         #save the results for the full model
++         causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested="full", p_value=p_value_global, r2=r2_global))
++ 
++ 
++         ##calculate the explicative power of the haplotype.glm model
++ 
++         #we will consider the hpalo.glm that includes a predictor with the haplotypes observed in the cohort.
++ 
++         #for each haplotype block
++         for(j in 1:length(vector_haplotype_blocks)){ #vector_haplotype_blocks comes from the haplotype analysis
++ 
++             #select the [j] haplotype block
++             selected_haplo_block = vector_haplotype_blocks[j]
++ 
++             #if the model is dominant or additive (the only models analyzed for haplotype)       
++             if(selected_model %in% c("dominant", "additive")){
++ 
++                 #select the haplo.score of the [j] haplotype for [p] phenotype and the [m] model
++                 result_haplo_score = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$haplo_score$", selected_model, sep="")))
++ 
++                 #save the p_value
++                 p_haplo = result_haplo_score$score.global.p.sim
++                     #we do not calculate the p-value, but use the simulated p-value from the permutation test in haplo.score
++ 
++                 #select the haplo.glm of the [j] haplotype for [p] phenotype and the [m] model
++                 result_haplo_glm = eval(parse(text=paste("haplo_list_per_block$", selected_haplo_block, "$", selected_pheno, "$regression$", selected_model, sep="")))
++ 
++                 #create a new null model
++                 model_haplo_null = glm(paste(transformation, "myData_ptpn1$", selected_pheno, ") ~ ", control_variables, sep=""), data=myData_ptpn1, family=family)
++                     #in result_haplo_glm you have the response variable as "transformation(myData_ptpn1$phenotype)". You need that exact response in the null model, with that notation, because of this, we have to add myData_ptpn1, although it is already indicated with the "data" argument.
++                     #We have to use "myData_ptpn1" as the dataset, because this is the dataset used in "result_haplo_glm".
++ 
++                 #calculate R2 comparing the haplo.glm with the model including only covariates
++                 r2_haplo = r.squaredLR(object=result_haplo_glm, null=model_haplo_null, null.RE=FALSE)[1]
++                     #we are using non-adjusted R2 as in the rest of the rest of analyses
++ 
++                 #check R2 haplo
++ 
++                     #The comparison between the two models is valid. Both models have the same response and covariables, the only difference is that in the null model there is not block_geno variable. So the difference in deviance is caused by this variable, the haplotype. Indeed, this approach is used in the documentation of haplo.glm (https://cran.r-project.org/web/packages/haplo.stats/haplo.stats.pdf). In the help of "anova.haplo.glm", they compare a full haplo.glm model ("haplo.glm(y ~ male + geno...)") with a simple glm without the geno block and the same covariables ("glm(y~male, family=gaussian, data=my.data)").
++ 
++                     #You can check how the comparison between the models works with anova.haplo.glm. This function does not work if there is different sample size or response variables.             
++                         #anova.haplo.glm(result_haplo_glm, model_haplo_null)
++                             #The difference in freedom degrees is the number of haplotype levels in the haplotype block less 1. This makes sense because the only difference between the two models is the haplotype block. 
++ 
++                     #calculate also using your approach an adjusting, because the mumin R2 seems to be more similar my R2 adjusted (remember that in Mumin we are using un-adjusted because this package uses a different adjustment)
++                     #print(paste("d2 mine: ", Dsquared_mod(model=result_haplo_glm, null_model = model_haplo_null, adjust=TRUE, n_levels_predictor_test=8, predictor_is_factor=TRUE), " d2 mumin: ", r2_haplo, sep=""))
++                         #unannotate this line in order to compare d2 mine and mumin. In general, they are similar, suggesting that mumin is not doing something strange in the R2 calculation. This is congruent with what we found comparing mumin and d2 mine for crude associations.
++                         #8 levels because the haplo of PTPN1 has 8 levels (check the haplo.glm object)
++ 
++                     #in addition, the R2 of full and haplo models are relatively close between each other
++ 
++                     #I conclude that we can use this approach to calculate R2 of the haplo.glm
++                         #At the end, the haplo.glm is just a glm with a predictor with as many levels as frequent haplotypes exits in the cohort (and one more for the unfrequent haplos). 
++                         #if you remove this predictor and check the difference in predicitive power, you get the power of that predictor.
++ 
++                 #save the results for the full model
++                 causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested=paste("haplo_", selected_haplo_block, sep=""), p_value=as.numeric(p_haplo), r2=as.numeric(r2_haplo)))
++             } else { #if not, then no haplo analyses were done
++ 
++                 #save P-value and R2 as NA
++                 causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested=paste("haplo_", selected_haplo_block, sep=""), p_value=NA, r2=NA))
++             }
++         }
++ 
++ 
++         ##calculate the explicative power of the each SNP comparing with the full model
++ 
++         #for each model               
++         for(j in 1:length(snp_to_include)){
++     
++             #select the [j] snp
++             selected_snp = snp_to_include[j]
++ 
++             #bind all SNPs except the [j] SNP into one vector separated by "+" for the formula of the model
++             selected_snps_without_tested = paste(selected_model, "(", snp_to_include[which(snp_to_include != selected_snp)], ")", collapse="+", sep="")
++ 
++             #create a model with all SNPs except the [j] SNP
++             model_global_3 = glm(paste(transformation, selected_pheno, ") ~ ", selected_snps_without_tested, "+", control_variables, sep=""), data=subset_snps_no_na, family=family)
++                 #subset_snps_no_na comes from the full model, it is a subset considering only individuals without NA for all the SNPs analyzed. We have to use this subset because we are going to compare this model with a full model considering all SNPs
++ 
++             #calculate the p-value of the [j] SNPs while considering the rest of the SNPs
++             p_value_without_snp = anova(model_global_1, model_global_3, test="Chi")$"Pr(>Chi)"[2]
++                 #model_global_1 is the full model with all SNPs
++                 #we are testing is removing the [j] SNP significantly increases non-explained variance while the rest of SNPs are still present in the model.
++                 #the difference en degrees of freedoms depends of the heritage model, if the removed SNP is analyzed under codominant model, then the difference is 3-1=2, under recessive would be 2-1=1, under additive would be 1 because the SNP is considered a numeric variable (number of copies of one of the alleles)
++ 
++             #calculate the R2 of the [j] SNPs while considering the rest of the SNPs
++             r2_without_snp = r.squaredLR(object=model_global_1, null=model_global_3, null.RE=FALSE)[1]
++                 #the null model has to be the one without the [j] SNP, to check the R2 attributted to the [j] SNP that has been removed. 
++ 
++             #save the results for the full model
++             causal_variants_results = rbind.data.frame(causal_variants_results, cbind.data.frame(selected_pheno, selected_model, full_haplo_nested=selected_snp, p_value=p_value_without_snp, r2=r2_without_snp))
++         }        
++     }
++ }
+There were 50 or more warnings (use warnings() to see the first 50)
+> 
+> #remove first row with all NAs
+> causal_variants_results = causal_variants_results[-which(rowSums(is.na(causal_variants_results)) == ncol(causal_variants_results)),]
+> 
+> 
+> ##check rows
+> #check we have the correct number of rows
+> nrow(causal_variants_results) == length(which(!is.na(geno_pheno_results[which(geno_pheno_results$selected_pheno %in% pheno_to_model_causal_variant),]$pvals))) + length(pheno_to_model_causal_variant) * length(models_causal_variant) * (1 + length(vector_haplotype_blocks))
+[1] TRUE
+>     #the total number of rows should be equal to the number of associations with P-value (no NA) for the selected phenotypes under FDR<0.1 (included in pheno_to_model_causal_variant) PLUS the number of phenotypes (pheno_to_model_causal_variant) multiplied by the number of heritage models (5) and by 2 because for each of these phenotypes and each heritage model, we have one more row for full and one more for each haplotype.
+> 
+> #check that the cases with NA for the p_value OR R2 are exactly the number of phenotypes times the number of haplo blocks and the number of models that are not additive or dominant. We only should have haplo data for additive and dominant, so for the rest of models we should have NA.
+> length(which(is.na(causal_variants_results$p_value) | is.na(causal_variants_results$r2))) == length(pheno_to_model_causal_variant) * length(models_causal_variant[which(! models_causal_variant %in% c("dominant", "additive"))]) * length(vector_haplotype_blocks)
+[1] TRUE
+> 
+> 
+> ##P-values of the full and haplotype model
+> 
+> #There are many cases where the P-value of the full model is larger than the P-value of some SNPs, BUT the predictive power of the full model is higher. In addition, the comparison between the full model and the haplotype shows that both models have similar predictive power but the haplo_model shows lower p-values sometimes.
+> 
+> #We know that the SNPs of PTPN1 are in clear linkage disequilibrium between them, so we are including correlated predictors in the model.
+> 
+> #All of this suggests that the full model is losing power due to the correlation between predictors. Predictors can bother to each other. There are some tools to test this, like the package perturb (https://rdrr.io/github/JohnHendrickx/Perturb/), which makes some random perturbations of the data to check if the results are stable or not. High multicolinearity between predictors can lead to higher instability. 
+> 
+> #We are not going to test this because: The correlation could decrease the power of the model, even though, we are finding higher predictive power in the full model compare to individual SNPs, being at least 2 times higher most of the times. Therefore, even we could have limited power, the full model outperform individual SNPs explaining the variance of the phenotypes. We could have problems if the full model was worse, because in that case we could not be sure that the reason is a very relevant (causal) SNP, or the reduce power in the full model due to multicolineality problem.
+> 
+> #We can conclude then, that the SNPs are very correlated and explain a similar portion of the variance of the phenotye. No further analyses will be done. 
+> 
+> #Given that multiple P-values of the full model are higher than the individual SNP, probably because multicolineraity, we are going to remove these p-values along with the p-values of the hpalotype, which has been already showed in results section. We are going to show only p-values for the independent explicative power of each SNP.
+> 
+> #remove the P-values for the full and haplotype models
+> causal_variants_results[which(causal_variants_results$full_haplo_nested %in% c("full", paste("haplo_", vector_haplotype_blocks, sep=""))),]$p_value <- NA
+> 
+> #check that the number of NAs in p_value is correct
+> length(which(is.na(causal_variants_results$p_value))) == length(pheno_to_model_causal_variant) * length(models_causal_variant) * (1 + length(vector_haplotype_blocks))
+[1] TRUE
+>     #for each phenotype and heritage model we should have 2 NAs, one for full and other for each haplo.
+> 
+> 
+> ##results interpretation
+> 
+> #In multiple cases, the SNP with the lowest p-value is rs2143511 or rs6067472, but above 0.1 most of the cases (P<0.1 in 22 of 217 cases). Importantly, their R2 tend to be the highest, but only between the rest of SNPs, being much lower compared to the R2 of the full model. The full model has at least 2 times more of explicative power. 
+> causal_variants_results
+     selected_pheno selected_model    full_haplo_nested       p_value
+2           obesity     codominant                 full            NA
+3           obesity     codominant haplo_chr_20.block_1            NA
+4           obesity     codominant            rs6067472 0.24745410660
+5           obesity     codominant            rs2143511 0.14033153553
+6           obesity     codominant            rs6020608 0.37848475869
+7           obesity     codominant             rs968701 0.37628808386
+8           obesity       dominant                 full            NA
+9           obesity       dominant haplo_chr_20.block_1            NA
+10          obesity       dominant            rs6067472 0.14090313721
+11          obesity       dominant           rs10485614 0.29387541364
+12          obesity       dominant            rs2143511 0.20678012123
+13          obesity       dominant            rs6020608 0.57625168170
+14          obesity       dominant             rs968701 0.55205933602
+15          obesity      recessive                 full            NA
+16          obesity      recessive haplo_chr_20.block_1            NA
+17          obesity      recessive            rs6067472 0.75519957288
+18          obesity      recessive            rs2143511 0.14434968224
+19          obesity      recessive            rs6020608 0.20801798050
+20          obesity      recessive             rs968701 0.42739278517
+21          obesity   overdominant                 full            NA
+22          obesity   overdominant haplo_chr_20.block_1            NA
+23          obesity   overdominant            rs6067472 0.07411513125
+24          obesity   overdominant            rs2143511 0.56875296505
+25          obesity   overdominant            rs6020608 0.50713773909
+26          obesity   overdominant             rs968701 0.58846055437
+27          obesity       additive                 full            NA
+28          obesity       additive haplo_chr_20.block_1            NA
+29          obesity       additive            rs6067472 0.61678223452
+30          obesity       additive            rs2143511 0.05645872341
+31          obesity       additive            rs6020608 0.79980797382
+32          obesity       additive             rs968701 0.21377169444
+33          CRF_hip     codominant                 full            NA
+34          CRF_hip     codominant haplo_chr_20.block_1            NA
+35          CRF_hip     codominant            rs6067472 0.33730691495
+36          CRF_hip     codominant            rs2143511 0.02881042584
+37          CRF_hip     codominant            rs6020608 0.20653065908
+38          CRF_hip     codominant             rs968701 0.04875777107
+39          CRF_hip       dominant                 full            NA
+40          CRF_hip       dominant haplo_chr_20.block_1            NA
+41          CRF_hip       dominant            rs6067472 0.75534700103
+42          CRF_hip       dominant           rs10485614 0.59929959855
+43          CRF_hip       dominant            rs2143511 0.05918987217
+44          CRF_hip       dominant            rs6020608 0.76183361838
+45          CRF_hip       dominant             rs968701 0.49025407584
+46          CRF_hip      recessive                 full            NA
+47          CRF_hip      recessive haplo_chr_20.block_1            NA
+48          CRF_hip      recessive            rs6067472 0.90832106490
+49          CRF_hip      recessive            rs2143511 0.06749232232
+50          CRF_hip      recessive            rs6020608 0.09617597819
+51          CRF_hip      recessive             rs968701 0.12322992477
+52          CRF_hip   overdominant                 full            NA
+53          CRF_hip   overdominant haplo_chr_20.block_1            NA
+54          CRF_hip   overdominant            rs6067472 0.15131471279
+55          CRF_hip   overdominant            rs2143511 0.45669483452
+56          CRF_hip   overdominant            rs6020608 0.95650225716
+57          CRF_hip   overdominant             rs968701 0.36988612043
+58          CRF_hip       additive                 full            NA
+59          CRF_hip       additive haplo_chr_20.block_1            NA
+60          CRF_hip       additive            rs6067472 0.74039962780
+61          CRF_hip       additive            rs2143511 0.01029157103
+62          CRF_hip       additive            rs6020608 0.19336756436
+63          CRF_hip       additive             rs968701 0.02651520697
+64          CRF_BMI     codominant                 full            NA
+65          CRF_BMI     codominant haplo_chr_20.block_1            NA
+66          CRF_BMI     codominant            rs6067472 0.49662184499
+67          CRF_BMI     codominant            rs2143511 0.09632133246
+68          CRF_BMI     codominant            rs6020608 0.53517437596
+69          CRF_BMI     codominant             rs968701 0.22467657730
+70          CRF_BMI       dominant                 full            NA
+71          CRF_BMI       dominant haplo_chr_20.block_1            NA
+72          CRF_BMI       dominant            rs6067472 0.38817270702
+73          CRF_BMI       dominant           rs10485614 0.57843694764
+74          CRF_BMI       dominant            rs2143511 0.20372977730
+75          CRF_BMI       dominant            rs6020608 0.85606964013
+76          CRF_BMI       dominant             rs968701 0.58606884523
+77          CRF_BMI      recessive                 full            NA
+78          CRF_BMI      recessive haplo_chr_20.block_1            NA
+79          CRF_BMI      recessive            rs6067472 0.98275542460
+80          CRF_BMI      recessive            rs2143511 0.07440281612
+81          CRF_BMI      recessive            rs6020608 0.27921252131
+82          CRF_BMI      recessive             rs968701 0.28450029758
+83          CRF_BMI   overdominant                 full            NA
+84          CRF_BMI   overdominant haplo_chr_20.block_1            NA
+85          CRF_BMI   overdominant            rs6067472 0.19557377641
+86          CRF_BMI   overdominant            rs2143511 0.75933166759
+87          CRF_BMI   overdominant            rs6020608 0.91946730450
+88          CRF_BMI   overdominant             rs968701 0.45393750172
+89          CRF_BMI       additive                 full            NA
+90          CRF_BMI       additive haplo_chr_20.block_1            NA
+91          CRF_BMI       additive            rs6067472 0.74430781228
+92          CRF_BMI       additive            rs2143511 0.03620169186
+93          CRF_BMI       additive            rs6020608 0.43579397079
+94          CRF_BMI       additive             rs968701 0.14315091511
+95  CRF_Body_fat_PC     codominant                 full            NA
+96  CRF_Body_fat_PC     codominant haplo_chr_20.block_1            NA
+97  CRF_Body_fat_PC     codominant            rs6067472 0.65285259748
+98  CRF_Body_fat_PC     codominant            rs2143511 0.20275072067
+99  CRF_Body_fat_PC     codominant            rs6020608 0.46034903458
+100 CRF_Body_fat_PC     codominant             rs968701 0.50443526905
+101 CRF_Body_fat_PC       dominant                 full            NA
+102 CRF_Body_fat_PC       dominant haplo_chr_20.block_1            NA
+103 CRF_Body_fat_PC       dominant            rs6067472 0.63673783426
+104 CRF_Body_fat_PC       dominant           rs10485614 0.78834469337
+105 CRF_Body_fat_PC       dominant            rs2143511 0.15970636499
+106 CRF_Body_fat_PC       dominant            rs6020608 0.57185032628
+107 CRF_Body_fat_PC       dominant             rs968701 0.74681322492
+108 CRF_Body_fat_PC      recessive                 full            NA
+109 CRF_Body_fat_PC      recessive haplo_chr_20.block_1            NA
+110 CRF_Body_fat_PC      recessive            rs6067472 0.83914240895
+111 CRF_Body_fat_PC      recessive            rs2143511 0.25891187311
+112 CRF_Body_fat_PC      recessive            rs6020608 0.27232615339
+113 CRF_Body_fat_PC      recessive             rs968701 0.69469901349
+114 CRF_Body_fat_PC   overdominant                 full            NA
+115 CRF_Body_fat_PC   overdominant haplo_chr_20.block_1            NA
+116 CRF_Body_fat_PC   overdominant            rs6067472 0.31218015521
+117 CRF_Body_fat_PC   overdominant            rs2143511 0.43604934630
+118 CRF_Body_fat_PC   overdominant            rs6020608 0.59755328644
+119 CRF_Body_fat_PC   overdominant             rs968701 0.66462822849
+120 CRF_Body_fat_PC       additive                 full            NA
+121 CRF_Body_fat_PC       additive haplo_chr_20.block_1            NA
+122 CRF_Body_fat_PC       additive            rs6067472 0.81719997674
+123 CRF_Body_fat_PC       additive            rs2143511 0.08123779128
+124 CRF_Body_fat_PC       additive            rs6020608 0.28035429616
+125 CRF_Body_fat_PC       additive             rs968701 0.28071790087
+126             FMI     codominant                 full            NA
+127             FMI     codominant haplo_chr_20.block_1            NA
+128             FMI     codominant            rs6067472 0.45488551015
+129             FMI     codominant            rs2143511 0.17297355270
+130             FMI     codominant            rs6020608 0.42281443130
+131             FMI     codominant             rs968701 0.38682001286
+132             FMI       dominant                 full            NA
+133             FMI       dominant haplo_chr_20.block_1            NA
+134             FMI       dominant            rs6067472 0.45827610172
+135             FMI       dominant           rs10485614 0.92469748524
+136             FMI       dominant            rs2143511 0.20289734665
+137             FMI       dominant            rs6020608 0.66694208049
+138             FMI       dominant             rs968701 0.77397469677
+139             FMI      recessive                 full            NA
+140             FMI      recessive haplo_chr_20.block_1            NA
+141             FMI      recessive            rs6067472 0.99371284468
+142             FMI      recessive            rs2143511 0.16715867873
+143             FMI      recessive            rs6020608 0.21281393126
+144             FMI      recessive             rs968701 0.55561880406
+145             FMI   overdominant                 full            NA
+146             FMI   overdominant haplo_chr_20.block_1            NA
+147             FMI   overdominant            rs6067472 0.17699597681
+148             FMI   overdominant            rs2143511 0.56536655361
+149             FMI   overdominant            rs6020608 0.71630606632
+150             FMI   overdominant             rs968701 0.47174519030
+151             FMI       additive                 full            NA
+152             FMI       additive haplo_chr_20.block_1            NA
+153             FMI       additive            rs6067472 0.80650564949
+154             FMI       additive            rs2143511 0.06710710589
+155             FMI       additive            rs6020608 0.29188296384
+156             FMI       additive             rs968701 0.25744395283
+157    Leptin_ng_ml     codominant                 full            NA
+158    Leptin_ng_ml     codominant haplo_chr_20.block_1            NA
+159    Leptin_ng_ml     codominant            rs6067472 0.70596911138
+160    Leptin_ng_ml     codominant            rs2143511 0.29576642835
+161    Leptin_ng_ml     codominant            rs6020608 0.23457678829
+162    Leptin_ng_ml     codominant             rs968701 0.78995347259
+163    Leptin_ng_ml       dominant                 full            NA
+164    Leptin_ng_ml       dominant haplo_chr_20.block_1            NA
+165    Leptin_ng_ml       dominant            rs6067472 0.58901144740
+166    Leptin_ng_ml       dominant           rs10485614 0.02736727419
+167    Leptin_ng_ml       dominant            rs2143511 0.43224103504
+168    Leptin_ng_ml       dominant            rs6020608 0.49821758421
+169    Leptin_ng_ml       dominant             rs968701 0.65084146471
+170    Leptin_ng_ml      recessive                 full            NA
+171    Leptin_ng_ml      recessive haplo_chr_20.block_1            NA
+172    Leptin_ng_ml      recessive            rs6067472 0.61641431583
+173    Leptin_ng_ml      recessive            rs2143511 0.17708066904
+174    Leptin_ng_ml      recessive            rs6020608 0.12305138886
+175    Leptin_ng_ml      recessive             rs968701 0.63155316936
+176    Leptin_ng_ml   overdominant                 full            NA
+177    Leptin_ng_ml   overdominant haplo_chr_20.block_1            NA
+178    Leptin_ng_ml   overdominant            rs6067472 0.97465195044
+179    Leptin_ng_ml   overdominant            rs2143511 0.94460463236
+180    Leptin_ng_ml   overdominant            rs6020608 0.92884641306
+181    Leptin_ng_ml   overdominant             rs968701 0.93515047239
+182    Leptin_ng_ml       additive                 full            NA
+183    Leptin_ng_ml       additive haplo_chr_20.block_1            NA
+184    Leptin_ng_ml       additive            rs6067472 0.45148543828
+185    Leptin_ng_ml       additive            rs2143511 0.14126455202
+186    Leptin_ng_ml       additive            rs6020608 0.16920097687
+187    Leptin_ng_ml       additive             rs968701 0.62945332150
+188             SBP     codominant                 full            NA
+189             SBP     codominant haplo_chr_20.block_1            NA
+190             SBP     codominant            rs6067472 0.09216298544
+191             SBP     codominant            rs2143511 0.04423355166
+192             SBP     codominant            rs6020608 0.86821599507
+193             SBP     codominant             rs968701 0.30068713709
+194             SBP       dominant                 full            NA
+195             SBP       dominant haplo_chr_20.block_1            NA
+196             SBP       dominant            rs6067472 0.05290543910
+197             SBP       dominant           rs10485614 0.97959195867
+198             SBP       dominant            rs2143511 0.20522794476
+199             SBP       dominant            rs6020608 0.85141828889
+200             SBP       dominant             rs968701 0.50317546667
+201             SBP      recessive                 full            NA
+202             SBP      recessive haplo_chr_20.block_1            NA
+203             SBP      recessive            rs6067472 0.49269674328
+204             SBP      recessive            rs2143511 0.04406785376
+205             SBP      recessive            rs6020608 0.94677909336
+206             SBP      recessive             rs968701 0.01743649641
+207             SBP   overdominant                 full            NA
+208             SBP   overdominant haplo_chr_20.block_1            NA
+209             SBP   overdominant            rs6067472 0.50914364737
+210             SBP   overdominant            rs2143511 0.57444560541
+211             SBP   overdominant            rs6020608 0.81116283024
+212             SBP   overdominant             rs968701 0.57547752292
+213             SBP       additive                 full            NA
+214             SBP       additive haplo_chr_20.block_1            NA
+215             SBP       additive            rs6067472 0.02951895564
+216             SBP       additive            rs2143511 0.02027957978
+217             SBP       additive            rs6020608 0.69323039690
+218             SBP       additive             rs968701 0.31629226007
+                 r2
+2   9.646324820e-03
+3                NA
+4   2.643949100e-03
+5   3.715823340e-03
+6   1.840161646e-03
+7   1.851175923e-03
+8   7.074997681e-03
+9   6.434997069e-03
+10  2.052930812e-03
+11  1.043797769e-03
+12  1.509596517e-03
+13  2.960070358e-04
+14  3.351484187e-04
+15  4.924546190e-03
+16               NA
+17  9.214121118e-05
+18  2.017835201e-03
+19  1.501399834e-03
+20  5.968813701e-04
+21  3.464815451e-03
+22               NA
+23  3.018606252e-03
+24  3.077948088e-04
+25  4.169446516e-04
+26  2.774542330e-04
+27  6.533190147e-03
+28  6.896817540e-03
+29  2.373330730e-04
+30  3.442848516e-03
+31  6.095619238e-05
+32  1.464043595e-03
+33  1.517595184e-02
+34               NA
+35  2.141036996e-03
+36  6.954296024e-03
+37  3.104461442e-03
+38  5.928884846e-03
+39  7.554184128e-03
+40  4.239041794e-03
+41  9.555438959e-05
+42  2.716324543e-04
+43  3.491643828e-03
+44  9.039904160e-05
+45  4.682536594e-04
+46  7.653138430e-03
+47               NA
+48  1.303918402e-05
+49  3.276328472e-03
+50  2.714184521e-03
+51  2.330623727e-03
+52  4.278033593e-03
+53               NA
+54  2.020439452e-03
+55  5.444260547e-04
+56  2.925241213e-06
+57  7.899821556e-04
+58  1.131400394e-02
+59  5.750640033e-03
+60  1.079290709e-04
+61  6.432026839e-03
+62  1.660729871e-03
+63  4.816515862e-03
+64  9.854725014e-03
+65               NA
+66  1.350687991e-03
+67  4.501510405e-03
+68  1.206586157e-03
+69  2.876904075e-03
+70  6.016157393e-03
+71  5.360890696e-03
+72  7.168829933e-04
+73  2.973762524e-04
+74  1.553875485e-03
+75  3.169317150e-05
+76  2.855884831e-04
+77  5.840946659e-03
+78               NA
+79  4.496522550e-07
+80  3.054275037e-03
+81  1.125698510e-03
+82  1.101255546e-03
+83  2.579063528e-03
+84               NA
+85  1.609650113e-03
+86  9.032442837e-05
+87  9.838374059e-06
+88  5.394599918e-04
+89  8.031811292e-03
+90  5.951598472e-03
+91  1.023730201e-04
+92  4.205128308e-03
+93  5.841940567e-04
+94  2.059040567e-03
+95  1.038283379e-02
+96               NA
+97  8.676861949e-04
+98  3.239528438e-03
+99  1.577487858e-03
+100 1.391778693e-03
+101 8.068413155e-03
+102 5.505328341e-03
+103 2.263791829e-04
+104 7.316334443e-05
+105 2.003090430e-03
+106 3.243580548e-04
+107 1.058044264e-04
+108 5.750240154e-03
+109              NA
+110 4.178848522e-05
+111 1.290994318e-03
+112 1.220610031e-03
+113 1.562082616e-04
+114 3.340001857e-03
+115              NA
+116 1.034860563e-03
+117 6.148923212e-04
+118 2.825792786e-04
+119 1.905824429e-04
+120 9.209429465e-03
+121 6.107093923e-03
+122 5.418500320e-05
+123 3.073649867e-03
+124 1.180523181e-03
+125 1.178741822e-03
+126 1.154904112e-02
+127              NA
+128 1.601726726e-03
+129 3.560832333e-03
+130 1.750133075e-03
+131 1.930676230e-03
+132 8.108619172e-03
+133 5.801679957e-03
+134 5.581672600e-04
+135 9.069663680e-06
+136 1.643381422e-03
+137 1.879848742e-04
+138 8.372111636e-05
+139 6.407536692e-03
+140              NA
+141 6.297385824e-08
+142 1.931598350e-03
+143 1.571744597e-03
+144 3.521548134e-04
+145 3.883329002e-03
+146              NA
+147 1.845137257e-03
+148 3.350773912e-04
+149 1.339167439e-04
+150 5.249628134e-04
+151 9.568876661e-03
+152 6.381643270e-03
+153 6.084199513e-05
+154 3.388479164e-03
+155 1.125421437e-03
+156 1.298969947e-03
+157 9.945701503e-03
+158              NA
+159 7.241033777e-04
+160 2.528833801e-03
+161 3.008553528e-03
+162 4.904590836e-04
+163 7.393360898e-03
+164 6.883762275e-03
+165 3.026995566e-04
+166 5.023896771e-03
+167 6.394190204e-04
+168 4.756358194e-04
+169 2.124454130e-04
+170 5.801520420e-03
+171              NA
+172 2.599733383e-04
+173 1.884478956e-03
+174 2.458238370e-03
+175 2.382441916e-04
+176 9.126675523e-05
+177              NA
+178 1.046230439e-06
+179 5.003063162e-06
+180 8.262972150e-06
+181 6.860585990e-06
+182 8.541540814e-03
+183 8.239445756e-03
+184 5.871369080e-04
+185 2.237603684e-03
+186 1.954729452e-03
+187 2.411882616e-04
+188 1.287877402e-02
+189              NA
+190 4.662241626e-03
+191 6.088967848e-03
+192 2.775550696e-04
+193 2.355313598e-03
+194 6.850837555e-03
+195 7.686430545e-03
+196 3.656418353e-03
+197 6.409014164e-07
+198 1.569300532e-03
+199 3.436189341e-05
+200 4.388206616e-04
+201 7.148878968e-03
+202              NA
+203 4.602886306e-04
+204 3.951020344e-03
+205 4.359899535e-06
+206 5.499816956e-03
+207 2.027659860e-03
+208              NA
+209 4.262631155e-04
+210 3.084181384e-04
+211 5.585374521e-05
+212 3.067582620e-04
+213 1.103090425e-02
+214 7.788753691e-03
+215 4.613732577e-03
+216 5.244043775e-03
+217 1.522375919e-04
+218 9.816352668e-04
+> nrow(causal_variants_results[which(causal_variants_results$p_val<0.1),])
+[1] 22
+> nrow(causal_variants_results[which(causal_variants_results$p_val<0.05),])
+[1] 11
+> 
+> #In general, the predictive power of the full model is similar to the power of the haplo glm
+> causal_variants_results[which(causal_variants_results$full_haplo_nested %in% c("full", "haplo_chr_20.block_1") & causal_variants_results$selected_model %in% c("additive", "dominant")),]
+     selected_pheno selected_model    full_haplo_nested p_value             r2
+8           obesity       dominant                 full      NA 0.007074997681
+9           obesity       dominant haplo_chr_20.block_1      NA 0.006434997069
+27          obesity       additive                 full      NA 0.006533190147
+28          obesity       additive haplo_chr_20.block_1      NA 0.006896817540
+39          CRF_hip       dominant                 full      NA 0.007554184128
+40          CRF_hip       dominant haplo_chr_20.block_1      NA 0.004239041794
+58          CRF_hip       additive                 full      NA 0.011314003938
+59          CRF_hip       additive haplo_chr_20.block_1      NA 0.005750640033
+70          CRF_BMI       dominant                 full      NA 0.006016157393
+71          CRF_BMI       dominant haplo_chr_20.block_1      NA 0.005360890696
+89          CRF_BMI       additive                 full      NA 0.008031811292
+90          CRF_BMI       additive haplo_chr_20.block_1      NA 0.005951598472
+101 CRF_Body_fat_PC       dominant                 full      NA 0.008068413155
+102 CRF_Body_fat_PC       dominant haplo_chr_20.block_1      NA 0.005505328341
+120 CRF_Body_fat_PC       additive                 full      NA 0.009209429465
+121 CRF_Body_fat_PC       additive haplo_chr_20.block_1      NA 0.006107093923
+132             FMI       dominant                 full      NA 0.008108619172
+133             FMI       dominant haplo_chr_20.block_1      NA 0.005801679957
+151             FMI       additive                 full      NA 0.009568876661
+152             FMI       additive haplo_chr_20.block_1      NA 0.006381643270
+163    Leptin_ng_ml       dominant                 full      NA 0.007393360898
+164    Leptin_ng_ml       dominant haplo_chr_20.block_1      NA 0.006883762275
+182    Leptin_ng_ml       additive                 full      NA 0.008541540814
+183    Leptin_ng_ml       additive haplo_chr_20.block_1      NA 0.008239445756
+194             SBP       dominant                 full      NA 0.006850837555
+195             SBP       dominant haplo_chr_20.block_1      NA 0.007686430545
+213             SBP       additive                 full      NA 0.011030904248
+214             SBP       additive haplo_chr_20.block_1      NA 0.007788753691
+> 
+> #These results suggest that each SNP does not explain much phenotypic variability independently. When we remove each SNP individually from the full model, there is not an important reduction of explicative power (P>0.1 in most cases). In addition, the R2 of each SNP separately is much lower compared to the full and haplotype models. All of this supports our results about the existence of an haplotype of PTPN1 that is associated with adiposity in our cohort. 
+> 
+> 
+> ## save the results as supple data 3
+> 
+> #set the folder to save
+> folder_to_save_supple_data_3 = "/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/supple_data"
+> system(paste("mkdir -p ", folder_to_save_supple_data_3, sep=""))
+>     #p: no error if existing, make parent directories as needed
+> 
+> #convert R2 from 0-1 to percentage
+> causal_variants_results$r2 = (causal_variants_results$r2*100)/1
+>     #For example: If over 1, we have 0.5, over 100 we would have X. X being (100*0.5)/1=50 -> 50% 
+> 
+> #change columns names
+> colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_pheno")] <- "phenotype"
+> colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_model")] <- "heritage_model"
+> colnames(causal_variants_results)[which(colnames(causal_variants_results) == "full_haplo_nested")] <- "set_gen_predictors"
+> colnames(causal_variants_results)[which(colnames(causal_variants_results) == "p_value")] <- "p_value"
+> colnames(causal_variants_results)[which(colnames(causal_variants_results) == "r2")] <- "r2_percentage"
+> 
+> #set the names of the files for saving
+> suppl_data_3_file_name = "suplementary_data_3_v1.csv"
+> suppl_data_3_file_name_zip = "suplementary_data_3_v1.zip"
+> 
+> #save the table
+> write.table(causal_variants_results, paste(folder_to_save_supple_data_3, "/", suppl_data_3_file_name, sep=""), col.names=TRUE, row.names=FALSE, sep=",")
+> 
+> #compress the text file and remove it after compression
+> system(paste("cd ", folder_to_save_supple_data_3, "; rm ", suppl_data_3_file_name_zip, "; zip ", suppl_data_3_file_name_zip, " ", suppl_data_3_file_name, " ; rm ", suppl_data_3_file_name, sep=""))
+  adding: suplementary_data_3_v1.csv (deflated 70%)
+>     #we could save directly as ".gz" using gzfile() around the file path with write.table. I avoid this option because this could give problems with the reviewers and readers, because they have to use a third party software to open it in windows.
+> 
+> 
+> 
+> 
 > ##############################################################################
 > ############# Change risk_score names in results to plot #####################
 > ##############################################################################
@@ -25188,7 +25940,8 @@ null device
 > save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis_v2.RData")
 > require(SNPassoc)
 > require(genetics)
+> require(MuMIn)
 > 
 > proc.time()
    user  system elapsed 
-907.750   2.826 910.064 
+911.177   2.821 913.545 
