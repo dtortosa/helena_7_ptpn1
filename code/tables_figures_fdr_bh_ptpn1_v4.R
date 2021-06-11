@@ -1532,6 +1532,8 @@ for(i in 1:length(vector_haplotype_blocks)){ #the list of blocks comes from the 
 supple_table_1 = tables_haplo[[1]]
 
 
+#FALTAN LAS TRES NUEVAS TABLAS SUPPLE!!
+
 
 
 ################################################
