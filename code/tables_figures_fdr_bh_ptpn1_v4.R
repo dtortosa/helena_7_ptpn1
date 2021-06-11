@@ -47,6 +47,7 @@
 load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/helena_study/helena_7/results/rdata/analysis_v2.RData")
 require(SNPassoc)
 require(genetics)
+require(MuMIn)
 
 
 ### set the working directory

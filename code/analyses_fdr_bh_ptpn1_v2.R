@@ -33,7 +33,9 @@
 
 require(foreign) #for importing the HELENA database from SPSS format
 require(SNPassoc) #for using the heritage model functions and create setupSNP objects
+require(MuMIn) #for calculating R2
     #Not all the packages are listed!
+
 
 
 
