@@ -15,6 +15,8 @@
 
 #In this script, we test the existence of sampling bias in the subset of individuals with physical activity. 
 
+#I have not revised the whole script, I have just took the scripts for the analyses with the whole cohort (analyses_fdr_bh_ptpn1_v2.R and tables_figures_fdr_bh_ptpn1_v4.R in 11/06/2021). It is the same but in a subset, I have checked a few cases in each table analyses.
+
 
 
 
@@ -118,6 +120,7 @@ plot(density(myData_ptpn1_no_subset$CRF_age), main="Age whole cohort")
 plot(myData_ptpn1$CRF_sex, main="Sex subset PA")
 plot(myData_ptpn1_no_subset$CRF_sex, main="Sex whole cohort")
 	#the distributions are similar and for Age, seems normal.
+dev.off()
 
 
 ##test selection
@@ -354,13 +357,9 @@ for(i in 1:length(vector_centers)){
 }
 
 #results of the check
-    #for PTPN1, Dortmund, Heraklion and Vienna show differences in the MAF for the rs968701.
+    #for PTPN1, Dortmund and Vienna show differences in the MAF for the rs968701.
     #This SNP has a frequency very similar between alleles (almost 0.5), so it is possible that in one of the subsets by center, the minor becomes major. 
-    #Indeed, I have compared the new version of table 1 with the previous version. In that version, the minor in each center was selected by frequency, independently if the minor across the whole cohort was similar to the minor in the subset. 
-        #The frequency of Dortmund for the MAF of rs968701 in the previous version is 0.48, while in the new version is 0.52. 
-        #The frequency of Heraklion for the MAF of rs968701 in the previous version is 0.48, while in the new version is 0.52. 
-        #The frequency of Vienna for the MAF of rs968701 in the previous version is 0.45, while in the new version is 0.55.
-    #It seems that the calculations are ok, just the minor allele for rs968701 has become the major in these three subsets. Because of this, in the new version we have these cases with the minor having a frequency higher than 0.5.
+	#These two populations have the same problem in the whole cohort.
 
 #reorder the table following the order in the chromosome 
 table_1 = table_1[match(ptpn1_snps$snp, row.names(table_1)),]
@@ -439,6 +438,36 @@ table_1_1KGP$Row.names == c("PTPN1", as.character(ptpn1_position$snp))
 
 #remove the column name for row names
 colnames(table_1_1KGP)[which(colnames(table_1_1KGP) == "Row.names")] <- ""
+
+
+## check only a few cases
+
+#for rs10485614
+alleles[which(alleles$snp == "rs10485614"),]
+summary(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean)),]$rs10485614)
+	#1 is A (major) and 2 is C (minor)
+
+#check the overall MAF for the PA subset
+summary_subset = summary(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean)),]$rs10485614)
+round(summary_subset$allele.freq[which(row.names(summary_subset$allele.freq) == "2"), 2]/100, 2) == round(table_1_1KGP[which(table_1_1KGP[,1] == "rs10485614"),]$MAF, 2)
+
+#check the MAF in Dortmund for the PA subset
+summary_subset_dortmund = summary(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Dortmund in Germany"),]$rs10485614)
+round(summary_subset_dortmund$allele.freq[which(row.names(summary_subset_dortmund$allele.freq) == "2"), 2]/100, 2) == round(table_1_1KGP[which(table_1_1KGP[,1] == "rs10485614"),]$'Dortmund in Germany', 2)
+
+
+#for rs968701
+alleles[which(alleles$snp == "rs968701"),]
+summary(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean)),]$rs968701)
+	#1 is A (minor) and 2 is G (major)
+
+#check the overall MAF for the PA subset
+summary_subset = summary(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean)),]$rs968701)
+round(summary_subset$allele.freq[which(row.names(summary_subset$allele.freq) == "1"), 2]/100, 2) == round(table_1_1KGP[which(table_1_1KGP[,1] == "rs968701"),]$MAF, 2)
+
+#check the MAF in Dortmund for the PA subset
+summary_subset_dortmund = summary(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Dortmund in Germany"),]$rs968701)
+round(summary_subset_dortmund$allele.freq[which(row.names(summary_subset_dortmund$allele.freq) == "1"), 2]/100, 2) == round(table_1_1KGP[which(table_1_1KGP[,1] == "rs968701"),]$'Dortmund in Germany',2)
 
 
 
@@ -533,6 +562,18 @@ column_slash = which(grepl("%", colnames(table_2))) #rows with percentage as phe
 #change names of these phenotypes modifying "%" by "\\%"
 colnames(table_2)[column_slash] <- gsub("%", "\\%", colnames(table_2)[column_slash], fixed=TRUE)
     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+
+
+## check only a few cases
+
+#overall obesity in Dortmund
+round((nrow(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Dortmund in Germany" & myData_ptpn1_no_subset$obesity == 1),]) / nrow(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Dortmund in Germany" & !is.na(myData_ptpn1_no_subset$obesity)),]))*100, 2) == round(table_2[which(table_2$Center == "Dortmund in Germany"),]$"All overweight (\\%)", 2)
+
+#female obesity in Lille
+round((nrow(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Lille in France" & myData_ptpn1_no_subset$obesity == 1 & myData_ptpn1_no_subset$CRF_sex == "female"),]) / nrow(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Lille in France" & !is.na(myData_ptpn1_no_subset$obesity) & myData_ptpn1_no_subset$CRF_sex == "female"),])*100), 2) == round(table_2[which(table_2$Center == "Lille in France"),]$"Female overweight (\\%)", 2)
+
+#sample size in Rome
+round(nrow(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$center == "Roma in Italy" & !is.na(myData_ptpn1_no_subset$obesity) & myData_ptpn1_no_subset$CRF_sex == "male"),]), 2) == round(table_2[which(table_2$Center == "Roma in Italy"),]$"Male sample size", 2)
 
 
 
@@ -674,6 +715,21 @@ pheno_squared = which(grepl("\\^2", table_3$Phenotype)) #rows with squared as ph
 #change names of these phenotypes modifying "^2" by "\\textsuperscript{2}"
 table_3[pheno_squared,]$Phenotype <- gsub("^2", "\\textsuperscript{2}", table_3[pheno_squared,]$Phenotype, fixed=TRUE)
     #fixed: logical.  If ‘TRUE’, ‘pattern’ is a string to be matched as is.  Overrides all conflicting arguments. fixed=TRUE prevents R from using regular expressions, which allow more flexible pattern matching but take time to compute. Without fixed=TRUE, gsub recognise \\ as a regular expression
+
+
+## check only a few cases
+
+#waist_hip male overweight
+mean(na.omit(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$CRF_sex == "male" & myData_ptpn1_no_subset$obesity == "1"),]$waist_hip))
+table_3[which(table_3$Phenotype == "Waist/Hip ratio"),]$"Male overweight (n=58)"
+
+#FMI female overweight
+mean(na.omit(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$CRF_sex == "female" & myData_ptpn1_no_subset$obesity == "1"),]$FMI))
+table_3[which(table_3$Phenotype == "FMI (kg/m\\textsuperscript{2})"),]$"Female overweight (n=78)"
+
+#SBP all non-overweight
+mean(na.omit(myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & myData_ptpn1_no_subset$CRF_sex %in% c("female", "male") & myData_ptpn1_no_subset$obesity == "0"),]$SBP))
+table_3[which(table_3$Phenotype == "SBP (mm Hg)"),]$"All non-overweight (n=562)"
 
 
 
@@ -966,5 +1022,26 @@ geno_pheno_results = geno_pheno_results[-which(rowSums(is.na(geno_pheno_results)
 #check we have all the associations
 nrow(geno_pheno_results) == length(pheno_to_model) * length(snp_to_test) * length(models)
 
-#compare the R2 of the associations with the full dataset with the subset
+##check only a few cases
+
+#first check
+subset_data_first_check = myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & !is.na(myData_ptpn1_no_subset$rs2143511)),]
+model_1_first_check = glm(formula="log(CRF_BMI) ~ dominant(rs2143511) + CRF_sex + CRF_age + center", family=gaussian, data=subset_data_first_check)
+model_2_first_check = glm(formula="log(CRF_BMI) ~ CRF_sex + CRF_age + center", family=gaussian, data=subset_data_first_check)
+round(r.squaredLR(model_1_first_check, model_2_first_check), 2) == round(geno_pheno_results[which(geno_pheno_results$selected_pheno == "CRF_BMI" & geno_pheno_results$selected_model == "dominant" & geno_pheno_results$snp_to_test == "rs2143511"),]$d2_mumin, 2)
+
+#second check
+subset_data_second_check = myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & !is.na(myData_ptpn1_no_subset$rs968701)),]
+model_1_second_check = glm(formula="log(HDL) ~ additive(rs968701) + CRF_BMI + CRF_sex + CRF_age + center", family=gaussian, data=subset_data_second_check)
+model_2_second_check = glm(formula="log(HDL) ~ CRF_BMI + CRF_sex + CRF_age + center", family=gaussian, data=subset_data_second_check)
+round(r.squaredLR(model_1_second_check, model_2_second_check), 2) == round(geno_pheno_results[which(geno_pheno_results$selected_pheno == "HDL" & geno_pheno_results$selected_model == "additive" & geno_pheno_results$snp_to_test == "rs968701"),]$d2_mumin, 2)
+
+#third check
+subset_data_third_check = myData_ptpn1_no_subset[which(!is.na(myData_ptpn1_no_subset$MVPA_mean) & !is.na(myData_ptpn1_no_subset$rs6067472)),]
+model_1_third_check = glm(formula="obesity ~ overdominant(rs6067472) + CRF_sex + CRF_age + center", family=binomial, data=subset_data_third_check)
+model_2_third_check = glm(formula="obesity ~ CRF_sex + CRF_age + center", family=binomial, data=subset_data_third_check)
+round(r.squaredLR(model_1_third_check, model_2_third_check), 2) == round(geno_pheno_results[which(geno_pheno_results$selected_pheno == "obesity" & geno_pheno_results$selected_model == "overdominant" & geno_pheno_results$snp_to_test == "rs6067472"),]$d2_mumin, 2)
+
+
+##compare the R2 of the associations with the full dataset with the subset
 kruskal.test(geno_pheno_results$d2_mumin, geno_pheno_results_no_subset$d2_mumin)
