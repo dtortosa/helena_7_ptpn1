@@ -1876,4 +1876,4 @@ Kruskal-Wallis chi-squared = 542, df = 542, p-value = 0.4919218
 > 
 > proc.time()
    user  system elapsed 
-  9.345   0.647   9.942 
+  9.028   0.525   9.537 

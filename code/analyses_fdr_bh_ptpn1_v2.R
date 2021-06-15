@@ -1390,7 +1390,7 @@ suppl_data_1$d2_mumin = (suppl_data_1$d2_mumin*100)/1
 
 #change columns names
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_pheno")] <- "phenotype"
-colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_model")] <- "heritage_model"
+colnames(suppl_data_1)[which(colnames(suppl_data_1) == "selected_model")] <- "inheritance_model"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "snp_to_test")] <- "snp"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "min_n")] <- "min_sample_size"
 colnames(suppl_data_1)[which(colnames(suppl_data_1) == "pvals")] <- "p_value"
@@ -1420,7 +1420,7 @@ suppl_data_1_previous_version = read.table(paste(folder_to_save_supple_data_1, "
 suppl_data_1_last_version = read.table(unz(paste(folder_to_save_supple_data_1, "/suplementary_data_1_v2.zip", sep=""), suppl_data_1_file_name), sep=",", header=TRUE)
 
 #select the non-numeric columns
-no_numeric_cols = which(colnames(suppl_data_1_last_version) %in% c("phenotype", "heritage_model", "snp"))
+no_numeric_cols = which(colnames(suppl_data_1_last_version) %in% c("phenotype", "inheritance_model", "snp"))
 
 #check that the non-numeric and numeric columns are the same between versions
 summary(suppl_data_1_previous_version[,no_numeric_cols] == suppl_data_1_last_version[,no_numeric_cols])
@@ -2619,7 +2619,7 @@ suppl_data_2$d2_mumin = (suppl_data_2$d2_mumin*100)/1
 
 #change columns names
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "pheno_selected")] <- "phenotype"
-colnames(suppl_data_2)[which(colnames(suppl_data_2) == "selected_model")] <- "heritage_model"
+colnames(suppl_data_2)[which(colnames(suppl_data_2) == "selected_model")] <- "inheritance_model"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "snps")] <- "snp"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "min_n")] <- "min_sample_size"
 colnames(suppl_data_2)[which(colnames(suppl_data_2) == "p.val")] <- "p_value"
@@ -2649,7 +2649,7 @@ suppl_data_2_previous_version = read.table(paste(folder_to_save_supple_data_2, "
 suppl_data_2_last_version = read.table(unz(paste(folder_to_save_supple_data_2, "/suplementary_data_2_v2.zip", sep=""), suppl_data_2_file_name), sep=",", header=TRUE)
 
 #select the non-numeric columns
-no_numeric_cols = which(colnames(suppl_data_2_last_version) %in% c("phenotype", "heritage_model", "snp"))
+no_numeric_cols = which(colnames(suppl_data_2_last_version) %in% c("phenotype", "inheritance_model", "snp"))
 
 #check that the non-numeric and numeric columns are the same between versions
 summary(suppl_data_2_previous_version[,no_numeric_cols] == suppl_data_2_last_version[,no_numeric_cols])
@@ -2990,7 +2990,7 @@ causal_variants_results$r2 = (causal_variants_results$r2*100)/1
 
 #change columns names
 colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_pheno")] <- "phenotype"
-colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_model")] <- "heritage_model"
+colnames(causal_variants_results)[which(colnames(causal_variants_results) == "selected_model")] <- "inheritance_model"
 colnames(causal_variants_results)[which(colnames(causal_variants_results) == "full_haplo_nested")] <- "set_gen_predictors"
 colnames(causal_variants_results)[which(colnames(causal_variants_results) == "p_value")] <- "p_value"
 colnames(causal_variants_results)[which(colnames(causal_variants_results) == "r2")] <- "r2_percentage"

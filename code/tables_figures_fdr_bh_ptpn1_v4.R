@@ -655,9 +655,9 @@ summary(crude_assocs$pheno_snp_combination == paste(crude_assocs$phenotype, crud
 assoc_fdr_less_01 = crude_assocs[which(crude_assocs$fdr<0.1),]
 
 #from these associations, select those with the additive and codominant model
-assoc_fdr_less_01_only_add_cod = crude_assocs[which(crude_assocs$fdr<0.1 & crude_assocs$heritage_model %in% c("additive", "codominant")),]
+assoc_fdr_less_01_only_add_cod = crude_assocs[which(crude_assocs$fdr<0.1 & crude_assocs$inheritance_model %in% c("additive", "codominant")),]
 #check
-nrow(assoc_fdr_less_01_only_add_cod[which(assoc_fdr_less_01_only_add_cod$fdr<0.1 & assoc_fdr_less_01_only_add_cod$heritage_model %in% c("additive", "codominant")),]) == nrow(assoc_fdr_less_01_only_add_cod)
+nrow(assoc_fdr_less_01_only_add_cod[which(assoc_fdr_less_01_only_add_cod$fdr<0.1 & assoc_fdr_less_01_only_add_cod$inheritance_model %in% c("additive", "codominant")),]) == nrow(assoc_fdr_less_01_only_add_cod)
 
 #check whether all significant combinations are included when restricting to add/codominant
 summary(unique(assoc_fdr_less_01$pheno_snp_combination) %in% unique(assoc_fdr_less_01_only_add_cod$pheno_snp_combination))
@@ -852,21 +852,21 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
     if(nrow(selected_rows) == 2){
 
         #extract the association results of additive model from selected rows
-        p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
-        fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
-        r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
+        p_value_additive = round(selected_rows[which(selected_rows$inheritance_model == "additive"),]$p_value, 3)
+        fdr_additive = round(selected_rows[which(selected_rows$inheritance_model == "additive"),]$fdr, 3)
+        r2_additive = round(selected_rows[which(selected_rows$inheritance_model == "additive"),]$r2_percentage, 3)
 
         #extract the association results of codominant model from selected rows
-        p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
-        fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
-        r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
+        p_value_codominant = round(selected_rows[which(selected_rows$inheritance_model == "codominant"),]$p_value, 3)
+        fdr_codominant = round(selected_rows[which(selected_rows$inheritance_model == "codominant"),]$fdr, 3)
+        r2_codominant = round(selected_rows[which(selected_rows$inheritance_model == "codominant"),]$r2_percentage, 3)
     } else { #if not, only one heritage model is significant
 
         #thus we should have only 1 selected row
         if(nrow(selected_rows) == 1){
             
             #save the name of the significant
-            model_significant = selected_rows$heritage_model
+            model_significant = selected_rows$inheritance_model
                 #the significant model is in selected row, because this is the association selected as significant
             
             #save the name of the non-significant model
@@ -879,7 +879,7 @@ for(i in 1:length(pheno_snp_combinations_table_4)){
             assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
 
             #extract the results of the non-significant model from crude_assocs (there you have all associations)
-            results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$heritage_model == model_no_significant),]
+            results_model_no_significant = crude_assocs[which(crude_assocs$pheno_snp_combination == selected_combination & crude_assocs$inheritance_model == model_no_significant),]
                 #we need the whole supple (non-significant associations), but with the combination pheno-snp selected and the non-significant model
 
             #then assign these results to objects named with the name of the non-significant model
@@ -970,7 +970,7 @@ crude_interacts = suppl_data_2
 #Therefore, if a SNP-phenotype association has an FDR lower than 0.1 under additive model, but it is not significant under the codominant model, there is no problem. The script will take the non-significant FDR for the interaction under codominant model from crude_interacts (supple 2), where the results for the interactions under all heritage models are included.
 
 #you can check that there is no problem. Unannotate the next line and you will see how setting as NA the results from codominant model gives NA for all entry of the table for codominant. 
-#crude_interacts[which(crude_interacts$heritage_model == "codominant"), c("p_value", "fdr", "r2_percentage")] <- NA
+#crude_interacts[which(crude_interacts$inheritance_model == "codominant"), c("p_value", "fdr", "r2_percentage")] <- NA
     #select the p_value, fdr and r2 for all interaction results belonging to the codominant model and set them as NA.
     #The results is NA for the p_value, fdr and r2 under codominant model for all snp-phenotype combinations, while the additive model includes all results.
 
@@ -986,9 +986,9 @@ summary(crude_interacts$pheno_snp_combination == paste(crude_interacts$phenotype
 interact_fdr_less_005 = crude_interacts[which(crude_interacts$fdr<0.05),]
 
 #from these associations, select those with the additive and codominant model
-interact_fdr_less_005_only_add_cod = crude_interacts[which(crude_interacts$fdr<0.05 & crude_interacts$heritage_model %in% c("additive", "codominant")),]
+interact_fdr_less_005_only_add_cod = crude_interacts[which(crude_interacts$fdr<0.05 & crude_interacts$inheritance_model %in% c("additive", "codominant")),]
 #check
-nrow(interact_fdr_less_005_only_add_cod[which(interact_fdr_less_005_only_add_cod$fdr<0.05 & interact_fdr_less_005_only_add_cod$heritage_model %in% c("additive", "codominant")),]) == nrow(interact_fdr_less_005_only_add_cod)
+nrow(interact_fdr_less_005_only_add_cod[which(interact_fdr_less_005_only_add_cod$fdr<0.05 & interact_fdr_less_005_only_add_cod$inheritance_model %in% c("additive", "codominant")),]) == nrow(interact_fdr_less_005_only_add_cod)
 
 #check whether all significant combinations are included when restricting to add/codominant
 summary(unique(interact_fdr_less_005$pheno_snp_combination) %in% unique(interact_fdr_less_005_only_add_cod$pheno_snp_combination))
@@ -1272,21 +1272,21 @@ for(i in 1:length(pheno_snp_combinations_table_5)){
     if(nrow(selected_rows) == 2){
 
         #extract the association results of additive model from selected rows
-        p_value_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$p_value, 3)
-        fdr_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$fdr, 3)
-        r2_additive = round(selected_rows[which(selected_rows$heritage_model == "additive"),]$r2_percentage, 3)
+        p_value_additive = round(selected_rows[which(selected_rows$inheritance_model == "additive"),]$p_value, 3)
+        fdr_additive = round(selected_rows[which(selected_rows$inheritance_model == "additive"),]$fdr, 3)
+        r2_additive = round(selected_rows[which(selected_rows$inheritance_model == "additive"),]$r2_percentage, 3)
 
         #extract the association results of codominant model from selected rows
-        p_value_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$p_value, 3)
-        fdr_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$fdr, 3)
-        r2_codominant = round(selected_rows[which(selected_rows$heritage_model == "codominant"),]$r2_percentage, 3)
+        p_value_codominant = round(selected_rows[which(selected_rows$inheritance_model == "codominant"),]$p_value, 3)
+        fdr_codominant = round(selected_rows[which(selected_rows$inheritance_model == "codominant"),]$fdr, 3)
+        r2_codominant = round(selected_rows[which(selected_rows$inheritance_model == "codominant"),]$r2_percentage, 3)
     } else { #if not, only one heritage model is significant
 
         #thus we should have only 1 selected row
         if(nrow(selected_rows) == 1){
             
             #save the name of the significant
-            model_significant = selected_rows$heritage_model
+            model_significant = selected_rows$inheritance_model
                 #the significant model is in selected row, because this is the association selected as significant
             
             #save the name of the non-significant model
@@ -1299,7 +1299,7 @@ for(i in 1:length(pheno_snp_combinations_table_5)){
             assign(paste("r2_", model_significant, sep=""), round(selected_rows$r2_percentage, 3))
 
             #extract the results of the non-significant model from crude_interacts (there you have all associations)
-            results_model_no_significant = crude_interacts[which(crude_interacts$pheno_snp_combination == selected_combination & crude_interacts$heritage_model == model_no_significant),]
+            results_model_no_significant = crude_interacts[which(crude_interacts$pheno_snp_combination == selected_combination & crude_interacts$inheritance_model == model_no_significant),]
                 #we need the whole supple (non-significant associations), but with the combination pheno-snp selected and the non-significant model
 
             #then assign these results to objects named with the name of the non-significant model
