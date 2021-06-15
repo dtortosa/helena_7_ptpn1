@@ -2,6 +2,7 @@
 /ms
 /results
 
+*.PDF
 *.pdf
 *.RData
 *.DS_Store
