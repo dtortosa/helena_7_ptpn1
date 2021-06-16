@@ -451,6 +451,10 @@ if(length(rows_to_remove_total) != 0){
 
     #remove these rows
     helena_total = helena[-rows_to_remove_total,]
+} else {
+    
+    #helena_total will not lose any rows because of this
+    helena_total = helena
 }
 
 ## Subset columns total helena
@@ -469,6 +473,10 @@ if(length(rows_to_remove_ptpn1) != 0){
 
     #remove these rows
     helena_7 = helena[-rows_to_remove_ptpn1,]
+} else {
+
+    #helena 7 will not lose any rows because of this
+    helena_7 = helena 
 }
 
 ## Subset columns helena subset of target snps
