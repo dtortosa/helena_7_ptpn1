@@ -1440,7 +1440,7 @@ for(i in 1:length(vector_haplotype_blocks)){ #the list of blocks comes from the 
     print(summary(round(merge_check$frequency.x, 5) / round(merge_check$frequency.y, 5)))
         
     #conclusions checks
-    #With and without insertion, we get the same frequencies.
+    #With and without insertion, we get the same frequencies. Of course, there are more low-frequency haplotypes in no trim, because a progressive insertion was applied: This process removes haplotypes with a low posterior probability (see script of the main analyses for further details).
     #I have compared frequencies form haplo.em, haplo.glm and haploview. They are almost the same for the haplotypes with frequency higher than 0.005, which are the ones analyzed as independent haplotypes. Some differences are normal, specially in the case of haplo.glm because it depends on the number of individuals with data for each genotype.
     #The rest were included in "geno_block.rare" and I have not use it. In that category you have individuals with different low-frequency haplotypes. For these haplotypes, there are some cases with differences (e.g., 0.0014 instead 0.002).
     #We have the correct frequencies and we will use the most frequent haplotypes used in haplo.glm. An haplotype of 0.0054 is included in some phenotypes like hip circumference.
